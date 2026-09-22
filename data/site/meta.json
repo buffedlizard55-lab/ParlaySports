@@ -6,18 +6,19 @@
  "counts": {
   "games": 29053,
   "issues": 2,
-  "ledger": 7225,
+  "ledger": 7224,
   "legs": 17444,
   "parlays": 6100,
   "prices": 60504,
   "ratings": 54320,
-  "research": 12,
+  "research": 16,
   "signals": 17444,
   "strategies": 28,
-  "verifications": 8
+  "users": 28,
+  "verifications": 9
  },
  "data_as_of_utc": "2026-09-22T01:30:00Z",
  "disclaimer": "SIMULATED PAPER COMPETITION. No real money. Model prices are labeled MODEL and are estimates, never market facts.",
- "exported_utc": "2026-09-22T01:50:14Z",
+ "exported_utc": "2026-09-22T04:16:03Z",
  "seed_manifest_sha256": "40c181b36d5156c77c248932b7f99458288d585a49d0a91aada294cb3826d102"
 }

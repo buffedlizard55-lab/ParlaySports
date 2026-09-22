@@ -1,4 +1,4 @@
-.PHONY: seed backtest forward settle quality export nightly test audit serve clean
+.PHONY: seed backtest forward settle quality export nightly test uismoke audit serve clean
 
 PY ?= python3
 
@@ -25,6 +25,9 @@ nightly:
 
 test:
 	$(PY) -m unittest discover -s tests -q
+
+uismoke:
+	node scripts/ui_smoke.mjs
 
 audit:
 	$(PY) scripts/audit.py

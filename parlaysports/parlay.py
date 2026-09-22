@@ -230,6 +230,10 @@ def settle_parlay(parlay: dict[str, Any],
 
 def insert_parlay(con: sqlite3.Connection, parlay: dict[str, Any]) -> None:
     from .store import dump_json
+    existing = con.execute("SELECT 1 FROM legs WHERE parlay_id=? LIMIT 1",
+                           (parlay["parlay_id"],)).fetchone()
+    if existing is not None:
+        return  # ticket body already written; never duplicate its legs
     con.execute(
         """INSERT OR IGNORE INTO parlays(parlay_id, strategy_id, version, username,
            sport_scope, sports_json, n_legs, market_mix, stake, pricing_grade,

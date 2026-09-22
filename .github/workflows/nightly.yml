@@ -50,6 +50,9 @@ jobs:
       - name: Audit (PASS 2 gates)
         run: python3 scripts/audit.py
 
+      - name: UI smoke (all routes render against real exports)
+        run: node scripts/ui_smoke.mjs
+
       - name: Save database cache
         if: always()
         uses: actions/cache/save@v4

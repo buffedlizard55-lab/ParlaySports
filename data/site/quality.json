@@ -2,8 +2,8 @@
  "issues": [
   {
    "area": "quality",
-   "created_utc": "2026-09-22T01:49:11Z",
-   "detail": "[duplicate-events] MLB 2023-08-19 MIA@LAD (1-3): 2 rows",
+   "created_utc": "2026-09-22T04:16:03Z",
+   "detail": "[missing-historical-periods] MLB 2015: only 1330 finals (partial season in seed; window is truncated, not filled)",
    "game_key": null,
    "issue_id": 2,
    "resolution": null,
@@ -13,7 +13,7 @@
   },
   {
    "area": "quality",
-   "created_utc": "2026-09-22T01:49:11Z",
+   "created_utc": "2026-09-22T04:16:02Z",
    "detail": "[missing-scores-past-games] NFL:2026_02_NYG_LA (NFL 2026-09-21) still scheduled",
    "game_key": null,
    "issue_id": 1,
@@ -41,10 +41,8 @@
    },
    {
     "check": "duplicate-events",
-    "detail": [
-     "MLB 2023-08-19 MIA@LAD (1-3): 2 rows"
-    ],
-    "problems": 1,
+    "detail": [],
+    "problems": 0,
     "suppressed_resolved": 0
    },
    {
@@ -100,6 +98,14 @@
     "detail": [],
     "problems": 0,
     "suppressed_resolved": 0
+   },
+   {
+    "check": "missing-historical-periods",
+    "detail": [
+     "MLB 2015: only 1330 finals (partial season in seed; window is truncated, not filled)"
+    ],
+    "problems": 1,
+    "suppressed_resolved": 0
    }
   ],
   "total_problems": 2
@@ -107,8 +113,17 @@
  "open": 2,
  "verifications": [
   {
+   "claim": "Two MIA@LAD finals on one date with identical 1-3 scores are two real games (Hurricane Hilary makeup DH), not a duplicated row.",
+   "created_utc": "2026-09-22T04:09:05Z",
+   "detail": "MLB.com recap confirms Game 1 was Dodgers 3-1; baseball-reference box LAN202308192 confirms Game 2 also Dodgers 3-1. Both StatsAPI game_pks exist. The duplicate-events quality check now exempts MLB rows with distinct league game ids; identical scores alone are no longer treated as a data error for baseball.",
+   "result": "match",
+   "source_url": "https://www.baseball-reference.com/boxes/LAN/LAN202308192.shtml",
+   "subject": "MLB 2023-08-19 MIA@LAD doubleheader (games 716909 & 716926)",
+   "verify_id": 9
+  },
+  {
    "claim": "Oct 20 openers scheduled with ESPN/DK lines and Kalshi markets",
-   "created_utc": "2026-09-22T01:34:53Z",
+   "created_utc": "2026-09-22T04:09:04Z",
    "detail": "24 games carry ESPN/DK spread+total lines; 3 openers (OKC@SAS, PHI@NYK, BOS@DET... event tickers) carry 6 Kalshi GAME contracts with two-sided quotes. Inherited, re-verified by nightly pull.",
    "result": "match",
    "source_url": "https://github.com/buffedlizard55-lab/NBAComp (odds_snapshots + kalshi_markets, captured 2026-09-21)",
@@ -117,7 +132,7 @@
   },
   {
    "claim": "Preseason games in progress at seed time; excluded from forward books",
-   "created_utc": "2026-09-22T01:34:53Z",
+   "created_utc": "2026-09-22T04:09:04Z",
    "detail": "5 games LIVE (BUF@PIT, DET@CBJ, NYR@NJD, PHI@WSH neutral, OTT@MTL neutral), 3 PRE. Imported schedule rows match these game IDs (2026010015-2026010022 range).",
    "result": "match",
    "source_url": "https://api-web.nhle.com/v1/schedule/now",
@@ -126,7 +141,7 @@
   },
   {
    "claim": "30-team standings with W/L, streaks, splits, xW transcribed from official StatsAPI",
-   "created_utc": "2026-09-22T01:34:53Z",
+   "created_utc": "2026-09-22T04:09:04Z",
    "detail": "Retrieved 2026-09-22; league lastUpdated 2026-09-21T19:20:07Z. Clinched: TB(x) NYY(x) BOS(x) MIL(y) LAD(y) ATL(y). Cross-checked division leaders vs WC games-back arithmetic on 6 teams.",
    "result": "match",
    "source_url": "https://statsapi.mlb.com/api/v1/standings?leagueId=103,104&season=2026&standingsTypes=regularSeason",
@@ -135,7 +150,7 @@
   },
   {
    "claim": "NYG@LA had not kicked off at seed time",
-   "created_utc": "2026-09-22T01:34:53Z",
+   "created_utc": "2026-09-22T04:09:04Z",
    "detail": "ESPN status STATUS_SCHEDULED, 'Mon, September 21st at 8:15 PM EDT' (2026-09-22T00:15Z). Correctly treated as upcoming, not final.",
    "result": "match",
    "source_url": "https://site.api.espn.com/apis/site/v2/sports/football/nfl/scoreboard?dates=20260921",
@@ -144,7 +159,7 @@
   },
   {
    "claim": "nflverse Week 3 MLs track Kalshi exchange yes_ask prices within cents",
-   "created_utc": "2026-09-22T01:34:53Z",
+   "created_utc": "2026-09-22T04:09:04Z",
    "detail": "Sample 2026-09-22: PHI ask 0.64 (~-178) vs nflverse -180; LAR 0.56 (~-127) vs -125; BAL 0.60 (~-150) vs -155; NO 0.63 (~-170) vs -175. Dogs run longer on Kalshi (no-vig two-sided book); favorites within ~1-5c.",
    "result": "match",
    "source_url": "https://api.elections.kalshi.com/trade-api/v2/markets?series_ticker=KXNFLGAME&status=open&limit=10",
@@ -153,7 +168,7 @@
   },
   {
    "claim": "nflverse MLs (NYG +240 / LA -298) equal DraftKings MLs on ESPN",
-   "created_utc": "2026-09-22T01:34:53Z",
+   "created_utc": "2026-09-22T04:09:04Z",
    "detail": "ESPN DK block: home close -298 (open -375), away close +240 (open +295); nflverse: 240 / -298.",
    "result": "match",
    "source_url": "https://site.api.espn.com/apis/site/v2/sports/football/nfl/scoreboard?dates=20260921",
@@ -162,7 +177,7 @@
   },
   {
    "claim": "nflverse total_line=47.5 equals the DraftKings total on ESPN",
-   "created_utc": "2026-09-22T01:34:53Z",
+   "created_utc": "2026-09-22T04:09:04Z",
    "detail": "ESPN DK block: overUnder 47.5, o47.5 -110 / u47.5 -110; nflverse: 47.5 / -110 / -110.",
    "result": "match",
    "source_url": "https://site.api.espn.com/apis/site/v2/sports/football/nfl/scoreboard?dates=20260921",
@@ -171,7 +186,7 @@
   },
   {
    "claim": "nflverse spread_line=6.5 (LA -6.5) equals the DraftKings line on ESPN",
-   "created_utc": "2026-09-22T01:34:53Z",
+   "created_utc": "2026-09-22T04:09:04Z",
    "detail": "ESPN DK block: details 'LAR -6.5', home close line -6.5 odds -115, away +6.5 odds -105; nflverse row: spread 6.5 / -105 / -115. Open was -8.5 (moved toward NYG).",
    "result": "match",
    "source_url": "https://site.api.espn.com/apis/site/v2/sports/football/nfl/scoreboard?dates=20260921",

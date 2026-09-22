@@ -1,0 +1,198 @@
+[
+ {
+  "created_utc": "2026-09-22T02:00:00Z",
+  "note": "paper competitor managing B2B fade (NHL)",
+  "role": "competitor",
+  "strategy_id": "S-NHL-04",
+  "username": "BackToBacker"
+ },
+ {
+  "created_utc": "2026-09-22T02:00:00Z",
+  "note": "paper competitor managing Park-aware totals (MLB)",
+  "role": "competitor",
+  "strategy_id": "S-MLB-05",
+  "username": "CoorsTotal"
+ },
+ {
+  "created_utc": "2026-09-22T02:00:00Z",
+  "note": "paper competitor managing Goals-model totals (NHL)",
+  "role": "competitor",
+  "strategy_id": "S-NHL-03",
+  "username": "CreaseCrash"
+ },
+ {
+  "created_utc": "2026-09-22T02:00:00Z",
+  "note": "paper competitor managing Best edges any sport (MULTI)",
+  "role": "competitor",
+  "strategy_id": "S-MULTI-02",
+  "username": "CrossSportEdge"
+ },
+ {
+  "created_utc": "2026-09-22T02:00:00Z",
+  "note": "paper competitor managing Divisional home dogs (NFL)",
+  "role": "competitor",
+  "strategy_id": "S-NFL-02",
+  "username": "DivisionalDog"
+ },
+ {
+  "created_utc": "2026-09-22T02:00:00Z",
+  "note": "paper competitor managing Elo vs close (NBA)",
+  "role": "competitor",
+  "strategy_id": "S-NBA-01",
+  "username": "EloAndOrder"
+ },
+ {
+  "created_utc": "2026-09-22T02:00:00Z",
+  "note": "paper competitor managing Cross-sport favorites (MULTI)",
+  "role": "competitor",
+  "strategy_id": "S-MULTI-01",
+  "username": "FourSportFavor"
+ },
+ {
+  "created_utc": "2026-09-22T02:00:00Z",
+  "note": "paper competitor managing Elo edge favorites (NFL)",
+  "role": "competitor",
+  "strategy_id": "S-NFL-01",
+  "username": "GridironGuru"
+ },
+ {
+  "created_utc": "2026-09-22T02:00:00Z",
+  "note": "paper competitor managing Home/road splits (MLB)",
+  "role": "competitor",
+  "strategy_id": "S-MLB-04",
+  "username": "HomeCookin"
+ },
+ {
+  "created_utc": "2026-09-22T02:00:00Z",
+  "note": "paper competitor managing Elite home cover (NBA)",
+  "role": "competitor",
+  "strategy_id": "S-NBA-04",
+  "username": "HomeCourt"
+ },
+ {
+  "created_utc": "2026-09-22T02:00:00Z",
+  "note": "paper competitor managing Home ice + rest (NHL)",
+  "role": "competitor",
+  "strategy_id": "S-NHL-02",
+  "username": "HomeIceQ"
+ },
+ {
+  "created_utc": "2026-09-22T02:00:00Z",
+  "note": "paper competitor managing Schedule-spot fade (NBA)",
+  "role": "competitor",
+  "strategy_id": "S-NBA-02",
+  "username": "LoadManager"
+ },
+ {
+  "created_utc": "2026-09-22T02:00:00Z",
+  "note": "paper competitor managing Longshot lottery (MULTI)",
+  "role": "competitor",
+  "strategy_id": "S-MULTI-04",
+  "username": "LotteryTicket"
+ },
+ {
+  "created_utc": "2026-09-22T02:00:00Z",
+  "note": "paper competitor managing ATS streak fade (NBA)",
+  "role": "competitor",
+  "strategy_id": "S-NBA-05",
+  "username": "MeanReversion"
+ },
+ {
+  "created_utc": "2026-09-22T02:00:00Z",
+  "note": "paper competitor managing Road dog process (NHL)",
+  "role": "competitor",
+  "strategy_id": "S-NHL-06",
+  "username": "MuddyWater"
+ },
+ {
+  "created_utc": "2026-09-22T02:00:00Z",
+  "note": "paper competitor managing Pace totals (NBA)",
+  "role": "competitor",
+  "strategy_id": "S-NBA-03",
+  "username": "PaceCase"
+ },
+ {
+  "created_utc": "2026-09-22T02:00:00Z",
+  "note": "paper competitor managing Puck Elo edge (NHL)",
+  "role": "competitor",
+  "strategy_id": "S-NHL-01",
+  "username": "PuckElo"
+ },
+ {
+  "created_utc": "2026-09-22T02:00:00Z",
+  "note": "paper competitor managing Puck-line value (NHL)",
+  "role": "competitor",
+  "strategy_id": "S-NHL-05",
+  "username": "PucklinePete"
+ },
+ {
+  "created_utc": "2026-09-22T02:00:00Z",
+  "note": "paper competitor managing Pythagorean log5 (MLB)",
+  "role": "competitor",
+  "strategy_id": "S-MLB-01",
+  "username": "Pythagoras"
+ },
+ {
+  "created_utc": "2026-09-22T02:00:00Z",
+  "note": "paper competitor managing xW-Luck fade (MLB)",
+  "role": "competitor",
+  "strategy_id": "S-MLB-03",
+  "username": "RegressionRandy"
+ },
+ {
+  "created_utc": "2026-09-22T02:00:00Z",
+  "note": "paper competitor managing Rest mismatch (NFL)",
+  "role": "competitor",
+  "strategy_id": "S-NFL-04",
+  "username": "RestEdge"
+ },
+ {
+  "created_utc": "2026-09-22T02:00:00Z",
+  "note": "paper competitor managing Rested road dogs (NBA)",
+  "role": "competitor",
+  "strategy_id": "S-NBA-06",
+  "username": "RoadDawg"
+ },
+ {
+  "created_utc": "2026-09-22T02:00:00Z",
+  "note": "paper competitor managing September motivation (MLB)",
+  "role": "competitor",
+  "strategy_id": "S-MLB-06",
+  "username": "ScoreboardWatcher"
+ },
+ {
+  "created_utc": "2026-09-22T02:00:00Z",
+  "note": "paper competitor managing Short road chalk fade (NFL)",
+  "role": "competitor",
+  "strategy_id": "S-NFL-06",
+  "username": "ShortChalkFade"
+ },
+ {
+  "created_utc": "2026-09-22T02:00:00Z",
+  "note": "paper competitor managing Form streaks (MLB)",
+  "role": "competitor",
+  "strategy_id": "S-MLB-02",
+  "username": "StreakSmarter"
+ },
+ {
+  "created_utc": "2026-09-22T02:00:00Z",
+  "note": "paper competitor managing Cross-sport totals (MULTI)",
+  "role": "competitor",
+  "strategy_id": "S-MULTI-03",
+  "username": "TotalChaos"
+ },
+ {
+  "created_utc": "2026-09-22T02:00:00Z",
+  "note": "paper competitor managing Efficiency totals (NFL)",
+  "role": "competitor",
+  "strategy_id": "S-NFL-03",
+  "username": "Totalician"
+ },
+ {
+  "created_utc": "2026-09-22T02:00:00Z",
+  "note": "paper competitor managing Wind chill under (NFL)",
+  "role": "competitor",
+  "strategy_id": "S-NFL-05",
+  "username": "WindChill"
+ }
+]

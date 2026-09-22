@@ -116,6 +116,63 @@ def main() -> int:
     n = con.execute("SELECT COUNT(*) AS n FROM strategies WHERE limitations='' OR required_data=''"
                     ).fetchone()["n"]
     check("strategies-documented", n == 0, f"{n} undocumented")
+    # 13. settlement completeness: settled priced tickets record a payout
+    n = con.execute(
+        """SELECT COUNT(*) AS n FROM parlays WHERE status IN ('won','lost','push')
+           AND pricing_grade != 'UNPRICED' AND payout IS NULL""").fetchone()["n"]
+    check("settled-tickets-have-payout", n == 0, f"{n} missing payout")
+    # 14. upcoming/completed books never mix
+    up = json.loads((SITE_DIR / "upcoming.json").read_text())
+    done = json.loads((SITE_DIR / "completed.json").read_text())
+    bad = sum(1 for p in up if p["status"] not in ("upcoming", "live"))
+    check("upcoming-list-is-unsettled-only", bad == 0, f"{bad} settled rows leaked into upcoming")
+    bad = sum(1 for p in done if p["status"] not in ("won", "lost", "push", "void"))
+    check("completed-list-is-settled-only", bad == 0, f"{bad} unsettled rows leaked into completed")
+    # 15. per-strategy complete history files
+    missing_hist = [r["strategy_id"] for r in con.execute("SELECT DISTINCT strategy_id FROM strategies")
+                    if not (SITE_DIR / f"history_{r['strategy_id']}.json").exists()]
+    check("strategy-history-files", not missing_hist,
+          f"{len(missing_hist)} missing" if missing_hist else "all present")
+    # 16. leaderboard rows expose every required column's data
+    lb = json.loads((SITE_DIR / "leaderboard_forward.json").read_text())
+    need = {"username", "strategy_id", "sport", "bankroll", "pnl", "roi", "parlays",
+            "won", "lost", "push", "leg_hit_rate", "parlay_hit_rate",
+            "max_drawdown", "last_activity", "avg_legs", "streak"}
+    missing_cols = sorted({k for row in lb for k in (need - set(row))}) if lb else sorted(need)
+    check("leaderboard-required-columns", not missing_cols,
+          ",".join(missing_cols) if missing_cols else f"{len(need)} columns on all rows")
+    # 17. completed rows carry settlement source + leg verification status
+    bad = 0
+    for p in done[:200]:
+        if not p.get("settlement_source"):
+            bad += 1
+        for l in p.get("legs", []):
+            if l.get("game_verified") is None:
+                bad += 1
+    check("completed-carry-settlement-provenance", bad == 0, f"{bad} fields missing")
+    # 18. quality registry covers the full prompt checklist
+    names = {c["check"] for c in q["checks"]}
+    required_checks = {"missing-scores-past-games", "missing-odds-priced-parlays",
+                       "duplicate-events", "conflicting-results", "invalid-stats",
+                       "timestamp-order", "stale-snapshots", "settlement-recompute",
+                       "ledger-chain", "parlay-math", "backtest-leakage", "odds-sanity",
+                       "missing-historical-periods"}
+    lack = sorted(required_checks - names)
+    check("quality-registry-complete", not lack, ",".join(lack) if lack else "13 checks live")
+    # 19. competitor accounts persist and are exported
+    n = con.execute("SELECT COUNT(*) AS n FROM users").fetchone()["n"]
+    check("users-persisted", n == 28, f"{n} accounts")
+    ok = (SITE_DIR / "users.json").exists() and len(
+        json.loads((SITE_DIR / "users.json").read_text())) == n
+    check("users-exported", bool(ok), "users.json")
+    # 20. price import idempotency invariant: no two identical quotes
+    n = con.execute(
+        """SELECT COUNT(*) AS n FROM (
+             SELECT game_key, market, selection, source_id, observed_utc, close_flag,
+                    COUNT(*) AS c FROM prices
+             GROUP BY game_key, market, selection, line, odds_american,
+                      source_id, observed_utc, close_flag HAVING c > 1)""").fetchone()["n"]
+    check("no-duplicate-price-quotes", n == 0, f"{n} duplicated quote groups")
     return print_summary()
 
 

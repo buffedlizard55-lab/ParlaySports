@@ -62,6 +62,8 @@ CREATE TABLE IF NOT EXISTS games (
 );
 CREATE INDEX IF NOT EXISTS idx_games_sport_date ON games(sport, game_date);
 CREATE INDEX IF NOT EXISTS idx_games_status ON games(status);
+CREATE INDEX IF NOT EXISTS idx_games_away_team ON games(sport, away_team, game_date);
+CREATE INDEX IF NOT EXISTS idx_games_home_team ON games(sport, home_team, game_date);
 CREATE TABLE IF NOT EXISTS team_form (
     team_key TEXT NOT NULL,
     sport TEXT NOT NULL,
@@ -108,6 +110,14 @@ CREATE TABLE IF NOT EXISTS prices (
 );
 CREATE INDEX IF NOT EXISTS idx_prices_game ON prices(game_key, market, selection);
 CREATE INDEX IF NOT EXISTS idx_prices_market ON prices(market, close_flag);
+CREATE INDEX IF NOT EXISTS idx_prices_close ON prices(game_key, close_flag);
+CREATE TABLE IF NOT EXISTS users (
+    username TEXT PRIMARY KEY,
+    role TEXT NOT NULL,
+    strategy_id TEXT NOT NULL,
+    created_utc TEXT NOT NULL,
+    note TEXT
+);
 CREATE TABLE IF NOT EXISTS strategies (
     strategy_id TEXT NOT NULL,
     version TEXT NOT NULL,
@@ -256,9 +266,13 @@ def connect(path: str | Path = DB_PATH) -> sqlite3.Connection:
     con.row_factory = sqlite3.Row
     con.execute("PRAGMA journal_mode=WAL;")
     con.executescript(SCHEMA)
-    # Idempotent micro-migration for databases created before settle_detail.
+    # Idempotent micro-migrations for older databases.
     try:
         con.execute("ALTER TABLE legs ADD COLUMN settle_detail TEXT")
+    except sqlite3.OperationalError:
+        pass
+    try:
+        con.execute("ALTER TABLE parlays ADD COLUMN payout REAL")
     except sqlite3.OperationalError:
         pass
     return con

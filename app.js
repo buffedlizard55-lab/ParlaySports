@@ -47,15 +47,27 @@ function spark(points, w, h, color) {
   return '<svg class="spark" viewBox="0 0 ' + w + " " + h + '" preserveAspectRatio="none"><path d="' + d + '" fill="none" stroke="' + c + '" stroke-width="1.6"/></svg>';
 }
 
+function legDetailText(l) {
+  let d = {};
+  try { d = JSON.parse(l.leg_detail || "{}"); } catch (e) { return esc(l.leg_detail || ""); }
+  const bits = [];
+  if (d.note) bits.push(d.note);
+  if (d.edge != null) bits.push("edge " + pct(d.edge));
+  if (d.market_prob != null) bits.push("mkt " + pct(d.market_prob));
+  if (d.features && d.features.price_source) bits.push(String(d.features.price_source));
+  return esc(bits.join(" · "));
+}
 function legRow(l, showGame) {
   const matchup = l.g_away + " @ " + l.g_home;
   const score = l.game_status === "final" ? " <span class='mut'>(" + l.away_score + "–" + l.home_score + ")</span>" : "";
+  const when = showGame ? esc(l.game_date) + (l.start_utc ? " " + esc(l.start_utc.slice(11, 16)) + "Z" : "") + "<br>" : "";
   const pick = l.market + " " + l.selection + (l.line != null ? " " + (l.line > 0 ? "+" : "") + l.line : "");
   const odds = l.odds_american != null ? (l.odds_american > 0 ? "+" : "") + Math.round(l.odds_american) : "—";
   const res = l.result && l.result !== "pending" ? statusBadge(l.result) + "<br><span class='mut'>" + esc(l.settle_detail || "") + "</span>" : "<span class='mut'>pending</span>";
-  return "<tr><td>" + (showGame ? esc(l.game_date) + "<br>" : "") + "<b>" + esc(matchup) + "</b>" + score +
-    "<br><span class='mut'>" + esc(l.g_sport) + " · " + esc(l.game_status || "") + "</span></td><td>" + esc(pick) +
-    "<br><span class='mut'>" + esc(l.leg_detail || "") + "</span></td><td class='num'>" + esc(String(odds)) +
+  const vfy = l.game_verified != null ? (l.game_verified ? "verified game" : "unverified game") : "";
+  return "<tr><td>" + when + "<b>" + esc(matchup) + "</b>" + score +
+    "<br><span class='mut'>" + esc(l.g_sport) + " · " + esc(l.game_status || "") + (vfy ? " · " + vfy : "") + "</span></td><td>" + esc(pick) +
+    "<br><span class='mut'>" + legDetailText(l) + "</span></td><td class='num'>" + esc(String(odds)) +
     "<br><span class='mut'>" + esc(l.odds_type || "missing") + "</span></td><td class='num'>" +
     (l.model_prob != null ? pct(l.model_prob) : "—") + "</td><td>" + res + "</td></tr>";
 }
@@ -64,22 +76,29 @@ function parlayCard(p, opts) {
   opts = opts || {};
   const legs = (p.legs || []).map((l) => legRow(l, true)).join("");
   const comb = p.combined_american != null ? (p.combined_american > 0 ? "+" : "") + Math.round(p.combined_american) : "—";
+  const settled = p.status === "won" || p.status === "lost" || p.status === "push" || p.status === "void";
   return '<div class="card parlay"><div class="parlay-head"><span class="pid">' + esc(p.parlay_id) + "</span>" +
     statusBadge(p.status) + gradeBadge(p.pricing_grade) +
     "<span>" + stratLink(p.strategy_id) + " <span class='mut'>" + esc(uname(p.strategy_id)) + "</span></span>" +
-    "<span class='mut'>slate " + esc(p.slate_date) + " · decided " + esc(dt(p.decision_utc)) + "</span></div>" +
-    "<div class='kv' style='max-width:640px'><span>Stake <b>" + money(p.stake) + "</b></span>" +
+    "<span class='mut'>" + p.n_legs + " legs · sports " + esc((p.sports || []).join("+")) + " · slate " + esc(p.slate_date) + " · created " + esc(dt(p.decision_utc)) + "</span></div>" +
+    "<div class='kv' style='max-width:720px'><span>Stake <b>" + money(p.stake) + "</b></span>" +
     "<span>Combined <b>" + esc(String(comb)) + "</b>" + (p.combined_decimal != null ? " (" + p.combined_decimal + ")" : "") + "</span>" +
-    "<span>Potential <b>" + money(p.potential_payout) + "</b></span>" +
-    (p.pnl != null ? "<span>P&amp;L <b class='" + cls(p.pnl) + "'>" + money(p.pnl) + "</b></span>" : "<span class='mut'>P&amp;L pending</span>") + "</div>" +
-    (p.result_detail ? "<div class='sub'>" + esc(p.result_detail) + (p.settlement_source ? " · <span class='mut'>" + esc(p.settlement_source) + "</span>" : "") + "</div>" : "") +
+    (settled
+      ? "<span>Payout <b>" + money(p.payout) + "</b></span><span>P&amp;L <b class='" + cls(p.pnl) + "'>" + money(p.pnl) + "</b></span>" +
+        "<span>ROI <b class='" + cls(p.roi_parlay) + "'>" + pct(p.roi_parlay) + "</b></span>"
+      : "<span>Potential <b>" + money(p.potential_payout) + "</b></span><span class='mut'>P&amp;L pending</span>") +
+    "</div>" +
+    (p.result_detail ? "<div class='sub'>" + esc(p.result_detail) + (p.settlement_source ? " · settlement: <span class='mut'>" + esc(p.settlement_source) + "</span>" : "") +
+      (p.settled_utc ? " · settled " + esc(dt(p.settled_utc)) : "") + "</div>" : "") +
     "<div style='overflow-x:auto'><table class='data'><thead><tr><th>Game</th><th>Pick</th><th class='num'>Odds</th><th class='num'>Model</th><th>Result</th></tr></thead><tbody>" +
     legs + "</tbody></table></div></div>";
 }
 
 /* ---------------- Dashboard ---------------- */
 async function pageDashboard() {
-  const [meta, lbf, lbb, up, q] = await Promise.all([get("meta"), get("leaderboard_forward"), get("leaderboard_backtest"), get("upcoming"), get("quality")]);
+  const [meta, lbf, lbb, up, q, perf, games, done] = await Promise.all([
+    get("meta"), get("leaderboard_forward"), get("leaderboard_backtest"),
+    get("upcoming"), get("quality"), get("performance"), get("games"), get("completed")]);
   await users();
   const c = meta.counts;
   const fActive = lbf.filter((r) => r.parlays > 0).sort((a, b) => b.pnl - a.pnl);
@@ -89,7 +108,19 @@ async function pageDashboard() {
   const slateRows = Object.keys(slates).sort().map((s) => "<div class='kv'><span>" + esc(s) + "</span><b>" + slates[s] + " tickets</b></div>").join("");
   const lbRow = (r) => "<tr><td>" + stratLink(r.strategy_id) + "<br><span class='mut'>" + esc(r.name) + "</span></td><td>" + esc(r.sport) + "</td><td class='num'>" + r.parlays + "</td><td class='num " + cls(r.pnl) + "'>" + money(r.pnl) + "</td><td class='num'>" + pct(r.roi) + "</td><td class='num'>" + money0(r.bankroll) + "</td></tr>";
   const open = (q.issues || []).filter((i) => i.status === "open");
-  return "<h1>Dashboard</h1><p class='sub'>Paper competition across <b>4 sports</b> and <b>28 versioned strategies</b>. Two sealed books: <b>backtest</b> (history, settled) and <b>forward</b> (live paper, upcoming). " + esc(meta.disclaimer) + "</p>" +
+  const recent = done.slice(0, 5).map((p) => "<tr><td>" + statusBadge(p.status) + "</td><td>" + stratLink(p.strategy_id) + "<br><span class='mut'>" + esc(uname(p.strategy_id)) + "</span></td><td>" + esc(p.slate_date) + " · " + esc((p.sports || []).join("+")) + " · " + p.n_legs + " legs</td><td class='num'>" + money(p.payout) + "</td><td class='num " + cls(p.pnl) + "'>" + money(p.pnl) + "</td></tr>").join("");
+  const sp = perf.by_sport || {};
+  const sportRows = ["NFL", "MLB", "NHL", "NBA"].map((s) => {
+    const d = sp[s] || {};
+    return "<tr><td><a href='#/sport/" + s + "'>" + s + "</a></td><td class='num'>" + (d.parlays || 0) + "</td><td class='num'>" + (d.won || 0) + "W/" + (d.lost || 0) + "L</td><td class='num'>" + pct(d.leg_hit) + "</td><td class='num " + cls(d.pnl) + "'>" + money(d.pnl) + "</td><td class='num'>" + pct(d.roi) + "</td></tr>";
+  }).join("");
+  const verified = [];
+  ["NFL", "MLB", "NHL", "NBA"].forEach((s) => {
+    ((games.by_sport || {})[s] || {}).recent_finals = ((games.by_sport || {})[s] || {}).recent_finals || [];
+    ((games.by_sport || {})[s] || {}).recent_finals.filter((t) => t.verified).slice(0, 2).forEach((t) => verified.push([s, t]));
+  });
+  const vRows = verified.map(([s, t]) => "<tr><td>" + s + "</td><td><b>" + esc(t.away_team) + " @ " + esc(t.home_team) + "</b> <span class='mut'>(" + esc(t.game_date) + ")</span></td><td class='num'>" + t.away_score + "–" + t.home_score + "</td><td><span class='mut'>" + esc(t.source_id) + "</span></td></tr>").join("");
+  return "<h1>Dashboard</h1><p class='sub'>Competition status: paper play across <b>4 sports</b> and <b>28 versioned strategies</b> — <b>" + up.length + " upcoming</b> tickets, <b>" + done.length + " completed</b>. Two sealed books: <b>backtest</b> (history, settled) and <b>forward</b> (live paper). " + esc(meta.disclaimer) + "</p>" +
     "<div class='grid c4'>" +
     "<div class='card'><div class='stat'>" + c.games.toLocaleString() + "</div><div class='mut'>games tracked</div></div>" +
     "<div class='card'><div class='stat'>" + c.prices.toLocaleString() + "</div><div class='mut'>price points</div></div>" +
@@ -102,37 +133,101 @@ async function pageDashboard() {
     "<div class='card'><h3>Backtest book — top 5 by P&amp;L</h3><table class='data'><thead><tr><th>Strategy</th><th>Sport</th><th class='num'>N</th><th class='num'>P&amp;L</th><th class='num'>ROI</th><th class='num'>Bank</th></tr></thead><tbody>" +
     bSorted.slice(0, 5).map(lbRow).join("") + "</tbody></table>" +
     "<h3>Bottom 3 (honest losers shown too)</h3><table class='data'><tbody>" + bSorted.slice(-3).reverse().map(lbRow).join("") + "</tbody></table></div></div>" +
-    "<div class='grid c2'><div class='card'><h3>Upcoming slates</h3>" + slateRows + "<p><a href='#/upcoming'>All upcoming tickets →</a></p></div>" +
+    "<div class='grid c2'><div class='card'><h3>Recent completed parlays</h3>" +
+    (recent ? "<table class='data'><thead><tr><th>Result</th><th>Strategy</th><th>Ticket</th><th class='num'>Payout</th><th class='num'>P&amp;L</th></tr></thead><tbody>" + recent + "</tbody></table>" : "<p class='mut'>None settled yet.</p>") +
+    "<p><a href='#/completed'>All completed →</a></p></div>" +
+    "<div class='card'><h3>Sport performance (settled legs &amp; tickets)</h3><table class='data'><thead><tr><th>Sport</th><th class='num'>Tickets</th><th class='num'>W/L</th><th class='num'>Leg hit%</th><th class='num'>P&amp;L</th><th class='num'>ROI</th></tr></thead><tbody>" + sportRows + "</tbody></table>" +
+    "<p><a href='#/performance'>Full performance →</a></p></div></div>" +
+    "<div class='grid c2'><div class='card'><h3>Upcoming slates</h3>" + (slateRows || "<p class='mut'>No upcoming tickets.</p>") + "<p><a href='#/upcoming'>All upcoming tickets →</a></p></div>" +
     "<div class='card'><h3>Data quality</h3><div class='kv'><span>Open issues</span><b class='" + (open.length ? "neg" : "pos") + "'>" + open.length + "</b></div>" +
     "<div class='kv'><span>Resolved with notes</span><b>" + (q.issues || []).filter((i) => i.status !== "open").length + "</b></div>" +
     "<div class='kv'><span>Independent verifications</span><b>" + (q.verifications || []).length + "</b></div>" +
-    "<p><a href='#/quality'>Quality board →</a></p></div></div>";
+    (open.length ? "<div class='callout'>Latest: " + esc(open[0].detail) + "</div>" : "") +
+    "<p><a href='#/quality'>Quality board →</a></p></div></div>" +
+    "<div class='card'><h3>Important verified games / events</h3><p class='mut'>Recently settled games with source-verified provenance.</p>" +
+    (vRows ? "<table class='data'><thead><tr><th>Sport</th><th>Game</th><th class='num'>Score</th><th>Source</th></tr></thead><tbody>" + vRows + "</tbody></table>" : "<p class='mut'>No verified finals in the current window.</p>") +
+    "</div>";
 }
 
 /* ---------------- Leaderboard ---------------- */
+function ticketStats(list) {
+  const by = {};
+  list.forEach((p) => {
+    const r = by[p.strategy_id] = by[p.strategy_id] || {
+      strategy_id: p.strategy_id, tickets: 0, won: 0, lost: 0, push: 0, pending: 0,
+      staked: 0, pnl: 0, legW: 0, legD: 0, last_activity: null, grades: {},
+    };
+    r.tickets++;
+    r.grades[p.pricing_grade] = (r.grades[p.pricing_grade] || 0) + 1;
+    if (p.status === "won" || p.status === "lost" || p.status === "push") {
+      r[p.status === "won" ? "won" : p.status === "lost" ? "lost" : "push"]++;
+      r.pnl += p.pnl || 0;
+      r.staked += p.stake || 0;
+      if (!r.last_activity || p.slate_date > r.last_activity) r.last_activity = p.slate_date;
+    } else r.pending++;
+    (p.legs || []).forEach((l) => {
+      if (l.result === "win" || l.result === "loss") { r.legW += l.result === "win" ? 1 : 0; r.legD++; }
+    });
+  });
+  return Object.values(by).map((r) => ({
+    strategy_id: r.strategy_id, username: uname(r.strategy_id), sport: null,
+    parlays: r.tickets, won: r.won, lost: r.lost, push: r.push, pending: r.pending,
+    staked: r.staked, pnl: Math.round(r.pnl * 100) / 100,
+    roi: r.staked ? r.pnl / r.staked : null,
+    parlay_hit_rate: (r.won + r.lost) ? r.won / (r.won + r.lost) : null,
+    leg_hit_rate: r.legD ? r.legW / r.legD : null,
+    last_activity: r.last_activity, grades: r.grades, filtered: true,
+  }));
+}
 async function pageLeaderboard() {
-  const [lbf, lbb] = await Promise.all([get("leaderboard_forward"), get("leaderboard_backtest")]);
+  const [lbf, lbb, done, up, strats] = await Promise.all([
+    get("leaderboard_forward"), get("leaderboard_backtest"), get("completed"),
+    get("upcoming"), get("strategies")]);
   await users();
-  const st = window.__lb || (window.__lb = { book: "forward", sport: "ALL" });
-  const rows = (st.book === "forward" ? lbf : lbb).filter((r) => st.sport === "ALL" || r.sport === st.sport)
-    .sort((a, b) => (b.bankroll - b.start) - (a.bankroll - a.start));
+  const st = window.__lb || (window.__lb = { book: "forward", sport: "ALL", from: "", to: "", strat: "", market: "", size: "" });
+  const stratNames = {}; strats.forEach((s) => stratNames[s.strategy_id] = s);
+  const filtering = !!(st.from || st.to || st.strat || st.market || st.size);
+  let rows, note = "";
+  if (filtering) {
+    const tickets = done.concat(up).filter((p) => p.test_mode === st.book);
+    const inRange = (p) => (!st.from || p.slate_date >= st.from) && (!st.to || p.slate_date <= st.to);
+    const list = tickets.filter((p) => inRange(p) &&
+      (!st.strat || p.strategy_id === st.strat) &&
+      (!st.market || (p.market_mix || "").indexOf(st.market) >= 0) &&
+      (!st.size || (st.size === "5+" ? p.n_legs >= 5 : p.n_legs === Number(st.size))));
+    rows = ticketStats(list).map((r) => ({ ...r, ...(stratNames[r.strategy_id] || {}), name: (stratNames[r.strategy_id] || {}).name, sport: (stratNames[r.strategy_id] || {}).sport, username: uname(r.strategy_id) }));
+    note = "<div class='callout blue'>Filters active: figures are recomputed over the matching tickets only (last 2,000 completed + all upcoming). Bankroll / MaxDD are whole-book quantities and stay on the unfiltered board.</div>";
+  } else {
+    rows = (st.book === "forward" ? lbf : lbb);
+    note = "<div class='callout blue'>Grades: VERIFIED = direct market quote · REFERENCE = aggregated line · MODEL = estimated price (payout approximate) · MIXED = blend · UNPRICED = $0 tracking only.</div>";
+  }
+  rows = rows.filter((r) => st.sport === "ALL" || r.sport === st.sport)
+    .sort((a, b) => (b.bankroll != null ? b.bankroll - (b.start || 0) : b.pnl || 0) - (a.bankroll != null ? a.bankroll - (a.start || 0) : a.pnl || 0));
   const body = rows.map((r) => {
     const grades = Object.keys(r.grades || {}).map((g) => gradeBadge(g) + "×" + r.grades[g]).join(" ");
-    return "<tr><td>" + stratLink(r.strategy_id) + "<br><b>" + esc(uname(r.strategy_id)) + "</b><br><span class='mut'>" + esc(r.name) + "</span></td>" +
-      "<td>" + esc(r.sport) + "<br><span class='mut'>" + esc(r.category) + "</span></td>" +
+    return "<tr><td>" + stratLink(r.strategy_id) + "<br><b>" + esc(r.username || uname(r.strategy_id)) + "</b><br><span class='mut'>" + esc(r.name || "") + "</span></td>" +
+      "<td>" + esc(r.sport || "—") + "<br><span class='mut'>" + esc(r.category || "") + "</span></td>" +
       "<td class='num'>" + r.parlays + "<br><span class='mut'>" + (r.won || 0) + "W/" + (r.lost || 0) + "L/" + (r.push || 0) + "P</span></td>" +
       "<td class='num'>" + pct(r.parlay_hit_rate) + "<br><span class='mut'>legs " + pct(r.leg_hit_rate) + "</span></td>" +
       "<td class='num'>" + money(r.staked) + "</td><td class='num " + cls(r.pnl) + "'>" + money(r.pnl) + "</td>" +
-      "<td class='num'>" + pct(r.roi) + "</td><td class='num'>" + money0(r.bankroll) + "</td>" +
-      "<td class='num'>" + pct(r.max_drawdown) + "</td><td>" + grades + "</td></tr>";
+      "<td class='num'>" + pct(r.roi) + "</td><td class='num'>" + (r.bankroll != null ? money0(r.bankroll) : "—") + "</td>" +
+      "<td class='num'>" + (r.max_drawdown != null ? pct(r.max_drawdown) : "—") + "</td>" +
+      "<td>" + esc(r.last_activity || "—") + "</td><td>" + grades + "</td></tr>";
   }).join("");
   const sports = ["ALL", "NFL", "MLB", "NHL", "NBA", "MULTI"];
-  return "<h1>Leaderboard</h1><p class='sub'>One row per strategy per book. Standard start: <b>$10,000</b>. Books never mix: switch tabs to compare paper-live vs history.</p>" +
+  const opt = (v, label, cur) => "<option value='" + esc(v) + "'" + (cur === v ? " selected" : "") + ">" + esc(label) + "</option>";
+  const stratOpts = ["", ...Object.keys(stratNames).sort()].map((s) => opt(s, s ? s + " (" + (stratNames[s].username) + ")" : "All strategies", st.strat)).join("");
+  return "<h1>Leaderboard</h1><p class='sub'>One row per strategy per book. Standard start: <b>$10,000</b>. Books never mix: switch tabs to compare paper-live vs history. Filters recompute the factual stats over matching tickets; the default board is the full book of record.</p>" +
     "<div class='tabs'><button class='" + (st.book === "forward" ? "on" : "") + "' data-book='forward'>Forward (paper-live)</button>" +
     "<button class='" + (st.book === "backtest" ? "on" : "") + "' data-book='backtest'>Backtest (history)</button></div>" +
     "<div class='tabs'>" + sports.map((s) => "<button class='" + (st.sport === s ? "on" : "") + "' data-sport='" + s + "'>" + s + "</button>").join("") + "</div>" +
-    "<div style='overflow-x:auto'><table class='data'><thead><tr><th>Strategy</th><th>Sport</th><th class='num'>Tickets</th><th class='num'>Hit%</th><th class='num'>Staked</th><th class='num'>P&amp;L</th><th class='num'>ROI</th><th class='num'>Bankroll</th><th class='num'>MaxDD</th><th>Pricing</th></tr></thead><tbody>" + body + "</tbody></table></div>" +
-    "<div class='callout blue'>Grades: VERIFIED = direct market quote · REFERENCE = aggregated line · MODEL = estimated price (payout approximate) · MIXED = blend · UNPRICED = $0 tracking only.</div>";
+    "<div class='filters'>From <input type='date' id='lb-from' value='" + esc(st.from) + "'> To <input type='date' id='lb-to' value='" + esc(st.to) + "'>" +
+    "<select id='lb-strat'>" + stratOpts + "</select>" +
+    "<select id='lb-market'>" + ["", "ML", "SPREAD", "TOTAL"].map((m) => opt(m, m ? "Contains " + m : "Any market", st.market)).join("") + "</select>" +
+    "<select id='lb-size'>" + ["", "2", "3", "4", "5+"].map((s) => opt(s, s ? s + " legs" : "Any parlay size", st.size)).join("") + "</select>" +
+    "<button id='lb-clear'>Clear filters</button></div>" +
+    note +
+    "<div style='overflow-x:auto'><table class='data'><thead><tr><th>Strategy</th><th>Sport</th><th class='num'>Tickets</th><th class='num'>Hit%</th><th class='num'>Staked</th><th class='num'>P&amp;L</th><th class='num'>ROI</th><th class='num'>Bankroll</th><th class='num'>MaxDD</th><th>Last activity</th><th>Pricing</th></tr></thead><tbody>" + body + "</tbody></table></div>";
 }
 
 /* ---------------- Upcoming / Completed ---------------- */
@@ -141,13 +236,19 @@ function ticketFilters(prefix, strategies, sports) {
     strategies.map((s) => "<option value='" + s + "'>" + s + " (" + esc(uname(s)) + ")</option>").join("") + "</select>" +
     "<select id='" + prefix + "-sport'><option value=''>All sports</option>" +
     sports.map((s) => "<option>" + s + "</option>").join("") + "</select>" +
-    "<select id='" + prefix + "-grade'><option value=''>All grades</option><option>VERIFIED</option><option>REFERENCE</option><option>MODEL</option><option>MIXED</option><option>UNPRICED</option></select></div>";
+    "<select id='" + prefix + "-grade'><option value=''>All grades</option><option>VERIFIED</option><option>REFERENCE</option><option>MODEL</option><option>MIXED</option><option>UNPRICED</option></select>" +
+    "<select id='" + prefix + "-market'><option value=''>Any market</option><option value='ML'>Contains ML</option><option value='SPREAD'>Contains SPREAD</option><option value='TOTAL'>Contains TOTAL</option></select>" +
+    "<select id='" + prefix + "-size'><option value=''>Any parlay size</option><option value='2'>2 legs</option><option value='3'>3 legs</option><option value='4'>4 legs</option><option value='5+'>5+ legs</option></select></div>";
 }
 function applyTicketFilters(list, prefix) {
   const fs = ($("#" + prefix + "-strat") || {}).value || "";
   const fsport = ($("#" + prefix + "-sport") || {}).value || "";
   const fg = ($("#" + prefix + "-grade") || {}).value || "";
-  return list.filter((p) => (!fs || p.strategy_id === fs) && (!fsport || (p.sports || []).indexOf(fsport) >= 0) && (!fg || p.pricing_grade === fg));
+  const fm = ($("#" + prefix + "-market") || {}).value || "";
+  const fsz = ($("#" + prefix + "-size") || {}).value || "";
+  return list.filter((p) => (!fs || p.strategy_id === fs) && (!fsport || (p.sports || []).indexOf(fsport) >= 0) && (!fg || p.pricing_grade === fg) &&
+    (!fm || (p.market_mix || "").indexOf(fm) >= 0) &&
+    (!fsz || (fsz === "5+" ? p.n_legs >= 5 : p.n_legs === Number(fsz))));
 }
 async function pageUpcoming() {
   const up = await get("upcoming");
@@ -195,7 +296,7 @@ async function pageStrategies() {
     const b = r.books.backtest, f = r.books.forward;
     return "<div class='card'><h3><a href='#/strategy/" + esc(r.strategy_id) + "'>" + esc(r.name) + "</a></h3>" +
       "<div class='sub'><code>" + esc(r.strategy_id) + "</code> · " + esc(r.username) + " · " + esc(r.sport) + " · " + esc(r.category) + " · " + esc(r.markets) + "</div>" +
-      "<p>" + esc(r.hypothesis) + "</p>" +
+      "<p><b>Hypothesis:</b> " + esc(r.hypothesis) + "</p>" +
       "<div class='kv'><span>Backtest</span><b class='" + cls(b.pnl) + "'>" + money(b.pnl) + " <span class='mut'>(" + b.parlays + " tickets)</span></b></div>" +
       "<div class='kv'><span>Forward</span><b class='" + cls(f.pnl) + "'>" + money(f.pnl) + " <span class='mut'>(" + f.parlays + " tickets)</span></b></div>" +
       "</div>";
@@ -203,7 +304,7 @@ async function pageStrategies() {
   return "<h1>Strategies</h1><p class='sub'>28 versioned hypotheses. Every rule, market and limitation is documented; every ticket links back to its strategy page.</p><div class='grid c2'>" + cards + "</div>";
 }
 async function pageStrategy(id) {
-  const s = await get("strategies");
+  const [s, hist] = await Promise.all([get("strategies"), get("history_" + id).catch(() => null)]);
   const r = s.find((x) => x.strategy_id === id);
   if (!r) return "<h1>Not found</h1><p>No strategy " + esc(id) + ".</p>";
   const bookTable = (b, label) => {
@@ -214,6 +315,7 @@ async function pageStrategy(id) {
       "<div class='card'><div class='stat'>" + money0(b.bankroll) + "</div><div class='mut'>bankroll (start " + money0(b.start) + ") · maxDD " + pct(b.max_drawdown) + "</div></div>" +
       "<div class='card'><div class='stat'>" + pct(b.parlay_hit_rate) + "</div><div class='mut'>ticket hit% · legs " + pct(b.leg_hit_rate) + "</div></div></div>" +
       "<div class='kv'><span>Avg legs</span><b>" + (b.avg_legs != null ? b.avg_legs : "—") + "</b></div>" +
+      "<div class='kv'><span>Total payout</span><b>" + money(b.total_payout) + "</b></div>" +
       "<div class='kv'><span>Streak</span><b>" + esc(b.streak || "—") + "</b></div>" +
       "<div class='kv'><span>Verified-price share</span><b>" + pct(b.verified_share) + "</b></div>" +
       "<div class='kv'><span>Last activity</span><b>" + esc(b.last_activity || "—") + "</b></div>" +
@@ -221,6 +323,19 @@ async function pageStrategy(id) {
       "<h3>" + label + " legs by market</h3>" + splitTable((r.splits[label.toLowerCase()] || {}).by_market) +
       "<h3>" + label + " legs by sport</h3>" + splitTable((r.splits[label.toLowerCase()] || {}).by_sport);
   };
+  let histHtml = "";
+  if (hist && hist.tickets && hist.tickets.length) {
+    const fwd = hist.tickets.filter((p) => p.status === "upcoming" || p.status === "live");
+    const fin = hist.tickets.filter((p) => !(p.status === "upcoming" || p.status === "live"))
+      .sort((a, b) => (a.slate_date < b.slate_date ? 1 : -1));
+    window.__hist = { fwd: fwd, fin: fin, pg: 0 };
+    histHtml = "<h2>Complete ticket history (" + hist.tickets.length + ")</h2>" +
+      "<p class='sub'>Every parlay this strategy has ever filed — upcoming first, then the full completed record (paginated 10 at a time).</p>" +
+      (fwd.length ? "<h3>Upcoming / live (" + fwd.length + ")</h3>" + fwd.map((p) => parlayCard(p)).join("") : "<p class='mut'>No open tickets.</p>") +
+      "<h3>Completed (" + fin.length + ")</h3><div class='pager'><button id='h-pg-prev'>← Prev</button><span id='h-pg-info'></span><button id='h-pg-next'>Next →</button></div><div id='h-list'></div>";
+  } else {
+    histHtml = "<h2>Complete ticket history</h2><p class='mut'>History file unavailable — see the books above for aggregates.</p>";
+  }
   return "<h1>" + esc(r.name) + "</h1><p class='sub'><code>" + esc(r.strategy_id) + "</code> " + esc(r.version) + " · managed by <b>" + esc(r.username) + "</b> · " + esc(r.sport) + " · " + esc(r.category) + " · status " + esc(r.status) + "</p>" +
     "<div class='card'><h3>Hypothesis</h3><p>" + esc(r.hypothesis) + "</p>" +
     "<div class='kv'><span>Markets</span><b>" + esc(r.markets) + "</b></div>" +
@@ -232,7 +347,17 @@ async function pageStrategy(id) {
     "<div class='kv'><span>Max legs</span><b>" + r.max_legs + "</b></div>" +
     (r.lineage ? "<div class='kv'><span>Lineage</span><b>" + esc(r.lineage) + "</b></div>" : "") +
     "<div class='callout'><b>Limitations:</b> " + esc(r.limitations) + "</div></div>" +
-    bookTable(r.books.backtest, "Backtest") + bookTable(r.books.forward, "Forward");
+    bookTable(r.books.backtest, "Backtest") + bookTable(r.books.forward, "Forward") + histHtml;
+}
+function renderHistPage() {
+  const h = window.__hist;
+  if (!h || !$("#h-list")) return;
+  const per = 10, pages = Math.max(1, Math.ceil(h.fin.length / per));
+  h.pg = Math.min(Math.max(0, h.pg || 0), pages - 1);
+  $("#h-list").innerHTML = h.fin.slice(h.pg * per, h.pg * per + per).map((p) => parlayCard(p)).join("") || "<p class='mut'>No completed tickets.</p>";
+  $("#h-pg-info").textContent = "Page " + (h.pg + 1) + " of " + pages;
+  $("#h-pg-prev").disabled = h.pg === 0;
+  $("#h-pg-next").disabled = h.pg >= pages - 1;
 }
 function splitTable(sp) {
   if (!sp || !Object.keys(sp).length) return "<p class='mut'>No settled legs yet.</p>";
@@ -269,7 +394,17 @@ async function pagePerformance() {
   }).join("");
   const daily = (perf.daily_pnl || []).slice(-30).reverse().map((d) =>
     "<tr><td>" + esc(d.slate_date) + "</td><td>" + esc(d.test_mode) + "</td><td class='num'>" + d.n + "</td><td class='num " + cls(d.pnl) + "'>" + money(d.pnl) + "</td></tr>").join("");
-  return "<h1>Performance</h1><p class='sub'>Combined-book equity per strategy (backtest + forward stitched in time order) and daily P&amp;L. Drawdowns and losers are shown, not hidden.</p>" +
+  const splitRows = (sp, labelFn) => Object.keys(sp || {}).sort().map((k) => {
+    const d = sp[k] || {};
+    return "<tr><td>" + labelFn(k) + "</td><td class='num'>" + (d.parlays || 0) + "</td><td class='num'>" + (d.won || 0) + "W/" + (d.lost || 0) + "L/" + (d.push || 0) + "P</td>" +
+      "<td class='num'>" + (d.leg_win || 0) + "/" + ((d.leg_win || 0) + (d.leg_loss || 0)) + "</td><td class='num'>" + pct(d.leg_hit) + "</td>" +
+      "<td class='num " + cls(d.pnl) + "'>" + money(d.pnl) + "</td><td class='num'>" + pct(d.roi) + "</td></tr>";
+  }).join("");
+  const head = "<thead><tr><th>Slice</th><th class='num'>Tickets</th><th class='num'>W/L/P</th><th class='num'>Legs won</th><th class='num'>Leg hit%</th><th class='num'>P&amp;L</th><th class='num'>ROI</th></tr></thead>";
+  return "<h1>Performance</h1><p class='sub'>Per-strategy equity curves (one spark per sealed book) and competition-wide splits by sport, market and strategy. Drawdowns and losers are shown, not hidden.</p>" +
+    "<h2>By sport</h2><table class='data'>" + head + "<tbody>" + splitRows(perf.by_sport, (k) => esc(k)) + "</tbody></table>" +
+    "<h2>By market / market mix</h2><table class='data'>" + head + "<tbody>" + splitRows(perf.by_market, (k) => esc(k)) + "</tbody></table>" +
+    "<h2>By strategy</h2><table class='data'>" + head + "<tbody>" + splitRows(perf.by_strategy, (k) => stratLink(k)) + "</tbody></table>" +
     "<h2>Equity curves</h2><div class='grid c2'>" + cards + "</div>" +
     "<h2>Daily P&amp;L (last 30 days with action)</h2><table class='data'><thead><tr><th>Date</th><th>Book</th><th class='num'>Tickets</th><th class='num'>P&amp;L</th></tr></thead><tbody>" + daily + "</tbody></table>";
 }
@@ -342,9 +477,15 @@ function afterRender(h) {
   if (h === "leaderboard") {
     document.querySelectorAll("[data-book]").forEach((b) => b.addEventListener("click", () => { window.__lb.book = b.dataset.book; render(); }));
     document.querySelectorAll("[data-sport]").forEach((b) => b.addEventListener("click", () => { window.__lb.sport = b.dataset.sport; render(); }));
+    ["from", "to", "strat", "market", "size"].forEach((k) => {
+      const el = $("#lb-" + k);
+      if (el) el.addEventListener("change", () => { window.__lb[k] = el.value; render(); });
+    });
+    const clr = $("#lb-clear");
+    if (clr) clr.addEventListener("click", () => { Object.assign(window.__lb, { from: "", to: "", strat: "", market: "", size: "" }); render(); });
   }
   if (h === "upcoming") {
-    ["up-strat", "up-sport", "up-grade"].forEach((id) => $("#" + id).addEventListener("change", async () => {
+    ["up-strat", "up-sport", "up-grade", "up-market", "up-size"].forEach((id) => $("#" + id).addEventListener("change", async () => {
       const up = await get("upcoming");
       const list = applyTicketFilters(up, "up");
       const bySlate = {};
@@ -354,9 +495,15 @@ function afterRender(h) {
   }
   if (h === "completed") {
     renderDonePage();
-    ["done-strat", "done-sport", "done-grade", "done-result"].forEach((id) => $("#" + id).addEventListener("change", () => { window.__pg = 0; renderDonePage(); }));
+    ["done-strat", "done-sport", "done-grade", "done-result", "done-market", "done-size"].forEach((id) => $("#" + id).addEventListener("change", () => { window.__pg = 0; renderDonePage(); }));
     $("#pg-prev").addEventListener("click", () => { window.__pg--; renderDonePage(); });
     $("#pg-next").addEventListener("click", () => { window.__pg++; renderDonePage(); });
+  }
+  if (h.indexOf("strategy/") === 0) {
+    renderHistPage();
+    const prev = $("#h-pg-prev"), next = $("#h-pg-next");
+    if (prev) prev.addEventListener("click", () => { window.__hist.pg--; renderHistPage(); });
+    if (next) next.addEventListener("click", () => { window.__hist.pg++; renderHistPage(); });
   }
 }
 async function boot() {
