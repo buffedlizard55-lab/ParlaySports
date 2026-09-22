@@ -90,14 +90,24 @@
   "detail": "30"
  },
  {
-  "check": "multi-never-backtested",
+  "check": "multi-backtest-tickets-exist",
   "status": "PASS",
-  "detail": "0 (must be 0)"
+  "detail": "913"
+ },
+ {
+  "check": "multi-backtest-two-sports",
+  "status": "PASS",
+  "detail": "0 tickets spanning <2 sports"
+ },
+ {
+  "check": "multi-backtest-window-dates",
+  "status": "PASS",
+  "detail": "0 slate dates outside a >=2-sport window overlap"
  },
  {
   "check": "settled-parlays-exist",
   "status": "PASS",
-  "detail": "6042"
+  "detail": "6955"
  },
  {
   "check": "upcoming-parlays-exist",
@@ -132,32 +142,32 @@
  {
   "check": "export-meta.json",
   "status": "PASS",
-  "detail": "590B"
+  "detail": "618B"
  },
  {
   "check": "export-leaderboard_forward.json",
   "status": "PASS",
-  "detail": "16879B"
+  "detail": "16878B"
  },
  {
   "check": "export-leaderboard_backtest.json",
   "status": "PASS",
-  "detail": "18235B"
+  "detail": "18693B"
  },
  {
   "check": "export-upcoming.json",
   "status": "PASS",
-  "detail": "213238B"
+  "detail": "208121B"
  },
  {
   "check": "export-completed.json",
   "status": "PASS",
-  "detail": "6053468B"
+  "detail": "6772514B"
  },
  {
   "check": "export-strategies.json",
   "status": "PASS",
-  "detail": "550886B"
+  "detail": "624655B"
  },
  {
   "check": "export-games.json",
@@ -167,12 +177,12 @@
  {
   "check": "export-performance.json",
   "status": "PASS",
-  "detail": "610142B"
+  "detail": "679368B"
  },
  {
   "check": "export-research.json",
   "status": "PASS",
-  "detail": "9978B"
+  "detail": "12871B"
  },
  {
   "check": "export-sources.json",
@@ -182,7 +192,7 @@
  {
   "check": "export-quality.json",
   "status": "PASS",
-  "detail": "7005B"
+  "detail": "7123B"
  },
  {
   "check": "site-index.html",
@@ -197,7 +207,7 @@
  {
   "check": "site-app.js",
   "status": "PASS",
-  "detail": "42206B"
+  "detail": "42288B"
  },
  {
   "check": "hard-quality-gates",
@@ -242,7 +252,7 @@
  {
   "check": "quality-registry-complete",
   "status": "PASS",
-  "detail": "13 checks live"
+  "detail": "14 checks live"
  },
  {
   "check": "users-persisted",

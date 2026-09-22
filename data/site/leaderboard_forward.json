@@ -658,7 +658,7 @@
   "won": 0
  },
  {
-  "avg_legs": 4.0,
+  "avg_legs": 2.0,
   "bankroll": 9970.0,
   "category": "multi-sport",
   "grades": {
@@ -667,7 +667,7 @@
   "last_activity": "2026-09-27",
   "leg_hit_rate": null,
   "legs": {
-   "pending": 12
+   "pending": 6
   },
   "lost": 0,
   "max_drawdown": 0.003,

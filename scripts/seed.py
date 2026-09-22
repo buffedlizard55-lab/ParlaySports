@@ -142,8 +142,8 @@ RESEARCH_SEED = [
      "hypothesis": "Single-day cross-sport backtest is feasible in v1 scope.",
      "method": "Scoped the join across four calendars + four price histories with one decision clock.",
      "data_window": "n/a",
-     "result": "DEFERRED honestly: MULTI strategies are forward-only; component signal hit-rates shown as reference.",
-     "status": "hypothesis", "ref_strategy": "S-MULTI-01"},
+     "result": "DEFERRED honestly: MULTI strategies are forward-only; component signal hit-rates shown as reference. Superseded by R-017: the overlap engine shipped in v1.1.",
+     "status": "superseded", "ref_strategy": "S-MULTI-01"},
     {"research_id": "R-010", "sport": "NFL",
      "title": "Weather fields are sparse; WindChill fires only on observed data",
      "hypothesis": "Wind/temp coverage is complete for outdoor games.",
@@ -193,6 +193,20 @@ RESEARCH_SEED = [
      "data_window": "n/a",
      "result": "PARTIAL: nflverse QB names and MLB probable pitchers exist in seed inputs and are recorded on games (extra_json); a full point-in-time injury feed is NOT integrated, so no strategy conditions on injuries yet. MasterSite's NBAInjuryReport is catalogued as a candidate signal for a future version. Missing availability is treated like missing weather: no signal, never an assumption.",
      "status": "hypothesis", "ref_strategy": "S-NBA-02"},
+    {"research_id": "R-017", "sport": "MULTI",
+     "title": "Cross-sport backtest overlap engine (v1.1): window intersections are real and tradeable",
+     "hypothesis": "A single-decision-clock cross-sport backtest is feasible over the existing verified per-sport windows without any new data source.",
+     "method": "Computed pairwise intersections of BACKTEST_WINDOWS over final slates; pooled the MULTI source generators per slate at T12:00Z with close-only prices; reused the forward admission gate and builder unchanged; lottery weekly cap enforced per ISO week of the slate. The result line is regenerated from the actual build output on every seed run (update_r017_result) so the log can never drift from the record.",
+     "data_window": "window intersections: NFL∩NBA Oct-Dec 2014-2022, NFL∩MLB Sep 2023-Sep 2025, NFL∩NHL Oct 2025-Jan 2026",
+     "result": "computed at build time (update_r017_result)",
+     "status": "tested", "ref_strategy": "S-MULTI-01"},
+    {"research_id": "R-018", "sport": "MULTI",
+     "title": "PASS-3 review: engine violated two documented MULTI rules; both fixed in v1.1",
+     "hypothesis": "The parlay builder honors every versioned catalog construction rule.",
+     "method": "Line-by-line review of parlay.build_parlays vs catalog text + live ticket inspection on the pinned seed (2026-09-22).",
+     "data_window": "seed exports + pre-fix dry run on the pinned seed",
+     "result": "REJECTED the hypothesis, then fixed: (1) S-MULTI-01's '1 leg per sport max' was unenforced -- all 3 pre-fix forward tickets and 214 of 227 dry-run backtest tickets carried up to 3 legs of one sport; the builder now takes a machine-readable max_per_sport cap from the catalog. (2) The lottery 'max 1 ticket per week' relied on a one-off note stamp applied after seeding; run_forward now enforces the ISO-week cap and stamps every ticket at creation, so nightly runs cannot double-file a week. Catalog rule text unchanged (still v1); the engine was brought into compliance.",
+     "status": "tested", "ref_strategy": "S-MULTI-01"},
 ]
 
 
@@ -242,6 +256,46 @@ def install_verifications(con: sqlite3.Connection) -> int:
         add_verification(con, **v)
         n += 1
     return n
+
+
+def update_r017_result(con: sqlite3.Connection) -> str:
+    """Regenerate R-017's result line from the ACTUAL database record.
+
+    The research log must never carry hand-typed numbers that can drift from
+    the record: overlap counts and per-strategy ticket totals are measured
+    from the database itself, so the line stays true whether it is refreshed
+    at seed time or by a nightly convergence run.
+    """
+    from itertools import combinations
+
+    from parlaysports.engine import BACKTEST_WINDOWS, slate_dates
+    sport_dates = {sp: set(slate_dates(con, sp, w["seasons"], w["game_types"], "final"))
+                   for sp, w in BACKTEST_WINDOWS.items()}
+    pairs = []
+    for a, b in combinations(sorted(sport_dates), 2):
+        inter = sport_dates[a] & sport_dates[b]
+        if inter:
+            pairs.append(f"{a}&{b}: {len(inter)} slates ({min(inter)}..{max(inter)})")
+    all_dates = sorted(set().union(*sport_dates.values())) if sport_dates else []
+    n_multi = sum(1 for d in all_dates
+                  if sum(d in s for s in sport_dates.values()) >= 2)
+    tickets = ", ".join(
+        f"{r['strategy_id']}: {r['n']} tickets / {r['legs']} legs over {r['slates']} slates"
+        for r in con.execute(
+            """SELECT strategy_id, COUNT(*) AS n, SUM(n_legs) AS legs,
+                      COUNT(DISTINCT slate_date) AS slates
+               FROM parlays WHERE test_mode='backtest' AND sport_scope='MULTI'
+               GROUP BY strategy_id ORDER BY strategy_id""")) or "none"
+    result = (
+        f"CONFIRMED on the pinned seed: {n_multi} candidate slates where >=2 "
+        f"per-sport backtest windows overlap ({'; '.join(pairs)}). Tickets on "
+        f"record -- {tickets}. One decision clock per slate (T12:00Z), "
+        f"closing prices only, the forward admission gate reused unchanged, and "
+        f"the lottery weekly cap enforced per ISO week. Leg independence is "
+        f"still assumed (no correlation model); overlap slates are computed "
+        f"from verified finals only, never padded.")
+    con.execute("UPDATE research SET result=? WHERE research_id='R-017'", (result,))
+    return result
 
 
 def main() -> dict:
@@ -298,7 +352,8 @@ def main() -> dict:
     store.set_meta(con, "seed_manifest_sha256", man["manifest_sha256"])
     con.commit()
 
-    # Backtests (single-sport only; multi is forward-only by design).
+    # Backtests: single-sport runners first, then the cross-sport overlap
+    # engine for the MULTI strategies (R-017) on window-intersection slates.
     out["backtests"] = {}
     for sid in CATALOG_BY_ID:
         if sid in MULTI_SOURCES:
@@ -306,6 +361,14 @@ def main() -> dict:
         r = engine.run_backtest(con, sid)
         out["backtests"][sid] = r
         print(f"backtest {sid}: {r['parlays']} parlays / {r['legs']} legs", flush=True)
+    out["backtests_multi"] = engine.run_backtest_multi_all(
+        con, [s for s in CATALOG_BY_ID if s in MULTI_SOURCES])
+    for sid, r in sorted(out["backtests_multi"].items()):
+        print(f"backtest-multi {sid}: {r['parlays']} parlays / {r['legs']} legs "
+              f"over {r['slates']} overlap slates", flush=True)
+    out["r017"] = update_r017_result(con)
+    print(f"R-017 result: {out['r017'][:160]}...", flush=True)
+    con.commit()
     out["settle_backtest"] = engine.settle_all(con, test_mode="backtest")
     print(f"settle backtest: {out['settle_backtest']}", flush=True)
 
@@ -325,11 +388,11 @@ def main() -> dict:
         r = engine.run_forward(con, sid, fwd_slates, decision_utc=RETRIEVED_SEED)
         out["forward"][sid] = r
         print(f"forward {sid}: {r['parlays']} parlays", flush=True)
-    # One lottery ticket at seed time (labeled with ISO week).
+    # Lottery tickets at seed time: run_forward itself enforces the documented
+    # max-1-per-ISO-week cap and stamps each ticket's note at creation (R-018),
+    # so no post-hoc labeling is needed.
     lotto = engine.run_forward(con, "S-MULTI-04", fwd_slates[:7],
                                decision_utc=RETRIEVED_SEED)
-    con.execute("UPDATE parlays SET note = note || ' 2026-W39' WHERE strategy_id='S-MULTI-04'"
-                " AND test_mode='forward'")
     con.commit()
     out["forward"]["S-MULTI-04"] = lotto
     print(f"forward S-MULTI-04: {lotto['parlays']} parlays", flush=True)

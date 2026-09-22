@@ -53,6 +53,7 @@ def run_checks(con: sqlite3.Connection) -> dict[str, Any]:
     check("backtest-leakage", lambda: _leakage(con))
     check("odds-sanity", lambda: _odds_sanity(con))
     check("missing-historical-periods", lambda: _missing_periods(con))
+    check("multi-backtest-integrity", lambda: _multi_backtest_integrity(con))
     con.commit()
     return {"checks": results,
             "total_problems": sum(r["problems"] for r in results)}
@@ -310,3 +311,32 @@ def _odds_sanity(con) -> list[str]:
             if len(out) >= 20:
                 break
     return out
+
+
+def _multi_backtest_integrity(con) -> list[str]:
+    """MULTI backtest tickets (overlap engine, R-017) must span >=2 distinct
+    sports AND sit on slates where >=2 per-sport backtest windows hold finals.
+    Anything else means the engine leaked a single-sport or out-of-window date
+    into a cross-sport book."""
+    from .engine import BACKTEST_WINDOWS, slate_dates
+    out: list[str] = []
+    rows = con.execute(
+        """SELECT p.parlay_id, p.slate_date,
+                  (SELECT COUNT(DISTINCT l.sport) FROM legs l
+                    WHERE l.parlay_id=p.parlay_id) AS n_sports
+           FROM parlays p
+           WHERE p.test_mode='backtest' AND p.sport_scope='MULTI'""").fetchall()
+    if not rows:
+        return out
+    sport_dates: dict[str, set] = {}
+    for sp, w in BACKTEST_WINDOWS.items():
+        sport_dates[sp] = set(slate_dates(con, sp, w["seasons"], w["game_types"], "final"))
+    for r in rows:
+        if (r["n_sports"] or 0) < 2:
+            out.append(f"{r['parlay_id']}: MULTI backtest ticket spans "
+                       f"{r['n_sports']} sport(s); >=2 required")
+        n_windows = sum(1 for sp in sport_dates if r["slate_date"] in sport_dates[sp])
+        if n_windows < 2:
+            out.append(f"{r['parlay_id']}: slate {r['slate_date']} is not a "
+                       f">=2-sport backtest-window overlap ({n_windows} in window)")
+    return out[:20]

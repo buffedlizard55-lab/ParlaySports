@@ -6,6 +6,7 @@ construction guards, pricing grades, settlement immutability.
 """
 from __future__ import annotations
 
+import json
 import sqlite3
 import tempfile
 import unittest
@@ -453,6 +454,237 @@ class TestPass2Fixes(unittest.TestCase):
         self.assertEqual(row["hypothesis"], "TAMPERED")  # preserved + issue filed
         self.assertTrue(any("refusing to overwrite" in i["detail"] for i in
                             c.execute("SELECT detail FROM issues")))
+
+
+class TestMultiBacktest(unittest.TestCase):
+    """Cross-sport overlap engine (R-017): one decision clock, close-only
+    prices, window-overlap slates only, lottery weekly cap."""
+
+    def setUp(self):
+        self.tmp = tempfile.TemporaryDirectory()
+        self.con = store.connect(Path(self.tmp.name) / "t.db")
+        c = self.con
+        # Point-in-time ratings pinned BEFORE every test slate: strong home
+        # teams in both sports so S-NFL-01/S-NHL-01 fire on ML closes.
+        for sport, season, away, home in (("NFL", "2025", "NA", "NH"),
+                                          ("NHL", "20252026", "LA", "LH")):
+            for team, elo in ((away, 1300.0), (home, 1700.0)):
+                c.execute(
+                    """INSERT INTO ratings(sport, team, season, game_date, game_key,
+                       elo_before, elo_after, games_used, model_version)
+                       VALUES (?, ?, ?, '2025-10-20', ?, ?, ?, 50, 'elo-v1')""",
+                    (sport, team, season, f"{sport}:prior", elo, elo))
+        # One verified overlap slate: NFL + NHL finals on 2025-11-05.
+        self._dup_slate("2025-11-05", "NFL:n1", "NHL:h1")
+        c.commit()
+
+    def tearDown(self):
+        from parlaysports import engine
+        from parlaysports.strategies import clear_cover_cache
+        engine.clear_multi_signal_cache()
+        clear_cover_cache()
+        self.con.close()
+        self.tmp.cleanup()
+
+    def _game(self, key, sport, season, date, away, home, status="final",
+              a=17, h=24, start=None):
+        final = status == "final"
+        self.con.execute(
+            """INSERT INTO games(game_key, sport, league_game_id, season, game_type,
+               game_date, start_utc, week_or_slate, away_team, home_team, neutral,
+               venue, status, away_score, home_score, overtime, source_id,
+               source_url, retrieved_utc, verified, verify_note, extra_json)
+               VALUES (?, ?, ?, ?, 'REG', ?, ?, NULL, ?, ?, 0, NULL, ?, ?, ?, NULL,
+               't', 'u', '2025-10-01T00:00:00Z', 1, '', NULL)""",
+            (key, sport, key, season, date, start or f"{date}T23:00:00Z",
+             away, home, status, a if final else None, h if final else None))
+
+    def _ml(self, key, home_odds=-150.0, away_odds=130.0, close=1):
+        for sel, o in (("home", home_odds), ("away", away_odds)):
+            self.con.execute(
+                """INSERT INTO prices(game_key, market, selection, line, odds_american,
+                   odds_type, source_id, source_url, observed_utc, close_flag, note)
+                   VALUES (?, 'ML', ?, NULL, ?, 'market_reference', 't', 'u',
+                   '2025-10-01T00:00:00Z', ?, '')""", (key, sel, o, close))
+
+    def _dup_slate(self, date, nfl_key, nhl_key, close=1, status="final",
+                   nfl_odds=(-160.0, 140.0), nhl_odds=(-150.0, 130.0)):
+        self._game(nfl_key, "NFL", "2025", date, "NA", "NH", status=status)
+        self._game(nhl_key, "NHL", "20252026", date, "LA", "LH", status=status)
+        self._ml(nfl_key, nfl_odds[0], nfl_odds[1], close)
+        self._ml(nhl_key, nhl_odds[0], nhl_odds[1], close)
+        self.con.commit()
+
+    def test_cross_sport_ticket_builds_and_settles(self):
+        from parlaysports import engine
+        r = engine.run_backtest_multi(self.con, "S-MULTI-01")
+        self.assertEqual(r["slates"], 1)
+        self.assertEqual(r["parlays"], 1)
+        self.assertEqual(r["legs"], 2)
+        p = self.con.execute(
+            "SELECT * FROM parlays WHERE parlay_id='BA-S-MULTI-01-20251105-01'").fetchone()
+        self.assertIsNotNone(p)
+        self.assertEqual(sorted(json.loads(p["sports_json"])), ["NFL", "NHL"])
+        self.assertEqual(p["status"], "won")        # both home teams won 24-17
+        self.assertEqual(p["test_mode"], "backtest")
+        self.assertEqual(p["pricing_grade"], "REFERENCE")
+        # ledger: open + stake + settle, chain clean, bankroll exact
+        self.assertEqual(store.verify_ledger_chain(self.con), [])
+        bal = self.con.execute(
+            "SELECT current_amount FROM bankroll WHERE strategy_id='S-MULTI-01' "
+            "AND book='backtest'").fetchone()
+        expected = 10000.0 - 10.0 + 10.0 * (1 + 100 / 160) * (1 + 100 / 150)
+        self.assertAlmostEqual(bal["current_amount"], round(expected, 2), places=2)
+
+    def test_single_sport_slate_never_backtested(self):
+        from parlaysports import engine
+        # 2025-11-12 holds an NFL final only: not a >=2-sport overlap date.
+        self._game("NFL:only", "NFL", "2025", "2025-11-12", "NA", "NH")
+        self._ml("NFL:only", -160.0, 140.0)
+        self.con.commit()
+        r = engine.run_backtest_multi(self.con, "S-MULTI-01")
+        self.assertEqual(r["slates"], 1)   # only 2025-11-05 is a candidate
+        self.assertEqual(r["parlays"], 1)
+        n = self.con.execute("SELECT COUNT(*) AS n FROM parlays WHERE slate_date='2025-11-12'"
+                             ).fetchone()["n"]
+        self.assertEqual(n, 0)
+
+    def test_overlap_slate_uses_close_prices_only(self):
+        from parlaysports import engine
+        # 2025-11-08: NHL legs only carry a NON-close snapshot -> backtest
+        # sees one sport only and must not build a ticket for that slate.
+        self._dup_slate("2025-11-08", "NFL:n2", "NHL:h2", close=0)
+        r = engine.run_backtest_multi(self.con, "S-MULTI-01")
+        self.assertEqual(r["slates"], 2)
+        self.assertEqual(r["parlays"], 1)  # only the 11-05 close-priced slate
+        n = self.con.execute("SELECT COUNT(*) AS n FROM parlays WHERE slate_date='2025-11-08'"
+                             ).fetchone()["n"]
+        self.assertEqual(n, 0)
+
+    def test_lotto_backtest_weekly_cap(self):
+        from parlaysports import engine
+        # W45: 2025-11-05 (setUp) + 2025-11-08; W46: 2025-11-12.
+        self._dup_slate("2025-11-08", "NFL:n2", "NHL:h2")
+        self._dup_slate("2025-11-12", "NFL:n3", "NHL:h3")
+        r = engine.run_backtest_multi(self.con, "S-MULTI-04")
+        self.assertEqual(r["parlays"], 2)          # one per ISO week
+        self.assertEqual(r["skipped_week"], 1)     # 11-08 shares W45 with 11-05
+        rows = self.con.execute(
+            "SELECT parlay_id, slate_date, stake, note FROM parlays "
+            "WHERE strategy_id='S-MULTI-04' ORDER BY slate_date").fetchall()
+        self.assertEqual([r["slate_date"] for r in rows], ["2025-11-05", "2025-11-12"])
+        self.assertIn("2025-W45", rows[0]["note"])
+        self.assertIn("2025-W46", rows[1]["note"])
+        self.assertTrue(all(r["stake"] == 25.0 for r in rows))
+        # re-running is idempotent and the week tags block re-filing
+        r2 = engine.run_backtest_multi(self.con, "S-MULTI-04")
+        self.assertEqual(r2["parlays"], 0)
+        self.assertEqual(r2["skipped_week"], 3)
+
+    def test_run_backtest_routes_multi_to_overlap_engine(self):
+        from parlaysports import engine
+        with self.assertRaises(ValueError) as ctx:
+            engine.run_backtest(self.con, "S-MULTI-01")
+        self.assertIn("run_backtest_multi", str(ctx.exception))
+        with self.assertRaises(ValueError):
+            engine.run_backtest_multi(self.con, "S-NFL-01")
+
+    def test_forward_lotto_weekly_cap_stamped_at_creation(self):
+        from parlaysports import engine
+        # Two scheduled W47 slates (2025-11-19 Wed, 2025-11-22 Sat).
+        self._dup_slate("2025-11-19", "NFL:f1", "NHL:g1", close=0, status="scheduled")
+        self._dup_slate("2025-11-22", "NFL:f2", "NHL:g2", close=0, status="scheduled")
+        r = engine.run_forward(self.con, "S-MULTI-04", ["2025-11-19", "2025-11-22"],
+                               decision_utc="2025-11-18T12:00:00Z")
+        self.assertEqual(r["parlays"], 1)          # cap: one ticket in 2025-W47
+        self.assertEqual(r["skipped_week"], 1)
+        row = self.con.execute(
+            "SELECT slate_date, note FROM parlays WHERE strategy_id='S-MULTI-04'").fetchone()
+        self.assertEqual(row["slate_date"], "2025-11-19")
+        self.assertIn("2025-W47", row["note"])
+        # A later run in the same week reads the stamp from the record and skips.
+        r2 = engine.run_forward(self.con, "S-MULTI-04", ["2025-11-20"],
+                                decision_utc="2025-11-18T13:00:00Z")
+        self.assertEqual(r2["parlays"], 0)
+        self.assertEqual(r2["skipped_week"], 1)
+
+
+class TestMultiRules(unittest.TestCase):
+    """R-018: the builder must honor versioned catalog construction rules."""
+
+    def _sig(self, game_key, sport="NFL", edge=0.05, mp=0.6, odds=-110,
+             otype="market_verified"):
+        return {"strategy_id": "S-MULTI-01", "version": "v1", "game_key": game_key,
+                "sport": sport, "market": "ML", "selection": "home", "line": None,
+                "model_prob": mp, "market_prob": mp - edge, "edge": edge,
+                "decision_utc": "2026-01-01T12:00:00Z", "features": {},
+                "price_id": 1, "odds_american": odds, "odds_type": otype, "note": ""}
+
+    def test_max_per_sport_cap_enforced(self):
+        strat = dict(CATALOG_BY_ID["S-MULTI-01"])
+        self.assertEqual(strat.get("max_per_sport"), 1)  # catalog carries the cap
+        sigs = [self._sig("NFL:g1"), self._sig("NFL:g2"),
+                self._sig("MLB:m1", sport="MLB")]
+        parlays = build_parlays(sigs, strat, "2026-01-02",
+                                "2026-01-01T12:00:00Z", "forward")
+        self.assertEqual(len(parlays), 1)
+        self.assertEqual(sorted(l["sport"] for l in parlays[0]["legs"]),
+                         ["MLB", "NFL"])
+        # Without the cap the same pool would pack all three legs together.
+        uncapped = {k: v for k, v in strat.items() if k != "max_per_sport"}
+        p2 = build_parlays(sigs, uncapped, "2026-01-02",
+                           "2026-01-01T12:00:00Z", "forward")
+        self.assertEqual(p2[0]["n_legs"], 3)
+
+
+class TestSettleSummary(unittest.TestCase):
+    def setUp(self):
+        self.tmp = tempfile.TemporaryDirectory()
+        self.con = store.connect(Path(self.tmp.name) / "t.db")
+        c = self.con
+        c.execute(
+            """INSERT INTO games(game_key, sport, league_game_id, season, game_type,
+               game_date, start_utc, week_or_slate, away_team, home_team, neutral,
+               venue, status, away_score, home_score, overtime, source_id,
+               source_url, retrieved_utc, verified, verify_note, extra_json)
+               VALUES ('NFL:s1','NFL','s1','2020','REG','2020-09-13',NULL,NULL,
+               'AWY','HME',0,NULL,'final',20,17,NULL,'t','u',
+               '2020-01-01T00:00:00Z',0,'',NULL)""")
+        for pid, market, sel, line, odds, dec in (
+                ("S-W", "ML", "away", None, -110.0, 1.909),
+                ("S-L", "ML", "home", None, -110.0, 1.909),
+                ("S-P", "SPREAD", "home", 3.0, -110.0, 1.909)):
+            c.execute(
+                """INSERT INTO parlays(parlay_id, strategy_id, version, username,
+                   sport_scope, sports_json, n_legs, market_mix, stake, pricing_grade,
+                   combined_decimal, combined_american, potential_payout, decision_utc,
+                   slate_date, status, test_mode)
+                   VALUES (?,'S-NFL-01','v1','t','NFL','["NFL"]',1,?,10.0,
+                   'REFERENCE',?,-110.0,19.09,'2020-09-13T12:00:00Z','2020-09-13',
+                   'upcoming','backtest')""", (pid, market, dec))
+            c.execute(
+                """INSERT INTO legs(parlay_id, game_key, sport, market, selection, line,
+                   odds_american, odds_type, model_prob, result, leg_detail)
+                   VALUES (?,'NFL:s1','NFL',?,?,?,-110.0,'market_reference',0.55,
+                   'pending','{}')""", (pid, market, sel, line))
+        c.commit()
+
+    def tearDown(self):
+        self.con.close()
+        self.tmp.cleanup()
+
+    def test_summary_counts_win_loss_push(self):
+        from parlaysports import engine
+        out = engine.settle_all(self.con, test_mode="backtest")
+        self.assertEqual(out["won"], 1)
+        self.assertEqual(out["lost"], 1)
+        self.assertEqual(out["push"], 1)   # S-P: home +3 on a 3-point win = push
+        self.assertEqual(out["still_live"], 0)
+        self.assertEqual(store.verify_ledger_chain(self.con), [])
+        # push refunded the stake; won paid 10 * 1.909...; lost kept -10
+        st = {r["parlay_id"]: r["status"] for r in
+              self.con.execute("SELECT parlay_id, status FROM parlays")}
+        self.assertEqual(st, {"S-W": "won", "S-L": "lost", "S-P": "push"})
 
 
 if __name__ == "__main__":

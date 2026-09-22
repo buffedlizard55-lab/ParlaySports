@@ -17,7 +17,9 @@ on the site, and `data/seed/crosscheck/checks_20260922.json`).
   a written hypothesis, selection/construction rules, required data, min edge, stake and
   documented limitations. Rules live in `parlaysports/strategies.py` (`CATALOG`).
 * **Two sealed books.** `backtest` = history replayed chronologically with closing prices
-  only (multi-sport strategies are forward-only: no cross-sport overlap engine in v1).
+  only — multi-sport strategies backtest through the v1.1 cross-sport overlap engine
+  (R-017): one decision clock per slate, restricted to slates where ≥2 per-sport
+  backtest windows hold verified finals.
   `forward` = paper tickets on upcoming slates. Books are accounted separately and never merged.
 * **Pricing grades on every leg/ticket.** `VERIFIED` (direct market quote) →
   `REFERENCE` (aggregated line, book unnamed) → `MODEL` (estimated price, payout approximate) →
@@ -35,8 +37,8 @@ on the site, and `data/seed/crosscheck/checks_20260922.json`).
 
 ```bash
 make seed    # build DB from pinned seeds, backtest, forward, settle, export
-make test    # 31 unit tests
-make audit   # 52 PASS-2 checks (must be 52/52)
+make test    # 39 unit tests
+make audit   # 54 PASS-2 checks (must be 54/54)
 make uismoke # all 15 site routes render against the real exports
 make serve   # serve this repo root on 0.0.0.0:8000
 ```
@@ -108,8 +110,8 @@ parlaysports/                      engine: config, store, ingest, ratings,
                                    export, sources, util
 scripts/seed.py                    cold-start pipeline (PASS 1 build path)
 scripts/nightly.py                 live pipeline for GitHub Actions
-scripts/audit.py                   PASS 2 mechanical audit (52 checks)
-tests/test_platform.py             31 unit tests (stdlib unittest)
+scripts/audit.py                   PASS 2 mechanical audit (54 checks)
+tests/test_platform.py             39 unit tests (stdlib unittest)
 scripts/ui_smoke.mjs               headless route render test (node)
 ```
 
@@ -119,8 +121,11 @@ scripts/ui_smoke.mjs               headless route render test (node)
 * Backtests assume closing-line availability and ignore line movement, limits and fees.
 * Multi-sport legs assume independence (no correlation model; no same-game parlays in v1).
 * Kalshi prices exclude exchange fees (noted wherever used).
-* S-NHL-05 has no verified puck-line history yet (forward-armed only); S-MLB-06 and the
-  MULTI books are forward-only by design.
+* S-NHL-05 has no verified puck-line history yet (forward-armed only); S-MLB-06 is
+  forward-only by design. MULTI backtests cover only cross-sport overlap slates
+  (NFL∩NBA Oct–Dec 2014–22, NFL∩MLB Sep 2023–Sep 2025, NFL∩NHL Oct 2025–Jan 2026 —
+  measured, never padded; R-017), and the lottery book keeps its documented
+  max-1-ticket-per-ISO-week cap in both books (R-018).
 * **MLB results coverage is partial**: the pinned results file holds full 2023–2025
   seasons, Apr–Jul 2015 only, and **nothing for 2016–2022** (R-013). MLB backtests run
   over 2023–2025 only; the `missing-historical-periods` quality check flags the gap on
@@ -134,12 +139,16 @@ scripts/ui_smoke.mjs               headless route render test (node)
 
 ## Verification
 
-* `tests/test_platform.py`: 31/31 (odds math, settlement incl. push-reduction, guards,
+* `tests/test_platform.py`: 39/39 (odds math, settlement incl. push-reduction, guards,
   ledger tamper-evidence, Elo point-in-time + rollover, catalog completeness + version
-  immutability, score-correction logging, cover-map push exclusion, history-gap flags).
-* `scripts/audit.py`: 52/52 (coverage, books separation, settlement + payout,
+  immutability, score-correction logging, cover-map push exclusion, history-gap flags,
+  cross-sport overlap engine incl. close-only pricing and single-sport-date refusal,
+  per-sport leg caps, lottery ISO-week caps in both books, settle-summary counting).
+* `scripts/audit.py`: 54/54 (coverage, books separation, settlement + payout,
   ledger↔bankroll consistency, UNPRICED-$0, sources on every row, per-strategy history
-  files, upcoming/completed purity, leaderboard columns, users, quality registry, docs).
+  files, upcoming/completed purity, leaderboard columns, users, quality registry, docs,
+  MULTI-backtest overlap integrity: tickets exist, every ticket spans ≥2 sports and
+  every slate is a real ≥2-sport window overlap).
 * `scripts/ui_smoke.mjs`: all 15 site routes render headlessly against the real exports
   (`make uismoke`, also gated in the nightly workflow).
 * `data/audit_report.json` is regenerated on every run.

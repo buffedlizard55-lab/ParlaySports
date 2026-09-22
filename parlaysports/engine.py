@@ -4,15 +4,21 @@ Backtest integrity:
   * slate dates iterate chronologically; signals use only prices/ratings with
     timestamps strictly before the slate (close prices for finals; ratings
     trail is point-in-time by construction).
-  * MULTI strategies are forward-only in v1 (no cross-sport overlap engine);
-    the backtest runner refuses them loudly instead of faking it.
+  * MULTI strategies backtest through the cross-sport overlap engine
+    (run_backtest_multi): one decision clock per slate (T12:00Z, same as the
+    single-sport runners), closing prices only, and candidate slates limited
+    to dates where the per-sport BACKTEST_WINDOWS actually overlap (>=2
+    sports with finals in-window). Leg independence remains assumed and
+    documented. The single-sport run_backtest still refuses MULTI ids loudly.
   * every staked parlay appends stake + settle entries to the hash-chained
     ledger under the matching book ('backtest' | 'forward').
 """
 from __future__ import annotations
 
 import json
+import re
 import sqlite3
+from datetime import datetime
 from typing import Any
 
 from .parlay import (build_parlays, insert_parlay, settle_leg, settle_parlay)
@@ -83,7 +89,8 @@ def run_backtest(con: sqlite3.Connection, strategy_id: str,
                  max_slates: int | None = None) -> dict[str, Any]:
     """Chronological backtest for one single-sport strategy."""
     if strategy_id in MULTI_SOURCES:
-        raise ValueError(f"{strategy_id} is forward-only in v1 (no cross-sport backtest engine)")
+        raise ValueError(f"{strategy_id} is a MULTI strategy: use run_backtest_multi "
+                         f"(cross-sport overlap engine)")
     strat = CATALOG_BY_ID[strategy_id]
     sport = strat["sport"]
     window = BACKTEST_WINDOWS[sport]
@@ -119,6 +126,170 @@ def run_backtest(con: sqlite3.Connection, strategy_id: str,
             "parlays": n_parlays, "legs": n_legs}
 
 
+# ------------------------------------------------- cross-sport overlap engine
+# Per-run signal cache keyed by (source_strategy, slate_date): the four MULTI
+# strategies share most source generators, so each (src, slate) pair is
+# generated once per run. Cleared at the start of every public entry point --
+# signals are only cacheable while games/prices/ratings are static (they are
+# during a backtest phase; settle only touches parlays/legs/ledger).
+_MULTI_SIGNAL_CACHE: dict[tuple[str, str], list[dict[str, Any]]] = {}
+
+
+def clear_multi_signal_cache() -> None:
+    _MULTI_SIGNAL_CACHE.clear()
+
+
+def _iso_week(slate_date: str) -> str:
+    """ISO week tag (e.g. '2026-W39') for a YYYY-MM-DD slate date."""
+    return datetime.strptime(slate_date, "%Y-%m-%d").strftime("%G-W%V")
+
+
+def _lotto_weeks_from_db(con: sqlite3.Connection, strategy_id: str,
+                         test_mode: str) -> set[str]:
+    """ISO weeks that already hold a lottery ticket (parsed from note tags)."""
+    weeks: set[str] = set()
+    for r in con.execute(
+            "SELECT note FROM parlays WHERE strategy_id=? AND test_mode=?",
+            (strategy_id, test_mode)).fetchall():
+        for m in re.finditer(r"\b(\d{4}-W\d{2})\b", r["note"] or ""):
+            weeks.add(m.group(1))
+    return weeks
+
+
+def _stamp_lotto_week(con: sqlite3.Connection, parlay_id: str, slate_date: str) -> str:
+    """Append the slate's ISO-week tag to a lottery ticket's note (at creation,
+    before settlement -- note is not a settlement field). Returns the tag."""
+    week = _iso_week(slate_date)
+    con.execute("UPDATE parlays SET note = COALESCE(note, '') || ? WHERE parlay_id=?",
+                (f" {week}", parlay_id))
+    return week
+
+
+def multi_gate(strategy_id: str, min_edge: float):
+    """Shared admission gate for MULTI legs (forward AND backtest, identical):
+    market legs need edge >= min_edge; MODEL legs (edge-vs-proxy ~= 0 by
+    construction) are admitted on conviction: model_prob >= 0.60, i.e. clear
+    favorites only. UNPRICED legs (no prob, no price) never enter a ticket
+    (S-MULTI-04 lottery admits everything except it still needs prices to
+    build a graded ticket)."""
+    def _passes(s: dict[str, Any]) -> bool:
+        if strategy_id == "S-MULTI-04":
+            return True
+        if s.get("edge") is not None and s["edge"] >= min_edge:
+            return True
+        return (s.get("odds_type") in ("model_fair", "assumed")
+                and (s.get("model_prob") or 0) >= 0.60)
+    return _passes
+
+
+def multi_overlap_dates(con: sqlite3.Connection,
+                        sources: list[str]) -> tuple[list[str], dict[str, set[str]]]:
+    """Chronological candidate slates for a MULTI strategy: dates where >=2 of
+    its source sports hold final games inside their backtest windows.
+
+    Returns (dates, sport -> in-window final slate dates). Only verified
+    finals inside the documented per-sport windows are ever considered; no
+    date is padded or guessed.
+    """
+    sport_dates: dict[str, set[str]] = {}
+    for src in sources:
+        sp = CATALOG_BY_ID[src]["sport"]
+        if sp in sport_dates:
+            continue
+        w = BACKTEST_WINDOWS[sp]
+        sport_dates[sp] = set(slate_dates(con, sp, w["seasons"], w["game_types"], "final"))
+    if not sport_dates:
+        return [], {}
+    all_dates = sorted(set().union(*sport_dates.values()))
+    dates = [d for d in all_dates if sum(d in s for s in sport_dates.values()) >= 2]
+    return dates, sport_dates
+
+
+def run_backtest_multi(con: sqlite3.Connection, strategy_id: str,
+                       max_slates: int | None = None,
+                       _keep_cache: bool = False) -> dict[str, Any]:
+    """Chronological cross-sport backtest for one MULTI strategy.
+
+    One decision clock per slate (T12:00Z). Each in-window sport contributes
+    signals from its source-strategy generators (closing prices only, exactly
+    as in the single-sport backtests); the shared MULTI gate and builder apply.
+    S-MULTI-04 keeps its documented 'max 1 ticket per ISO week' cap (same as
+    forward) with the week tag stamped into the ticket note at creation.
+    """
+    if strategy_id not in MULTI_SOURCES:
+        raise ValueError(f"{strategy_id} is not a MULTI strategy (use run_backtest)")
+    if not _keep_cache:
+        clear_multi_signal_cache()
+    strat = CATALOG_BY_ID[strategy_id]
+    sources = MULTI_SOURCES[strategy_id]
+    dates, sport_dates = multi_overlap_dates(con, sources)
+    if max_slates:
+        dates = dates[:max_slates]
+    is_lotto = strategy_id == "S-MULTI-04"
+    weeks_done = _lotto_weeks_from_db(con, strategy_id, "backtest") if is_lotto else set()
+    gate = multi_gate(strategy_id, strat["min_edge"])
+    n_parlays = n_legs = skipped_week = 0
+    for slate in dates:
+        if is_lotto and _iso_week(slate) in weeks_done:
+            skipped_week += 1
+            continue
+        decision_utc = f"{slate}T12:00:00Z"  # same midday stamp as single-sport
+        signals: list[dict[str, Any]] = []
+        for src in sources:
+            sp = CATALOG_BY_ID[src]["sport"]
+            if slate not in sport_dates[sp]:
+                continue
+            cached = _MULTI_SIGNAL_CACHE.get((src, slate))
+            if cached is None:
+                gen: list[dict[str, Any]] = []
+                w = BACKTEST_WINDOWS[sp]
+                for g in slate_games(con, sp, slate, w["seasons"], w["game_types"], "final"):
+                    gen.extend(signals_for_game(con, src, g, decision_utc, "backtest"))
+                _MULTI_SIGNAL_CACHE[(src, slate)] = cached = gen
+            for s in cached:
+                s2 = dict(s)
+                s2["features"] = dict(s.get("features") or {})
+                s2["strategy_id"] = strategy_id  # pooled under the multi book
+                signals.append(s2)
+        signals = [s for s in signals if gate(s)]
+        if is_lotto:
+            # lottery prefers plus-money legs (stable sort keeps edge order)
+            signals.sort(key=lambda s: (-(s.get("odds_american") or -9999)))
+        if len({s["game_key"] for s in signals}) < 2:
+            continue
+        for p in build_parlays(signals, strat, slate, decision_utc, "backtest"):
+            if get_parlay(con, p["parlay_id"]) is not None:
+                continue
+            insert_parlay(con, p)
+            n_parlays += 1
+            n_legs += p["n_legs"]
+            if is_lotto:
+                weeks_done.add(_stamp_lotto_week(con, p["parlay_id"], p["slate_date"]))
+            if p["stake"] > 0:
+                ledger_append(con, strategy_id=p["strategy_id"], version=p["version"],
+                              book="backtest", parlay_id=p["parlay_id"],
+                              kind="stake", amount=-p["stake"],
+                              note=f"backtest stake {slate} (multi overlap)",
+                              entry_ts=decision_utc)
+    settle_all(con, test_mode="backtest", strategy_id=strategy_id)
+    con.commit()
+    return {"strategy_id": strategy_id, "slates": len(dates),
+            "parlays": n_parlays, "legs": n_legs, "skipped_week": skipped_week}
+
+
+def run_backtest_multi_all(con: sqlite3.Connection,
+                           strategy_ids: list[str]) -> dict[str, dict[str, Any]]:
+    """Run several MULTI backtests sharing one signal cache (seed/CLI path)."""
+    clear_multi_signal_cache()
+    out: dict[str, dict[str, Any]] = {}
+    try:
+        for sid in strategy_ids:
+            out[sid] = run_backtest_multi(con, sid, _keep_cache=True)
+    finally:
+        clear_multi_signal_cache()
+    return out
+
+
 def _forward_sports_and_games(con: sqlite3.Connection, strategy_id: str,
                               slate: str) -> list[sqlite3.Row]:
     strat = CATALOG_BY_ID[strategy_id]
@@ -143,8 +314,16 @@ def run_forward(con: sqlite3.Connection, strategy_id: str,
     """Generate upcoming parlays for future slates. Refuses past/live games."""
     strat = CATALOG_BY_ID[strategy_id]
     decision_utc = decision_utc or utcnow_iso()
-    n_parlays = n_legs = skipped_past = 0
+    is_lotto = strategy_id == "S-MULTI-04"
+    # Lottery cap ('max 1 ticket per ISO week', per the catalog): enforced here
+    # at creation time and stamped into the ticket note, so nightly runs can
+    # never file a second ticket in a week the record already covers.
+    weeks_done = _lotto_weeks_from_db(con, strategy_id, "forward") if is_lotto else set()
+    n_parlays = n_legs = skipped_past = skipped_week = 0
     for slate in slates:
+        if is_lotto and _iso_week(slate) in weeks_done:
+            skipped_week += 1
+            continue
         games = _forward_sports_and_games(con, strategy_id, slate)
         games = [g for g in games if g["status"] == "scheduled"]
         if not games:
@@ -160,6 +339,7 @@ def run_forward(con: sqlite3.Connection, strategy_id: str,
         skipped_past += len(games) - len(future_games)
         signals: list[dict[str, Any]] = []
         if strategy_id in MULTI_SOURCES:
+            gate = multi_gate(strategy_id, strat["min_edge"])
             for src in MULTI_SOURCES[strategy_id]:
                 src_sport = CATALOG_BY_ID[src]["sport"]
                 for g in future_games:
@@ -168,19 +348,11 @@ def run_forward(con: sqlite3.Connection, strategy_id: str,
                     for s in signals_for_game(con, src, g, decision_utc, "forward"):
                         s["strategy_id"] = strategy_id  # pooled under the multi book
                         signals.append(s)
-            # multi edge gate: market legs need edge >= min_edge; MODEL legs
-            # (edge-vs-proxy ~= 0 by construction) are admitted on conviction:
-            # model_prob >= 0.60, i.e. clear favorites only. UNPRICED legs
-            # (no prob, no price) never enter a multi ticket.
-            def _passes(s: dict[str, Any]) -> bool:
-                if strategy_id == "S-MULTI-04":
-                    return True
-                if s.get("edge") is not None and s["edge"] >= strat["min_edge"]:
-                    return True
-                return (s.get("odds_type") in ("model_fair", "assumed")
-                        and (s.get("model_prob") or 0) >= 0.60)
-            signals = [s for s in signals if _passes(s)]
-            if strategy_id == "S-MULTI-04":
+            # Shared multi gate (identical in forward and backtest): market
+            # legs need edge >= min_edge; MODEL legs are admitted on conviction
+            # (model_prob >= 0.60); UNPRICED legs never enter a multi ticket.
+            signals = [s for s in signals if gate(s)]
+            if is_lotto:
                 # lottery prefers plus-money legs
                 signals.sort(key=lambda s: (-(s.get("odds_american") or -9999)))
         else:
@@ -194,6 +366,8 @@ def run_forward(con: sqlite3.Connection, strategy_id: str,
             insert_parlay(con, p)
             n_parlays += 1
             n_legs += p["n_legs"]
+            if is_lotto:
+                weeks_done.add(_stamp_lotto_week(con, p["parlay_id"], p["slate_date"]))
             if p["stake"] > 0:
                 ledger_append(con, strategy_id=p["strategy_id"], version=p["version"],
                               book="forward", parlay_id=p["parlay_id"],
@@ -201,7 +375,8 @@ def run_forward(con: sqlite3.Connection, strategy_id: str,
                               note=f"forward stake {slate}", entry_ts=decision_utc)
     con.commit()
     return {"strategy_id": strategy_id, "slates": len(slates),
-            "parlays": n_parlays, "legs": n_legs, "skipped_past": skipped_past}
+            "parlays": n_parlays, "legs": n_legs, "skipped_past": skipped_past,
+            "skipped_week": skipped_week}
 
 
 def settle_all(con: sqlite3.Connection, test_mode: str | None = None,
@@ -263,7 +438,10 @@ def settle_all(con: sqlite3.Connection, test_mode: str | None = None,
             ledger_append(con, strategy_id=p["strategy_id"], version=p["version"],
                           book=p["test_mode"], parlay_id=p["parlay_id"],
                           kind="settle", amount=p["stake"], note="stake refunded")
-        settled[outcome["status"] if outcome["status"] in settled else "push"] = \
-            settled.get(outcome["status"], 0) + 1
+        # Summary counters: statuses outside the tracked set (e.g. a future
+        # 'void') fold into 'push' -- increment the FOLDED key, never clobber
+        # it from the unfolded one.
+        key = outcome["status"] if outcome["status"] in settled else "push"
+        settled[key] += 1
     con.commit()
     return settled
