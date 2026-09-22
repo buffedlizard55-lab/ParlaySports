@@ -1,0 +1,2 @@
+# ParlaySports is dependency-free: Python 3.11+ standard library only.
+# No install step required. This file exists to document that choice.

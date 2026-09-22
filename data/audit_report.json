@@ -1,0 +1,212 @@
+[
+ {
+  "check": "unit-test-suite",
+  "status": "PASS",
+  "detail": "OK"
+ },
+ {
+  "check": "sport-NFL-has-games",
+  "status": "PASS",
+  "detail": "7548 games"
+ },
+ {
+  "check": "sport-MLB-has-games",
+  "status": "PASS",
+  "detail": "8706 games"
+ },
+ {
+  "check": "sport-NHL-has-games",
+  "status": "PASS",
+  "detail": "4410 games"
+ },
+ {
+  "check": "sport-NBA-has-games",
+  "status": "PASS",
+  "detail": "8389 games"
+ },
+ {
+  "check": "28-strategies",
+  "status": "PASS",
+  "detail": "28 installed"
+ },
+ {
+  "check": "unique-usernames",
+  "status": "PASS",
+  "detail": "28 distinct"
+ },
+ {
+  "check": "scope-NFL-count",
+  "status": "PASS",
+  "detail": "6"
+ },
+ {
+  "check": "scope-MLB-count",
+  "status": "PASS",
+  "detail": "6"
+ },
+ {
+  "check": "scope-NHL-count",
+  "status": "PASS",
+  "detail": "6"
+ },
+ {
+  "check": "scope-NBA-count",
+  "status": "PASS",
+  "detail": "6"
+ },
+ {
+  "check": "scope-MULTI-count",
+  "status": "PASS",
+  "detail": "4"
+ },
+ {
+  "check": "NFL-backtest-parlays",
+  "status": "PASS",
+  "detail": "1580"
+ },
+ {
+  "check": "MLB-backtest-parlays",
+  "status": "PASS",
+  "detail": "2060"
+ },
+ {
+  "check": "NHL-backtest-parlays",
+  "status": "PASS",
+  "detail": "561"
+ },
+ {
+  "check": "NBA-backtest-parlays",
+  "status": "PASS",
+  "detail": "1841"
+ },
+ {
+  "check": "NFL-forward-parlays",
+  "status": "PASS",
+  "detail": "9"
+ },
+ {
+  "check": "MLB-forward-parlays",
+  "status": "PASS",
+  "detail": "30"
+ },
+ {
+  "check": "multi-never-backtested",
+  "status": "PASS",
+  "detail": "0 (must be 0)"
+ },
+ {
+  "check": "settled-parlays-exist",
+  "status": "PASS",
+  "detail": "6042"
+ },
+ {
+  "check": "upcoming-parlays-exist",
+  "status": "PASS",
+  "detail": "58"
+ },
+ {
+  "check": "ledger-bankroll-consistent",
+  "status": "PASS",
+  "detail": "0 mismatches"
+ },
+ {
+  "check": "unpriced-never-stakes",
+  "status": "PASS",
+  "detail": "0"
+ },
+ {
+  "check": "priced-legs-have-odds",
+  "status": "PASS",
+  "detail": "0"
+ },
+ {
+  "check": "games-have-sources",
+  "status": "PASS",
+  "detail": "0"
+ },
+ {
+  "check": "prices-have-sources",
+  "status": "PASS",
+  "detail": "0"
+ },
+ {
+  "check": "export-meta.json",
+  "status": "PASS",
+  "detail": "575B"
+ },
+ {
+  "check": "export-leaderboard_forward.json",
+  "status": "PASS",
+  "detail": "16235B"
+ },
+ {
+  "check": "export-leaderboard_backtest.json",
+  "status": "PASS",
+  "detail": "17507B"
+ },
+ {
+  "check": "export-upcoming.json",
+  "status": "PASS",
+  "detail": "198182B"
+ },
+ {
+  "check": "export-completed.json",
+  "status": "PASS",
+  "detail": "5697461B"
+ },
+ {
+  "check": "export-strategies.json",
+  "status": "PASS",
+  "detail": "549471B"
+ },
+ {
+  "check": "export-games.json",
+  "status": "PASS",
+  "detail": "243817B"
+ },
+ {
+  "check": "export-performance.json",
+  "status": "PASS",
+  "detail": "603590B"
+ },
+ {
+  "check": "export-research.json",
+  "status": "PASS",
+  "detail": "6681B"
+ },
+ {
+  "check": "export-sources.json",
+  "status": "PASS",
+  "detail": "8912B"
+ },
+ {
+  "check": "export-quality.json",
+  "status": "PASS",
+  "detail": "6059B"
+ },
+ {
+  "check": "site-index.html",
+  "status": "PASS",
+  "detail": "1670B"
+ },
+ {
+  "check": "site-styles.css",
+  "status": "PASS",
+  "detail": "6453B"
+ },
+ {
+  "check": "site-app.js",
+  "status": "PASS",
+  "detail": "29808B"
+ },
+ {
+  "check": "hard-quality-gates",
+  "status": "PASS",
+  "detail": "chain+settle+leakage clean"
+ },
+ {
+  "check": "strategies-documented",
+  "status": "PASS",
+  "detail": "0 undocumented"
+ }
+]
