@@ -26,14 +26,18 @@ on the site, and `data/seed/crosscheck/checks_20260922.json`).
   (push/void legs reduce the ticket; all-push refunds). Settled tickets are never edited.
 * **Hash-chained ledger + $10,000 standard bankroll** per strategy per book.
 * **Quality system that flags instead of guessing**: missing scores/odds, duplicates,
-  conflicts, stale snapshots, settlement recomputation, ledger integrity, parlay math and
-  backtest-leakage guards run on every build (`Data Quality` page).
+  conflicting results, invalid stats, timestamp order, stale snapshots, settlement
+  recomputation, ledger integrity, parlay math, backtest-leakage guards and missing
+  historical periods run on every build (`Data Quality` page). Legitimate MLB
+  doubleheaders are hand-verified before being exempted (see the verifications table).
 
 ## Quickstart (stdlib only — no installs)
 
 ```bash
 make seed    # build DB from pinned seeds, backtest, forward, settle, export
-make audit   # 23 unit tests + 42 PASS-2 checks (must be 42/42)
+make test    # 31 unit tests
+make audit   # 52 PASS-2 checks (must be 52/52)
+make uismoke # all 15 site routes render against the real exports
 make serve   # serve this repo root on 0.0.0.0:8000
 ```
 
@@ -83,7 +87,7 @@ GitHub Action runs daily (needs network for live APIs).
 | `SRC_ESPN_SCOREBOARD` | ESPN scoreboard API, all four leagues (+DK odds blocks) | VERIFIED_PRIMARY |
 | `SRC_KALSHI` | Kalshi public market API (GAME/SPREAD/TOTAL series) | VERIFIED_PRIMARY |
 | `SRC_SBR_NBA` | SportsbookReview NBA odds archive (via NBAComp) | SINGLE_SOURCE |
-| `SRC_SIBLING_MLB_RESULTS` | MLB results 2015–2025 (official StatsAPI via sibling tooling) | VERIFIED_SECONDARY |
+| `SRC_SIBLING_MLB_RESULTS` | MLB results via sibling tooling (official StatsAPI): full 2023–25, Apr–Jul 2015 | VERIFIED_SECONDARY |
 | `SRC_SIBLING_NBACOMP` | NBAComp games 2024–27 + forward lines | VERIFIED_SECONDARY |
 | `SRC_SIBLING_NHLCOMP` | NHLComp games 2024–27 + Kalshi closes + DK snapshots | VERIFIED_SECONDARY |
 | `SRC_SIBLING_VACSCHED` | VacationSchedule verified 2026 MLB/NFL fixtures | VERIFIED_SECONDARY |
@@ -97,14 +101,16 @@ Independent cross-checks: `data/seed/crosscheck/checks_20260922.json`.
 ```
 index.html / styles.css / app.js   static site (hash-routed, dependency-free)
 data/site/*.json                   committed exports (the persisted record)
+data/site/history_<SID>.json       complete per-strategy ticket history
 data/seed/                         pinned inputs + MANIFEST.json
 parlaysports/                      engine: config, store, ingest, ratings,
                                    strategies, parlay, engine, books, quality,
-                                   export, sources, research, util
+                                   export, sources, util
 scripts/seed.py                    cold-start pipeline (PASS 1 build path)
 scripts/nightly.py                 live pipeline for GitHub Actions
-scripts/audit.py                   PASS 2 mechanical audit (42 checks)
-tests/test_platform.py             23 unit tests (stdlib unittest)
+scripts/audit.py                   PASS 2 mechanical audit (52 checks)
+tests/test_platform.py             31 unit tests (stdlib unittest)
+scripts/ui_smoke.mjs               headless route render test (node)
 ```
 
 ## Limits (read before trusting any number)
@@ -115,12 +121,25 @@ tests/test_platform.py             23 unit tests (stdlib unittest)
 * Kalshi prices exclude exchange fees (noted wherever used).
 * S-NHL-05 has no verified puck-line history yet (forward-armed only); S-MLB-06 and the
   MULTI books are forward-only by design.
+* **MLB results coverage is partial**: the pinned results file holds full 2023–2025
+  seasons, Apr–Jul 2015 only, and **nothing for 2016–2022** (R-013). MLB backtests run
+  over 2023–2025 only; the `missing-historical-periods` quality check flags the gap on
+  every build and nothing is ever padded. NBA backtests use Oct–Dec slices only
+  (SBR archive). 2026 MLB game logs are still to be backfilled by the nightly job (R-012).
+* Player props / game props are **not** simulated: no free verified historical
+  player-prop feed exists (R-014). Injury/availability data is recorded where the feeds
+  provide it (nflverse QBs, MLB probables) but no strategy conditions on it yet (R-016).
+* Forward tickets use a conservative whole-date cutoff when a game has no recorded
+  start time (R-015): better to miss a ticket than to bet a started game.
 
 ## Verification
 
-* `tests/test_platform.py`: 23/23 (odds math, settlement incl. push-reduction, guards,
-  ledger tamper-evidence, Elo point-in-time + rollover, catalog completeness).
-* `scripts/audit.py`: 42/42 (coverage, books separation, settlement, ledger↔bankroll
-  consistency, UNPRICED-$0, sources on every row, exports, quality gates, docs).
-* Every frontend route render-tested headlessly against the real exports.
+* `tests/test_platform.py`: 31/31 (odds math, settlement incl. push-reduction, guards,
+  ledger tamper-evidence, Elo point-in-time + rollover, catalog completeness + version
+  immutability, score-correction logging, cover-map push exclusion, history-gap flags).
+* `scripts/audit.py`: 52/52 (coverage, books separation, settlement + payout,
+  ledger↔bankroll consistency, UNPRICED-$0, sources on every row, per-strategy history
+  files, upcoming/completed purity, leaderboard columns, users, quality registry, docs).
+* `scripts/ui_smoke.mjs`: all 15 site routes render headlessly against the real exports
+  (`make uismoke`, also gated in the nightly workflow).
 * `data/audit_report.json` is regenerated on every run.

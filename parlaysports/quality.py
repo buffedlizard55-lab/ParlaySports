@@ -52,6 +52,7 @@ def run_checks(con: sqlite3.Connection) -> dict[str, Any]:
     check("parlay-math", lambda: _parlay_math(con))
     check("backtest-leakage", lambda: _leakage(con))
     check("odds-sanity", lambda: _odds_sanity(con))
+    check("missing-historical-periods", lambda: _missing_periods(con))
     con.commit()
     return {"checks": results,
             "total_problems": sum(r["problems"] for r in results)}
@@ -79,26 +80,52 @@ def _missing_odds(con) -> list[str]:
 
 
 def _duplicates(con) -> list[str]:
-    # Scores included in the key: MLB doubleheaders (same teams, same day, two
-    # distinct game_pks and scores) are legitimate, not duplicates.
+    # Same matchup/date twice is legitimate ONLY for MLB doubleheaders where
+    # every row has a distinct league game id (verified real case: MIA@LAD
+    # 2023-08-19 Hurricane-Hilary makeup DH, both games 3-1; see verifications).
+    # Anything sharing a league game id, or any non-MLB repeat, is flagged.
     rows = con.execute(
         """SELECT sport, game_date, away_team, home_team, away_score, home_score,
                   COUNT(*) AS n, COUNT(DISTINCT league_game_id) AS ids
            FROM games GROUP BY sport, game_date, away_team, home_team,
                          away_score, home_score
            HAVING n > 1 LIMIT 20""").fetchall()
-    return [f"{r['sport']} {r['game_date']} {r['away_team']}@{r['home_team']} "
-            f"({r['away_score']}-{r['home_score']}): {r['n']} rows"
-            for r in rows]
+    out = []
+    for r in rows:
+        if r["sport"] == "MLB" and r["ids"] == r["n"]:
+            continue  # verified doubleheader pattern: distinct game ids
+        out.append(f"{r['sport']} {r['game_date']} {r['away_team']}@{r['home_team']} "
+                   f"({r['away_score']}-{r['home_score']}): {r['n']} rows, "
+                   f"{r['ids']} distinct league ids")
+    return out
 
 
 def _conflicts(con) -> list[str]:
-    # Same game_key stored twice with different scores is impossible (PK), so
-    # check the verifiable invariant: final games must have both scores.
+    # Same game_key stored twice with different scores is impossible (PK) and a
+    # re-import that changes a final files an ingest issue; here we hunt the
+    # cross-row case: two 'final' rows for the same matchup/date with different
+    # scores (one of them must be wrong). MLB doubleheaders are exempt only when
+    # the league game ids differ AND the scores differ (two real games).
+    out = []
     rows = con.execute(
-        """SELECT game_key FROM games WHERE status='final'
-           AND (away_score IS NULL OR home_score IS NULL) LIMIT 20""").fetchall()
-    return [f"{r['game_key']}: final without complete score" for r in rows]
+        """SELECT sport, game_date, away_team, home_team,
+                  COUNT(*) AS n, COUNT(DISTINCT league_game_id) AS ids,
+                  COUNT(DISTINCT COALESCE(away_score,'?') || '-' ||
+                        COALESCE(home_score,'?')) AS score_versions
+           FROM games WHERE status='final'
+           GROUP BY sport, game_date, away_team, home_team
+           HAVING score_versions > 1 LIMIT 20""").fetchall()
+    for r in rows:
+        detail = (f"{r['sport']} {r['game_date']} {r['away_team']}@{r['home_team']}: "
+                  f"{r['score_versions']} different final scores across {r['n']} rows")
+        if r["sport"] == "MLB" and r["ids"] == r["n"] and r["score_versions"] == r["n"]:
+            continue  # legitimate doubleheader: all rows distinct games+scores
+        out.append(detail)
+    for r in con.execute(
+            """SELECT game_key FROM games WHERE status='final'
+               AND (away_score IS NULL OR home_score IS NULL) LIMIT 20"""):
+        out.append(f"{r['game_key']}: final without complete score")
+    return out
 
 
 def _invalid_stats(con) -> list[str]:
@@ -173,6 +200,10 @@ def _recompute_settlements(con) -> list[str]:
                 abs(float(outcome["pnl"]) - float(p["pnl"])) > 0.01:
             out.append(f"{p['parlay_id']}: stored PnL {p['pnl']} vs recomputed "
                        f"{outcome['pnl']}")
+        if p["payout"] is not None and outcome["payout"] is not None and \
+                abs(float(outcome["payout"]) - float(p["payout"])) > 0.01:
+            out.append(f"{p['parlay_id']}: stored payout {p['payout']} vs recomputed "
+                       f"{outcome['payout']}")
         if len(out) >= 20:
             break
     return out
@@ -212,12 +243,46 @@ def _leakage(con) -> list[str]:
                WHERE substr(s.decision_utc,1,10) > g.game_date LIMIT 20"""):
         out.append(f"signal {r['signal_id']}: decided {r['decision_utc']} after "
                    f"game date {r['game_date']} ({r['game_key']})")
+    # Forward tickets may never be created for a gameday already past at
+    # decision time (whole-date cutoff for games with no recorded start).
+    for r in con.execute(
+            """SELECT DISTINCT p.parlay_id, p.decision_utc, g.game_date, g.game_key
+               FROM parlays p JOIN legs l ON l.parlay_id=p.parlay_id
+               JOIN games g ON g.game_key=l.game_key
+               WHERE p.test_mode='forward'
+                 AND ((g.start_utc IS NOT NULL AND p.decision_utc >= g.start_utc)
+                   OR (g.start_utc IS NULL
+                       AND g.game_date < substr(p.decision_utc,1,10)))
+               LIMIT 20"""):
+        out.append(f"forward {r['parlay_id']}: decided {r['decision_utc']} not "
+                   f"strictly before game {r['game_key']} (date {r['game_date']})")
     # Ratings rows must never be dated after the game they describe.
     for r in con.execute(
             """SELECT r.sport, r.team, r.game_key FROM ratings r
                JOIN games g ON g.game_key=r.game_key
                WHERE r.game_date != g.game_date LIMIT 20"""):
         out.append(f"rating {r['sport']}/{r['team']}/{r['game_key']}: date mismatch")
+    return out
+
+
+def _missing_periods(con) -> list[str]:
+    """Flag seasons inside the known coverage span that hold zero games, and
+    partially-covered seasons. Gaps are reported, never filled.
+    """
+    from .engine import EXPECTED_HISTORY
+    out = []
+    for sport, spec in EXPECTED_HISTORY.items():
+        counts = {r["season"]: r["n"] for r in con.execute(
+            "SELECT season, COUNT(*) AS n FROM games WHERE sport=? AND status='final'"
+            " GROUP BY season", (sport,)).fetchall()}
+        for season in spec["have"]:
+            n = counts.get(season, 0)
+            if n == 0:
+                out.append(f"{sport} {season}: no games in database "
+                           f"(declared coverage gap; never padded)")
+            elif sport == "MLB" and season != "2026" and n < 1500:
+                out.append(f"{sport} {season}: only {n} finals "
+                           f"(partial season in seed; window is truncated, not filled)")
     return out
 
 

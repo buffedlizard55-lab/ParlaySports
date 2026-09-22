@@ -165,6 +165,34 @@ RESEARCH_SEED = [
      "data_window": "2026-03..09",
      "result": "Gap documented: nightly collector backfills Mar-Sep 2026 game logs; until then 2026 MLB uses the verified standings snapshot + form splits.",
      "status": "hypothesis", "ref_strategy": "S-MLB-01"},
+    {"research_id": "R-013", "sport": "MLB",
+     "title": "PASS-2 audit: inherited MLB results cover 2015 (Apr-Jul) and 2023-2025 only",
+     "hypothesis": "results_2015_2025.csv covers every season 2015-2025 (README v1 claim).",
+     "method": "Row-counted the pinned seed file by season during the second-pass audit (8,619 rows).",
+     "data_window": "2015-2025",
+     "result": "REJECTED the claim: 2015 is Apr-Jul only (1,330 games), 2016-2022 hold zero rows, 2023-2025 are full. MLB backtests are confined to 2023-2025; the quality checker now flags the gap as missing-historical-periods and nothing is padded. Nightly backfill will restore 2016-2022 when StatsAPI access allows.",
+     "status": "tested", "ref_strategy": "S-MLB-01"},
+    {"research_id": "R-014", "sport": "MULTI",
+     "title": "Player props and game props have no verified free historical feed",
+     "hypothesis": "A free public source carries verifiable historical player-prop odds/results.",
+     "method": "Surveyed nflverse (game-level only), StatsAPI, ESPN scoreboard blocks (game markets only), Kalshi series (winner/limited spreads), SBR archives (game markets).",
+     "data_window": "n/a",
+     "result": "NOT AVAILABLE for v1: supported leg markets are ML, spread/run/puck line, totals and team-derived markets that settle from official final scores. Player props would require player-level odds + availability data we cannot verify freely; they are excluded rather than simulated.",
+     "status": "tested", "ref_strategy": "S-MULTI-02"},
+    {"research_id": "R-015", "sport": "NFL",
+     "title": "Forward tickets need a whole-date cutoff when start times are missing",
+     "hypothesis": "Forward generation cannot bet a game that already kicked off.",
+     "method": "PASS-2 review of nflverse rows: gameday is local-date, start_utc is not recorded. A 2026-09-22T01:30Z decision stamp could otherwise attach to the 2026-09-21 MNF after kickoff.",
+     "data_window": "2026-25 forward runs",
+     "result": "FIX: run_forward now skips games whose gameday is strictly before the decision date when start_utc is unknown (conservative: whole slate closes at UTC date rollover). backtest-leakage quality check enforces it on every run.",
+     "status": "tested", "ref_strategy": "S-NFL-01"},
+    {"research_id": "R-016", "sport": "MULTI",
+     "title": "Injuries and availability: no point-in-time verified feed wired in v1",
+     "hypothesis": "Starting lineups / injuries can be consumed as verifiable, timestamped inputs.",
+     "method": "Reviewed official feeds (MLB probables on StatsAPI schedule; nflverse QB columns) and the MasterSite directory (NBAInjuryReport sibling exists as a signal source).",
+     "data_window": "n/a",
+     "result": "PARTIAL: nflverse QB names and MLB probable pitchers exist in seed inputs and are recorded on games (extra_json); a full point-in-time injury feed is NOT integrated, so no strategy conditions on injuries yet. MasterSite's NBAInjuryReport is catalogued as a candidate signal for a future version. Missing availability is treated like missing weather: no signal, never an assumption.",
+     "status": "hypothesis", "ref_strategy": "S-NBA-02"},
 ]
 
 
@@ -176,6 +204,42 @@ def install_research(con: sqlite3.Connection) -> int:
                hypothesis, method, data_window, result, status, ref_strategy)
                VALUES (:research_id, '2026-09-22T02:00:00Z', :sport, :title, :hypothesis,
                :method, :data_window, :result, :status, :ref_strategy)""", r)
+        n += 1
+    return n
+
+
+def install_users(con: sqlite3.Connection) -> int:
+    """Persist the 28 competitor accounts (one per strategy manager)."""
+    n = 0
+    for s in CATALOG_BY_ID.values():
+        con.execute(
+            """INSERT OR REPLACE INTO users(username, role, strategy_id, created_utc, note)
+               VALUES (?, 'competitor', ?, '2026-09-22T02:00:00Z', ?)""",
+            (s["username"], s["strategy_id"],
+             f"paper competitor managing {s['name']} ({s['sport']})"))
+        n += 1
+    return n
+
+
+PASS2_VERIFICATIONS = [
+    {"subject": "MLB 2023-08-19 MIA@LAD doubleheader (games 716909 & 716926)",
+     "claim": "Two MIA@LAD finals on one date with identical 1-3 scores are two real "
+              "games (Hurricane Hilary makeup DH), not a duplicated row.",
+     "source_url": "https://www.baseball-reference.com/boxes/LAN/LAN202308192.shtml",
+     "result": "match",
+     "detail": "MLB.com recap confirms Game 1 was Dodgers 3-1; baseball-reference "
+               "box LAN202308192 confirms Game 2 also Dodgers 3-1. Both StatsAPI "
+               "game_pks exist. The duplicate-events quality check now exempts MLB "
+               "rows with distinct league game ids; identical scores alone are no "
+               "longer treated as a data error for baseball."},
+]
+
+
+def install_verifications(con: sqlite3.Connection) -> int:
+    from parlaysports.store import add_verification
+    n = 0
+    for v in PASS2_VERIFICATIONS:
+        add_verification(con, **v)
         n += 1
     return n
 
@@ -227,7 +291,9 @@ def main() -> dict:
     print(f"park factors: {len(out['parks'])} teams", flush=True)
 
     out["strategies"] = install_catalog(con)
+    out["users"] = install_users(con)
     out["research"] = install_research(con)
+    out["pass2_verifications"] = install_verifications(con)
     store.set_meta(con, "data_as_of_utc", RETRIEVED_SEED)
     store.set_meta(con, "seed_manifest_sha256", man["manifest_sha256"])
     con.commit()

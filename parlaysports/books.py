@@ -31,6 +31,10 @@ def strategy_books(con: sqlite3.Connection, strategy_id: str,
             "SELECT COALESCE(SUM(stake),0) AS s FROM parlays "
             "WHERE strategy_id=? AND version=? AND test_mode=?",
             (strategy_id, version, book)).fetchone()["s"]
+        paid_out = con.execute(
+            "SELECT COALESCE(SUM(payout),0) AS s FROM parlays "
+            "WHERE strategy_id=? AND version=? AND test_mode=? AND payout IS NOT NULL",
+            (strategy_id, version, book)).fetchone()["s"]
         res = con.execute(
             """SELECT status, COUNT(*) AS n FROM parlays
                WHERE strategy_id=? AND version=? AND test_mode=? GROUP BY status""",
@@ -82,7 +86,7 @@ def strategy_books(con: sqlite3.Connection, strategy_id: str,
         out[book] = {
             "started": True, "bankroll": money(current), "start": money(start),
             "pnl": pnl, "roi": round(pnl / staked, 4) if staked else None,
-            "staked": money(staked or 0),
+            "staked": money(staked or 0), "total_payout": money(paid_out or 0),
             "parlays": total_p, "upcoming":
                 counts.get("upcoming", 0) + counts.get("live", 0),
             "won": counts.get("won", 0), "lost": counts.get("lost", 0),
@@ -109,7 +113,7 @@ def _empty_book() -> dict[str, Any]:
     return {
         "started": False, "bankroll": money(STARTING_BANKROLL),
         "start": money(STARTING_BANKROLL), "pnl": 0.0, "roi": None,
-        "staked": 0.0, "parlays": 0, "upcoming": 0, "won": 0, "lost": 0,
+        "staked": 0.0, "total_payout": 0.0, "parlays": 0, "upcoming": 0, "won": 0, "lost": 0,
         "push": 0, "parlay_hit_rate": None, "leg_hit_rate": None,
         "legs": {}, "avg_legs": None, "max_drawdown": 0.0, "streak": None,
         "last_activity": None, "grades": {}, "verified_share": None,

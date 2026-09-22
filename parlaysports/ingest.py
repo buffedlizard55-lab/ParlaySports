@@ -22,6 +22,22 @@ def _game_exists(con: sqlite3.Connection, game_key: str) -> bool:
 
 
 def _insert_game(con: sqlite3.Connection, g: dict[str, Any]) -> None:
+    # Historical records are never silently modified: if a re-import would
+    # change an already-recorded final score, file a conflict issue first
+    # (the replacement then becomes a documented correction, not a quiet edit).
+    prev = con.execute(
+        "SELECT status, away_score, home_score, source_id FROM games WHERE game_key=?",
+        (g["game_key"],)).fetchone()
+    if prev is not None and prev["status"] == "final":
+        old = (prev["away_score"], prev["home_score"])
+        new = (g.get("away_score"), g.get("home_score"))
+        if g.get("status") == "final" and None not in old and old != new:
+            add_issue(con, severity="error", area="ingest", sport=g.get("sport"),
+                      game_key=g["game_key"],
+                      detail=(f"conflicting-results: final score changed "
+                              f"{old[0]}-{old[1]} ({prev['source_id']}) -> "
+                              f"{new[0]}-{new[1]} ({g.get('source_id')}); "
+                              f"correction logged, prior values preserved in this issue"))
     con.execute(
         """INSERT OR REPLACE INTO games(game_key, sport, league_game_id, season, game_type,
            game_date, start_utc, week_or_slate, away_team, home_team, neutral, venue,
@@ -39,6 +55,17 @@ def _insert_price(con: sqlite3.Connection, *, game_key: str, market: str, select
                   line: float | None, odds_american: float | None, odds_type: str,
                   source_id: str, source_url: str, observed_utc: str,
                   close_flag: int = 0, note: str = "") -> int:
+    # Idempotent re-import: an identical quote (same source + observation time)
+    # is never duplicated. Prices are otherwise append-only history.
+    dup = con.execute(
+        """SELECT price_id FROM prices WHERE game_key=? AND market=? AND selection=?
+           AND COALESCE(line,-999999)=COALESCE(?,-999999)
+           AND COALESCE(odds_american,-999999)=COALESCE(?,-999999)
+           AND source_id=? AND observed_utc=? AND close_flag=?""",
+        (game_key, market, selection, line, odds_american,
+         source_id, observed_utc, close_flag)).fetchone()
+    if dup is not None:
+        return int(dup["price_id"])
     cur = con.execute(
         """INSERT INTO prices(game_key, market, selection, line, odds_american, odds_type,
            source_id, source_url, observed_utc, close_flag, note)

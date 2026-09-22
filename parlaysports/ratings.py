@@ -143,14 +143,20 @@ def rolling_rates(con: sqlite3.Connection, sport: str, team: str,
     """Rolling scored/allowed per game over the last `window` finals before G.
 
     Also returns season-to-date rates and games counted. Strictly past only.
+    UNION ALL keeps both team-side lookups on the (sport, team, game_date)
+    indexes.
     """
     rows = con.execute(
-        """SELECT game_date, season AS gseason, away_team, home_team, away_score, home_score
-           FROM games WHERE sport=? AND status='final'
-             AND (away_team=? OR home_team=?)
+        """SELECT game_date, game_key, season AS gseason, away_team, home_team, away_score, home_score
+           FROM games WHERE sport=? AND status='final' AND away_team=?
+             AND (game_date < ? OR (game_date=? AND game_key < ?))
+           UNION ALL
+           SELECT game_date, game_key, season AS gseason, away_team, home_team, away_score, home_score
+           FROM games WHERE sport=? AND status='final' AND home_team=?
              AND (game_date < ? OR (game_date=? AND game_key < ?))
            ORDER BY game_date DESC, game_key DESC""",
-        (sport, team, team, game_date, game_date, game_key)).fetchall()
+        (sport, team, game_date, game_date, game_key,
+         sport, team, game_date, game_date, game_key)).fetchall()
     scored: list[float] = []
     allowed: list[float] = []
     season_scored: list[float] = []

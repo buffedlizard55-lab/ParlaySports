@@ -28,8 +28,11 @@ BACKTEST_WINDOWS = {
     # NFL: full line coverage 2010+; 2006/2008 partial (excluded: outside window).
     "NFL": {"seasons": [str(y) for y in range(2010, 2026)],
             "game_types": ["REG", "POST"]},
-    # MLB: outcome-only 2016-2025 (no market odds; MODEL-grade).
-    "MLB": {"seasons": [str(y) for y in range(2016, 2026)],
+    # MLB: outcome-only 2023-2025 (full seasons). KNOWN GAP: the inherited
+    # results file has no 2016-2022 seasons and only Apr-Jul 2015; the quality
+    # checker flags the gap and the Research log records it (R-013). Backtests
+    # never pad around missing seasons.
+    "MLB": {"seasons": ["2023", "2024", "2025"],
             "game_types": ["R"]},
     # NHL: Kalshi closes (REG/POST only; preseason excluded).
     "NHL": {"seasons": ["20252026"], "game_types": ["REG", "POST"]},
@@ -37,6 +40,20 @@ BACKTEST_WINDOWS = {
     "NBA": {"seasons": ["2014-15", "2015-16", "2016-17", "2017-18", "2018-19",
                         "2019-20", "2020-21", "2021-22", "2022-23"],
             "game_types": ["REG"]},
+}
+
+# Expected historical coverage actually held in the seed (for gap detection).
+# 'span' = (first_season, last_season) of intended coverage; 'have' = seasons
+# with data. Anything inside span but outside have is a flagged gap, not a
+# guess-filled period.
+EXPECTED_HISTORY = {
+    "NFL": {"span": ("1999", "2026"), "have": [str(y) for y in range(1999, 2027)]},
+    "MLB": {"span": ("2015", "2025"), "have": ["2015", "2023", "2024", "2025"]},
+    "NHL": {"span": ("20242025", "20252026"), "have": ["20242025", "20252026"]},
+    "NBA": {"span": ("2013-14", "2022-23"), "have": ["2013-14", "2014-15", "2015-16",
+                                                    "2016-17", "2017-18", "2018-19",
+                                                    "2019-20", "2020-21", "2021-22",
+                                                    "2022-23"]},
 }
 
 
@@ -132,9 +149,14 @@ def run_forward(con: sqlite3.Connection, strategy_id: str,
         games = [g for g in games if g["status"] == "scheduled"]
         if not games:
             continue
-        # Guard: every leg must start after the decision timestamp (when known).
+        # Guard: every leg must start after the decision timestamp. When a game
+        # has no recorded start time, fall back to a conservative whole-date
+        # cutoff: anything whose local gameday is strictly before the decision
+        # date is skipped (better to miss a ticket than bet a started game).
+        decision_date = (decision_utc or "")[:10]
         future_games = [g for g in games
-                        if not g["start_utc"] or g["start_utc"] > decision_utc]
+                        if (g["start_utc"] and g["start_utc"] > decision_utc)
+                        or (not g["start_utc"] and g["game_date"] >= decision_date)]
         skipped_past += len(games) - len(future_games)
         signals: list[dict[str, Any]] = []
         if strategy_id in MULTI_SOURCES:
@@ -223,12 +245,15 @@ def settle_all(con: sqlite3.Connection, test_mode: str | None = None,
             settled["still_live"] += 1
             continue
         # Finalize (single write; settle refuses settled rows ever after).
+        # Historical fields (odds, selections, decision-time details) are never
+        # touched; only settlement columns are written, once.
         roi = (outcome["pnl"] / p["stake"]) if p["stake"] else None
         con.execute(
             """UPDATE parlays SET status=?, settled_utc=?, settlement_source=?,
-               result_detail=?, pnl=?, roi_parlay=? WHERE parlay_id=? AND status IN ('upcoming','live')""",
+               result_detail=?, pnl=?, roi_parlay=?, payout=? WHERE parlay_id=? AND status IN ('upcoming','live')""",
             (outcome["status"], utcnow_iso(), settlement_source,
-             outcome["detail"], outcome["pnl"], roi, p["parlay_id"]))
+             outcome["detail"], outcome["pnl"], roi, outcome["payout"],
+             p["parlay_id"]))
         if p["stake"] > 0 and outcome["payout"]:
             ledger_append(con, strategy_id=p["strategy_id"], version=p["version"],
                           book=p["test_mode"], parlay_id=p["parlay_id"],

@@ -132,32 +132,32 @@
  {
   "check": "export-meta.json",
   "status": "PASS",
-  "detail": "575B"
+  "detail": "590B"
  },
  {
   "check": "export-leaderboard_forward.json",
   "status": "PASS",
-  "detail": "16235B"
+  "detail": "16879B"
  },
  {
   "check": "export-leaderboard_backtest.json",
   "status": "PASS",
-  "detail": "17507B"
+  "detail": "18235B"
  },
  {
   "check": "export-upcoming.json",
   "status": "PASS",
-  "detail": "198182B"
+  "detail": "213238B"
  },
  {
   "check": "export-completed.json",
   "status": "PASS",
-  "detail": "5697461B"
+  "detail": "6053468B"
  },
  {
   "check": "export-strategies.json",
   "status": "PASS",
-  "detail": "549471B"
+  "detail": "550886B"
  },
  {
   "check": "export-games.json",
@@ -167,12 +167,12 @@
  {
   "check": "export-performance.json",
   "status": "PASS",
-  "detail": "603590B"
+  "detail": "610142B"
  },
  {
   "check": "export-research.json",
   "status": "PASS",
-  "detail": "6681B"
+  "detail": "9978B"
  },
  {
   "check": "export-sources.json",
@@ -182,7 +182,7 @@
  {
   "check": "export-quality.json",
   "status": "PASS",
-  "detail": "6059B"
+  "detail": "7005B"
  },
  {
   "check": "site-index.html",
@@ -197,7 +197,7 @@
  {
   "check": "site-app.js",
   "status": "PASS",
-  "detail": "29808B"
+  "detail": "42206B"
  },
  {
   "check": "hard-quality-gates",
@@ -208,5 +208,55 @@
   "check": "strategies-documented",
   "status": "PASS",
   "detail": "0 undocumented"
+ },
+ {
+  "check": "settled-tickets-have-payout",
+  "status": "PASS",
+  "detail": "0 missing payout"
+ },
+ {
+  "check": "upcoming-list-is-unsettled-only",
+  "status": "PASS",
+  "detail": "0 settled rows leaked into upcoming"
+ },
+ {
+  "check": "completed-list-is-settled-only",
+  "status": "PASS",
+  "detail": "0 unsettled rows leaked into completed"
+ },
+ {
+  "check": "strategy-history-files",
+  "status": "PASS",
+  "detail": "all present"
+ },
+ {
+  "check": "leaderboard-required-columns",
+  "status": "PASS",
+  "detail": "16 columns on all rows"
+ },
+ {
+  "check": "completed-carry-settlement-provenance",
+  "status": "PASS",
+  "detail": "0 fields missing"
+ },
+ {
+  "check": "quality-registry-complete",
+  "status": "PASS",
+  "detail": "13 checks live"
+ },
+ {
+  "check": "users-persisted",
+  "status": "PASS",
+  "detail": "28 accounts"
+ },
+ {
+  "check": "users-exported",
+  "status": "PASS",
+  "detail": "users.json"
+ },
+ {
+  "check": "no-duplicate-price-quotes",
+  "status": "PASS",
+  "detail": "0 duplicated quote groups"
  }
 ]

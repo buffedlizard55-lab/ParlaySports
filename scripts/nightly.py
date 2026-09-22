@@ -87,6 +87,61 @@ def collect_espn(con: sqlite3.Connection, sport: str, days_back=2, days_fwd=7) -
     return {"games": n_games, "prices": n_prices}
 
 
+def _guarded_upsert_game(con, *, sport, espn_id, season, game_type, date, start_utc,
+                         week, away, home, venue, status, away_score, home_score,
+                         url) -> str:
+    """Write one ESPN event without duplicating league rows or silently editing
+    finals. Reuses an existing game row for the same matchup/date when one
+    exists (doubleheaders resolve on score match), and files a conflicting-
+    results issue before any final-score change. Returns the row's game_key.
+    """
+    prev = con.execute(
+        "SELECT game_key, status, away_score, home_score, source_id FROM games "
+        "WHERE game_key=?", (f"{sport}:espn:{espn_id}",)).fetchone()
+    if prev is None:
+        cands = con.execute(
+            """SELECT game_key, status, away_score, home_score, source_id FROM games
+               WHERE sport=? AND game_date=? AND away_team=? AND home_team=?
+               ORDER BY game_key""",
+            (sport, date, away, home)).fetchall()
+        if status == "final" and away_score is not None:
+            for c in cands:
+                if (c["away_score"], c["home_score"]) == (away_score, home_score):
+                    prev = c
+                    break
+        if prev is None and len(cands) == 1:
+            prev = cands[0]
+        elif prev is None and len(cands) > 1:
+            for c in cands:
+                if c["status"] != "final":
+                    prev = c
+                    break
+    key = prev["game_key"] if prev is not None else f"{sport}:espn:{espn_id}"
+    if (prev is not None and prev["status"] == "final" and status == "final"
+            and None not in (prev["away_score"], prev["home_score"])
+            and (prev["away_score"], prev["home_score"]) != (away_score, home_score)):
+        store.add_issue(
+            con, severity="error", area="collect", sport=sport, game_key=key,
+            detail=f"conflicting-results: final score changed {prev['away_score']}-"
+                   f"{prev['home_score']} ({prev['source_id']}) -> {away_score}-"
+                   f"{home_score} (SRC_ESPN_SCOREBOARD); logged, not silent")
+    con.execute(
+        """INSERT INTO games(game_key, sport, league_game_id, season, game_type, game_date,
+           start_utc, week_or_slate, away_team, home_team, neutral, venue, status,
+           away_score, home_score, overtime, source_id, source_url, retrieved_utc,
+           verified, verify_note, extra_json)
+           VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 0, ?, ?, ?, ?, NULL,
+           'SRC_ESPN_SCOREBOARD', ?, ?, 1, 'ESPN nightly pull', NULL)
+           ON CONFLICT(game_key) DO UPDATE SET status=excluded.status,
+             away_score=excluded.away_score, home_score=excluded.home_score,
+             start_utc=COALESCE(excluded.start_utc, games.start_utc),
+             retrieved_utc=excluded.retrieved_utc""",
+        (key, sport, espn_id, season, game_type,
+         date, start_utc, week, away, home, venue,
+         status, away_score, home_score, url, utcnow_iso()))
+    return key
+
+
 def _upsert_espn_event(con, sport, ev, url) -> tuple[int, int]:
     comp = (ev.get("competitions") or [{}])[0]
     competitors = comp.get("competitors", [])
@@ -104,25 +159,15 @@ def _upsert_espn_event(con, sport, ev, url) -> tuple[int, int]:
     status = {"pre": "scheduled", "in": "live", "post": "final"}.get(state, "scheduled")
     season = str((((ev.get("season") or {}).get("year")) or "")) or _season_guess(sport)
     date = (comp.get("date") or ev.get("date") or "")[:10]
-    game_key = f"{sport}:espn:{ev['id']}"
+    a_score = _int_or_none(away.get("score")) if status == "final" else None
+    h_score = _int_or_none(home.get("score")) if status == "final" else None
+    game_key = _guarded_upsert_game(
+        con, sport=sport, espn_id=str(ev["id"]), season=season,
+        game_type=_gametype(sport, ev), date=date,
+        start_utc=comp.get("date"), week=_week(ev), away=aa, home=ha,
+        venue=(comp.get("venue") or {}).get("fullName"),
+        status=status, away_score=a_score, home_score=h_score, url=url)
     now = utcnow_iso()
-    con.execute(
-        """INSERT INTO games(game_key, sport, league_game_id, season, game_type, game_date,
-           start_utc, week_or_slate, away_team, home_team, neutral, venue, status,
-           away_score, home_score, overtime, source_id, source_url, retrieved_utc,
-           verified, verify_note, extra_json)
-           VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 0, ?, ?, ?, ?, NULL,
-           'SRC_ESPN_SCOREBOARD', ?, ?, 1, 'ESPN nightly pull', NULL)
-           ON CONFLICT(game_key) DO UPDATE SET status=excluded.status,
-             away_score=excluded.away_score, home_score=excluded.home_score,
-             start_utc=COALESCE(excluded.start_utc, games.start_utc),
-             retrieved_utc=excluded.retrieved_utc""",
-        (game_key, sport, str(ev["id"]), season, _gametype(sport, ev),
-         date, comp.get("date"), _week(ev), aa, ha,
-         (comp.get("venue") or {}).get("fullName"),
-         status,
-         _int_or_none(home.get("score")) if status == "final" else None,
-         _int_or_none(away.get("score")) if status == "final" else None, url, now))
     n_prices = 0
     for odd in comp.get("odds", []) or []:
         prov = ((odd.get("provider") or {}).get("name")) or "ESPN"
@@ -529,10 +574,6 @@ def main() -> dict:
             out["forward"][sid] = {"error": str(e)}
             store.add_issue(con, severity="error", area="forward",
                             detail=f"{sid}: {e}")
-    if "S-MULTI-04" not in out["forward"] or "skipped" not in out["forward"].get("S-MULTI-04", {}):
-        pass
-    else:
-        pass
     out["settle"] = engine.settle_all(con)
     q = quality.run_checks(con)
     store.set_meta(con, "last_quality_run", json.dumps(q))

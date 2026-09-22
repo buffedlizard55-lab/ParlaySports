@@ -324,6 +324,135 @@ class TestNoLookahead(unittest.TestCase):
         self.assertEqual(leg["result"], "win")  # AWY 20 @ HME 17
         self.assertEqual(leg["leg_detail"], '{"price_id": 2}')  # untouched
         self.assertIn("20", leg["settle_detail"])  # result recorded separately
+        row = c.execute("SELECT payout, pnl, roi_parlay FROM parlays").fetchone()
+        self.assertAlmostEqual(row["pnl"], 15.0)      # payout 25 - stake 10
+        self.assertAlmostEqual(row["payout"], 25.0)   # +150 -> decimal 2.5 x $10
+        self.assertAlmostEqual(row["roi_parlay"], 1.5)
+
+
+class TestPass2Fixes(unittest.TestCase):
+    def setUp(self):
+        self.tmp = tempfile.TemporaryDirectory()
+        self.con = store.connect(Path(self.tmp.name) / "t.db")
+
+    def tearDown(self):
+        self.con.close()
+        self.tmp.cleanup()
+
+    def test_insert_parlay_never_duplicates_legs(self):
+        parlay = {
+            "parlay_id": "BA-T-001", "strategy_id": "S-NFL-01", "version": "v1",
+            "username": "t", "sport_scope": "NFL", "sports": ["NFL"], "n_legs": 1,
+            "market_mix": "ML", "stake": 10.0, "pricing_grade": "REFERENCE",
+            "combined_decimal": 2.0, "combined_american": 100.0,
+            "potential_payout": 20.0, "model_prob": 0.5,
+            "decision_utc": "2026-01-01T12:00:00Z", "slate_date": "2026-01-02",
+            "test_mode": "backtest",
+            "legs": [{"strategy_id": "S-NFL-01", "version": "v1", "game_key": "NFL:x",
+                      "sport": "NFL", "market": "ML", "selection": "home", "line": None,
+                      "odds_american": 100.0, "odds_type": "market_reference",
+                      "model_prob": 0.5, "features": {}, "price_id": 1, "note": "",
+                      "decision_utc": "2026-01-01T12:00:00Z"}],
+        }
+        from parlaysports.parlay import insert_parlay
+        insert_parlay(self.con, parlay)
+        insert_parlay(self.con, parlay)  # second call must be a no-op for legs
+        n = self.con.execute("SELECT COUNT(*) AS n FROM legs WHERE parlay_id='BA-T-001'"
+                             ).fetchone()["n"]
+        self.assertEqual(n, 1)
+
+    def test_score_correction_is_logged_not_silent(self):
+        from parlaysports.ingest import _insert_game
+        g = {"game_key": "MLB:1", "sport": "MLB", "league_game_id": "1",
+             "season": "2020", "game_type": "R", "game_date": "2020-04-01",
+             "start_utc": None, "week_or_slate": None, "away_team": "A",
+             "home_team": "B", "neutral": 0, "venue": None, "status": "final",
+             "away_score": 3, "home_score": 1, "overtime": None,
+             "source_id": "t1", "source_url": "u", "retrieved_utc": "2020-01-01T00:00:00Z",
+             "verified": 0, "verify_note": "", "extra_json": None}
+        _insert_game(self.con, dict(g))
+        g2 = dict(g, source_id="t2", away_score=4)
+        _insert_game(self.con, g2)  # conflicting final -> issue filed
+        issues = self.con.execute("SELECT detail FROM issues").fetchall()
+        self.assertTrue(any("conflicting-results" in i["detail"] and "3-1" in i["detail"]
+                            for i in issues))
+        # identical re-import of the CURRENT row -> no new issue
+        _insert_game(self.con, dict(g2, source_id="t3"))
+        n_after = self.con.execute("SELECT COUNT(*) AS n FROM issues").fetchone()["n"]
+        self.assertEqual(n_after, len(issues))
+
+    def test_cover_mapping_excludes_pushes(self):
+        from parlaysports.strategies import _cover_mapping_uncached, clear_cover_cache
+        c = self.con
+        for i, (ml, line, aw, hm) in enumerate([
+                (-200, -3.0, 10, 20),   # fav covers (home -3 wins by 10)
+                (-200, -3.0, 17, 20),   # push on 3
+                (-200, -3.0, 18, 20),   # fav fails
+                (-200, -3.0, 10, 20)] * 12):  # 48 rows, 36 non-push
+            c.execute("""INSERT INTO games(game_key, sport, league_game_id, season,
+               game_type, game_date, start_utc, week_or_slate, away_team, home_team,
+               neutral, venue, status, away_score, home_score, overtime, source_id,
+               source_url, retrieved_utc, verified, verify_note, extra_json)
+               VALUES (?, 'NFL', ?, '2020', 'REG', ?, NULL, NULL, 'A', 'H', 0, NULL,
+               'final', ?, ?, NULL, 't', 'u', 'x', 0, '', NULL)""",
+                      (f"NFL:{i}", str(i), f"2020-09-{10 + i // 4:02d}", aw, hm))
+            c.execute("""INSERT INTO prices(game_key, market, selection, line,
+               odds_american, odds_type, source_id, source_url, observed_utc,
+               close_flag, note) VALUES (?, 'SPREAD', 'home', ?, -110,
+               'market_reference', 't', 'u', 'x', 1, '')""", (f"NFL:{i}", line))
+            c.execute("""INSERT INTO prices(game_key, market, selection, line,
+               odds_american, odds_type, source_id, source_url, observed_utc,
+               close_flag, note) VALUES (?, 'ML', 'home', NULL, ?,
+               'market_reference', 't', 'u', 'x', 1, '')""", (f"NFL:{i}", ml))
+        c.commit()
+        clear_cover_cache()
+        # american -200 -> implied 0.6667 lives in the 0.65-0.70 bucket
+        cov = _cover_mapping_uncached(c, "NFL", "2021", "fav", 0.65, 0.70)
+        # 36 decided games (12 pushes dropped): 24 covers -> 2/3 exactly
+        self.assertIsNotNone(cov)
+        self.assertAlmostEqual(cov, 24 / 36, places=6)
+
+    def test_missing_historical_periods_flagged(self):
+        from parlaysports import quality
+        q = quality.run_checks(self.con)
+        names = {c["check"] for c in q["checks"]}
+        self.assertIn("missing-historical-periods", names)
+        mm = next(c for c in q["checks"] if c["check"] == "missing-historical-periods")
+        self.assertGreater(mm["problems"], 0)  # empty DB: every season is a gap
+
+    def test_forward_refuses_past_gameday_without_start(self):
+        from parlaysports import engine
+        c = self.con
+        c.execute("""INSERT INTO games(game_key, sport, league_game_id, season, game_type,
+           game_date, start_utc, week_or_slate, away_team, home_team, neutral, venue,
+           status, away_score, home_score, overtime, source_id, source_url,
+           retrieved_utc, verified, verify_note, extra_json)
+           VALUES ('NFL:past','NFL','p','2026','REG','2026-09-21',NULL,NULL,'A','B',
+           0,NULL,'scheduled',NULL,NULL,NULL,'t','u','x',0,'',NULL)""")
+        c.execute("""INSERT INTO prices(game_key, market, selection, line, odds_american,
+           odds_type, source_id, source_url, observed_utc, close_flag, note)
+           VALUES ('NFL:past','ML','away',NULL,-110,'market_reference','t','u','x',0,'')""")
+        c.execute("""INSERT INTO prices(game_key, market, selection, line, odds_american,
+           odds_type, source_id, source_url, observed_utc, close_flag, note)
+           VALUES ('NFL:past','ML','home',NULL,-110,'market_reference','t','u','x',0,'')""")
+        c.commit()
+        r = engine.run_forward(c, "S-NFL-01", ["2026-09-21"],
+                               decision_utc="2026-09-22T01:30:00Z")
+        self.assertEqual(r["parlays"], 0)
+        self.assertGreaterEqual(r["skipped_past"], 1)
+
+    def test_catalog_version_immutable(self):
+        from parlaysports.strategies import install_catalog
+        c = self.con
+        install_catalog(c)
+        c.execute("UPDATE strategies SET hypothesis='TAMPERED' WHERE strategy_id='S-NFL-01'")
+        c.commit()
+        install_catalog(c)  # must refuse to overwrite the changed row
+        row = c.execute("SELECT hypothesis FROM strategies WHERE strategy_id='S-NFL-01'"
+                        ).fetchone()
+        self.assertEqual(row["hypothesis"], "TAMPERED")  # preserved + issue filed
+        self.assertTrue(any("refusing to overwrite" in i["detail"] for i in
+                            c.execute("SELECT detail FROM issues")))
 
 
 if __name__ == "__main__":

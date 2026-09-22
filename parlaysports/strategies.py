@@ -266,9 +266,26 @@ CATALOG_BY_ID = {s["strategy_id"]: s for s in STRATEGIES}
 
 
 def install_catalog(con: sqlite3.Connection) -> int:
-    from .util import utcnow_iso
+    from .store import add_issue
     n = 0
     for s in STRATEGIES:
+        prev = con.execute(
+            "SELECT * FROM strategies WHERE strategy_id=? AND version=?",
+            (s["strategy_id"], s["version"])).fetchone()
+        if prev is not None:
+            changed = [k for k in ("name", "sport", "hypothesis", "markets",
+                                   "selection_rules", "construction_rules",
+                                   "required_data", "min_edge", "stake", "max_legs")
+                       if str(prev[k]) != str(s.get(k))]
+            if changed:
+                # Versioned rules are immutable: a changed definition must get a
+                # new version or every historical result becomes irreproducible.
+                add_issue(con, severity="error", area="strategies",
+                          sport=s["sport"],
+                          detail=(f"{s['strategy_id']} {s['version']}: catalog "
+                                  f"definition would modify fields {changed}; "
+                                  f"refusing to overwrite — bump the version"))
+                continue
         con.execute(
             """INSERT OR REPLACE INTO strategies(strategy_id, version, username, name, sport,
                category, hypothesis, markets, selection_rules, construction_rules,
@@ -380,12 +397,14 @@ def _cover_mapping_uncached(con, sport, before_season, side_kind,
             continue
         if not (lo <= p < hi):
             continue
-        n += 1
         if r["selection"] == "home":
-            covered = (r["home_score"] + r["line"]) > r["away_score"]
+            margin = (r["home_score"] + r["line"]) - r["away_score"]
         else:
-            covered = (r["away_score"] + r["line"]) > r["home_score"]
-        if covered:
+            margin = (r["away_score"] + r["line"]) - r["home_score"]
+        if margin == 0:
+            continue  # pushes are excluded from the cover denominator
+        n += 1
+        if margin > 0:
             c += 1
     if n < 30:
         return None
@@ -410,40 +429,69 @@ def prev_final(con: sqlite3.Connection, sport: str, team: str,
     return dict(row) if row else None
 
 
+def _team_dates(con: sqlite3.Connection, sport: str, team: str,
+                start_excl: str | None, end_excl: str, end_key: str | None = None,
+                statuses: tuple[str, ...] = ("final",),
+                limit: int | None = None) -> list[sqlite3.Row]:
+    """Team's games in a date window from both sides of the boxscore.
+
+    UNION ALL keeps both legs on the (sport, team, game_date) indexes; an
+    OR predicate would table-scan. All boundaries are strict/exclusive on the
+    (game_date, game_key) decision point so nothing at-or-after the game can
+    leak in. Statuses are matched exactly as given.
+    """
+    st_list = ",".join("?" for _ in statuses)
+    key_clause = " AND (game_date < ? OR (game_date = ? AND game_key < ?))" if end_key else " AND game_date < ?"
+    args_tail: list[Any] = ([start_excl] if start_excl else [])
+    if end_key:
+        args_tail += [end_excl, end_excl, end_key]
+    else:
+        args_tail += [end_excl]
+    q = f"""SELECT game_date, game_key, season, away_team, home_team,
+                   away_score, home_score FROM games
+            WHERE sport=? AND away_team=? AND status IN ({st_list})
+              {"AND game_date >= ?" if start_excl else ""}{key_clause}
+            UNION ALL
+            SELECT game_date, game_key, season, away_team, home_team,
+                   away_score, home_score FROM games
+            WHERE sport=? AND home_team=? AND status IN ({st_list})
+              {"AND game_date >= ?" if start_excl else ""}{key_clause}
+            ORDER BY game_date DESC, game_key DESC"""
+    head = [sport, team, *statuses, *args_tail]
+    tail = [sport, team, *statuses, *args_tail]
+    sql_args = [*head, *tail]
+    if limit:
+        q += " LIMIT ?"
+        sql_args.append(limit)
+    return con.execute(q, sql_args).fetchall()
+
+
 def games_in_last_n_days(con: sqlite3.Connection, sport: str, team: str,
                          game_date: str, n: int) -> int:
     start = (datetime.strptime(game_date, "%Y-%m-%d") - timedelta(days=n)).strftime("%Y-%m-%d")
-    row = con.execute(
-        """SELECT COUNT(*) AS n FROM games WHERE sport=?
-           AND (away_team=? OR home_team=?) AND game_date >= ? AND game_date < ?
-           AND status IN ('final','scheduled','live')""",
-        (sport, team, team, start, game_date)).fetchone()
-    return int(row["n"] or 0)
+    rows = _team_dates(con, sport, team, start_excl=start, end_excl=game_date,
+                       statuses=("final", "scheduled", "live"))
+    return len(rows)
 
 
 def is_b2b(con: sqlite3.Connection, sport: str, team: str, game_date: str) -> bool:
-    prev = con.execute(
-        """SELECT game_date FROM games WHERE sport=? AND (away_team=? OR home_team=?)
-           AND game_date < ? AND status IN ('final','scheduled','live')
-           ORDER BY game_date DESC LIMIT 1""",
-        (sport, team, team, game_date)).fetchone()
-    if prev is None:
+    rows = _team_dates(con, sport, team, start_excl=None, end_excl=game_date,
+                       statuses=("final", "scheduled", "live"), limit=1)
+    if not rows:
         return False
     d = datetime.strptime(game_date, "%Y-%m-%d")
-    p = datetime.strptime(prev["game_date"], "%Y-%m-%d")
+    p = datetime.strptime(rows[0]["game_date"], "%Y-%m-%d")
     return (d - p).days == 1
 
 
 def home_away_split(con: sqlite3.Connection, sport: str, team: str,
                     game_date: str, game_key: str, season: str) -> dict[str, Any]:
-    rows = con.execute(
-        """SELECT away_team, home_team, away_score, home_score FROM games
-           WHERE sport=? AND season=? AND status='final'
-             AND (away_team=? OR home_team=?)
-             AND (game_date < ? OR (game_date=? AND game_key < ?))""",
-        (sport, season, team, team, game_date, game_date, game_key)).fetchall()
+    rows = _team_dates(con, sport, team, start_excl=None, end_excl=game_date,
+                       end_key=game_key)
     hw = hl = aw = al = 0
     for r in rows:
+        if r["season"] != season:
+            continue
         home_win = r["home_score"] > r["away_score"]
         if r["home_team"] == team:
             hw, hl = hw + (1 if home_win else 0), hl + (0 if home_win else 1)
@@ -454,13 +502,8 @@ def home_away_split(con: sqlite3.Connection, sport: str, team: str,
 
 def last_n_form(con: sqlite3.Connection, sport: str, team: str,
                 game_date: str, game_key: str, n: int = 10) -> dict[str, Any]:
-    rows = con.execute(
-        """SELECT away_team, home_team, away_score, home_score, game_date
-           FROM games WHERE sport=? AND status='final'
-             AND (away_team=? OR home_team=?)
-             AND (game_date < ? OR (game_date=? AND game_key < ?))
-           ORDER BY game_date DESC, game_key DESC LIMIT ?""",
-        (sport, team, team, game_date, game_date, game_key, n)).fetchall()
+    rows = _team_dates(con, sport, team, start_excl=None, end_excl=game_date,
+                       end_key=game_key, limit=n)
     w = sum(1 for r in rows
             if (r["home_team"] == team and r["home_score"] > r["away_score"])
             or (r["away_team"] == team and r["away_score"] > r["home_score"]))
