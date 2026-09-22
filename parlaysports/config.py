@@ -6,7 +6,7 @@ from __future__ import annotations
 
 from pathlib import Path
 
-__version__ = "1.0.0"
+__version__ = "1.1.0"
 
 ROOT = Path(__file__).resolve().parent.parent
 DATA_DIR = ROOT / "data"

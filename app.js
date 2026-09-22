@@ -10,6 +10,7 @@ async function get(name) {
   return D[name];
 }
 const $ = (s) => document.querySelector(s);
+const on = (sel, ev, fn) => { const el = $(sel); if (el) el.addEventListener(ev, fn); };
 const esc = (x) => String(x == null ? "" : x).replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
 const money = (x) => (x == null ? "—" : (x < 0 ? "−$" : "$") + Math.abs(x).toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 }));
 const money0 = (x) => (x == null ? "—" : (x < 0 ? "−$" : "$") + Math.abs(Math.round(x)).toLocaleString("en-US"));
@@ -485,7 +486,7 @@ function afterRender(h) {
     if (clr) clr.addEventListener("click", () => { Object.assign(window.__lb, { from: "", to: "", strat: "", market: "", size: "" }); render(); });
   }
   if (h === "upcoming") {
-    ["up-strat", "up-sport", "up-grade", "up-market", "up-size"].forEach((id) => $("#" + id).addEventListener("change", async () => {
+    ["up-strat", "up-sport", "up-grade", "up-market", "up-size"].forEach((id) => on("#" + id, "change", async () => {
       const up = await get("upcoming");
       const list = applyTicketFilters(up, "up");
       const bySlate = {};
@@ -495,9 +496,9 @@ function afterRender(h) {
   }
   if (h === "completed") {
     renderDonePage();
-    ["done-strat", "done-sport", "done-grade", "done-result", "done-market", "done-size"].forEach((id) => $("#" + id).addEventListener("change", () => { window.__pg = 0; renderDonePage(); }));
-    $("#pg-prev").addEventListener("click", () => { window.__pg--; renderDonePage(); });
-    $("#pg-next").addEventListener("click", () => { window.__pg++; renderDonePage(); });
+    ["done-strat", "done-sport", "done-grade", "done-result", "done-market", "done-size"].forEach((id) => on("#" + id, "change", () => { window.__pg = 0; renderDonePage(); }));
+    on("#pg-prev", "click", () => { window.__pg--; renderDonePage(); });
+    on("#pg-next", "click", () => { window.__pg++; renderDonePage(); });
   }
   if (h.indexOf("strategy/") === 0) {
     renderHistPage();
@@ -510,7 +511,8 @@ async function boot() {
   try {
     const meta = await get("meta");
     $("#asof").textContent = "data as of " + (meta.data_as_of_utc || "?").replace("T", " ").replace("Z", " UTC");
-    $("#foot").innerHTML = "ParlaySports · simulated paper competition · no real money · seed manifest <code>" +
+    $("#foot").innerHTML = "ParlaySports · simulated paper competition · no real money · engine v" +
+      esc(meta.engine_version || "?") + " · seed manifest <code>" +
       esc((meta.seed_manifest_sha256 || "").slice(0, 12)) + "</code> · exported " + esc(dt(meta.exported_utc));
   } catch (e) { /* offline preview */ }
   window.addEventListener("hashchange", render);

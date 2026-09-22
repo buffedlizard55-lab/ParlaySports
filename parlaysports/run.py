@@ -30,11 +30,21 @@ def cmd_seed(args) -> dict:
 def cmd_backtest(args) -> dict:
     con = store.connect()
     out = {}
-    ids = [args.strategy] if args.strategy else [s for s in CATALOG_BY_ID
-                                                 if s not in MULTI_SOURCES]
+    if args.strategy:
+        ids, multi_ids = [args.strategy], []
+        if args.strategy in MULTI_SOURCES:
+            ids, multi_ids = [], [args.strategy]
+    else:
+        ids = [s for s in CATALOG_BY_ID if s not in MULTI_SOURCES]
+        multi_ids = [s for s in CATALOG_BY_ID if s in MULTI_SOURCES]
     for sid in ids:
         out[sid] = engine.run_backtest(con, sid)
         print(f"backtest {sid}: {out[sid]}", flush=True)
+    if multi_ids:
+        # cross-sport overlap engine; one shared signal cache for the batch
+        out.update(engine.run_backtest_multi_all(con, multi_ids))
+        for sid in multi_ids:
+            print(f"backtest-multi {sid}: {out[sid]}", flush=True)
     store.set_meta(con, "last_backtest_utc", utcnow_iso())
     con.commit()
     return out

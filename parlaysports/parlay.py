@@ -53,6 +53,10 @@ def build_parlays(signals: list[dict[str, Any]], strategy: dict[str, Any],
     min_prob = MIN_MODEL_PROB_LOTTO if is_lotto else MIN_MODEL_PROB_STANDARD
     max_parlays = 1 if is_lotto else MAX_PARLAYS_PER_SLATE
     require_multi = strategy.get("sport") == "MULTI"
+    # Catalog construction rules can cap legs per sport (e.g. S-MULTI-01:
+    # "1 leg per sport max" -- the top-edge leg of each sport, since the pool
+    # arrives edge-sorted). None/absent = unlimited.
+    max_per_sport = strategy.get("max_per_sport")
 
     pool = sorted(signals, key=_sort_key_leg)
     parlays: list[dict[str, Any]] = []
@@ -62,6 +66,7 @@ def build_parlays(signals: list[dict[str, Any]], strategy: dict[str, Any],
         legs: list[dict[str, Any]] = []
         sports: set[str] = set()
         legs_games: set[str] = set()
+        sport_counts: dict[str, int] = {}
         rest: list[dict[str, Any]] = []
         for sig in pool:
             if sig["game_key"] in used_game or sig["game_key"] in legs_games:
@@ -70,9 +75,13 @@ def build_parlays(signals: list[dict[str, Any]], strategy: dict[str, Any],
             if len(legs) >= max_legs:
                 rest.append(sig)
                 continue
+            if max_per_sport and sport_counts.get(sig["sport"], 0) >= max_per_sport:
+                rest.append(sig)
+                continue
             legs.append(sig)
             legs_games.add(sig["game_key"])
             sports.add(sig["sport"])
+            sport_counts[sig["sport"]] = sport_counts.get(sig["sport"], 0) + 1
         if require_multi and len(sports) < 2 and len(legs) < 2:
             break
         if len(legs) < 2:

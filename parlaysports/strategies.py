@@ -234,8 +234,8 @@ STRATEGIES: list[dict[str, Any]] = [
      "markets": "ML", "selection_rules": "Top model edge per in-season sport (edge>=.03 on market legs; MODEL legs admitted at model_prob>=.60); 2-4 legs across >=2 sports.",
      "construction_rules": "1 leg per sport max, >=2 sports required.",
      "required_data": "all single-sport models", "min_edge": 0.03,
-     "stake": 10.0, "max_legs": 4, "status": "active",
-     "limitations": "FORWARD ONLY in v1 (no cross-sport backtest overlap engine). Independence assumed across legs."},
+     "stake": 10.0, "max_legs": 4, "max_per_sport": 1, "status": "active",
+     "limitations": "Backtest covers cross-sport overlap slates only (dates where >=2 per-sport backtest windows hold finals; see R-017); forward covers every in-season slate. Independence assumed across legs."},
     {"strategy_id": "S-MULTI-02", "version": VERSION, "username": "CrossSportEdge",
      "name": "Best edges any sport", "sport": "MULTI", "category": "multi-sport",
      "hypothesis": "Pooling the highest-edge legs across sports beats single-sport concentration.",
@@ -243,7 +243,7 @@ STRATEGIES: list[dict[str, Any]] = [
      "construction_rules": "Distinct games; any sport mix.",
      "required_data": "all single-sport models", "min_edge": 0.03,
      "stake": 10.0, "max_legs": 4, "status": "active",
-     "limitations": "FORWARD ONLY in v1. Independence assumed across legs."},
+     "limitations": "Backtest covers cross-sport overlap slates only (dates where >=2 per-sport backtest windows hold finals; see R-017). Independence assumed across legs."},
     {"strategy_id": "S-MULTI-03", "version": VERSION, "username": "TotalChaos",
      "name": "Cross-sport totals", "sport": "MULTI", "category": "multi-sport",
      "hypothesis": "Totals edges in different sports are uncorrelated; parlaying them harvests multiple edges.",
@@ -251,7 +251,7 @@ STRATEGIES: list[dict[str, Any]] = [
      "construction_rules": "Distinct games; totals only.",
      "required_data": "totals models", "min_edge": 0.03,
      "stake": 10.0, "max_legs": 4, "status": "active",
-     "limitations": "FORWARD ONLY in v1. Weather/pace correlation within a day is ignored."},
+     "limitations": "Backtest covers cross-sport overlap slates only (dates where >=2 per-sport backtest windows hold finals; see R-017). Weather/pace correlation within a day is ignored."},
     {"strategy_id": "S-MULTI-04", "version": VERSION, "username": "LotteryTicket",
      "name": "Longshot lottery", "sport": "MULTI", "category": "multi-sport",
      "hypothesis": "Small-stake up-to-8-leg longshots on plus-money legs are a bounded entertainment book, tracked separately.",
@@ -259,7 +259,7 @@ STRATEGIES: list[dict[str, Any]] = [
      "construction_rules": "Up to 8 legs (0.2% min-prob gate may shorten), distinct games, $25 stake.",
      "required_data": "all single-sport models", "min_edge": 0.0,
      "stake": 25.0, "max_legs": 8, "status": "active",
-     "limitations": "FORWARD ONLY in v1. Negative expectation expected; sized at 0.25%. Never chased."},
+     "limitations": "Backtest covers cross-sport overlap slates only, max 1 ticket per ISO week in both books (see R-017). Negative expectation expected; sized at 0.25%. Never chased."},
 ]
 
 CATALOG_BY_ID = {s["strategy_id"]: s for s in STRATEGIES}

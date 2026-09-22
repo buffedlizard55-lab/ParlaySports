@@ -102,9 +102,9 @@
   "method": "Scoped the join across four calendars + four price histories with one decision clock.",
   "ref_strategy": "S-MULTI-01",
   "research_id": "R-009",
-  "result": "DEFERRED honestly: MULTI strategies are forward-only; component signal hit-rates shown as reference.",
+  "result": "DEFERRED honestly: MULTI strategies are forward-only; component signal hit-rates shown as reference. Superseded by R-017: the overlap engine shipped in v1.1.",
   "sport": "MULTI",
-  "status": "hypothesis",
+  "status": "superseded",
   "title": "Cross-sport backtest overlap engine deferred to v2"
  },
  {
@@ -190,5 +190,29 @@
   "sport": "MULTI",
   "status": "hypothesis",
   "title": "Injuries and availability: no point-in-time verified feed wired in v1"
+ },
+ {
+  "created_utc": "2026-09-22T02:00:00Z",
+  "data_window": "window intersections: NFL\u2229NBA Oct-Dec 2014-2022, NFL\u2229MLB Sep 2023-Sep 2025, NFL\u2229NHL Oct 2025-Jan 2026",
+  "hypothesis": "A single-decision-clock cross-sport backtest is feasible over the existing verified per-sport windows without any new data source.",
+  "method": "Computed pairwise intersections of BACKTEST_WINDOWS over final slates; pooled the MULTI source generators per slate at T12:00Z with close-only prices; reused the forward admission gate and builder unchanged; lottery weekly cap enforced per ISO week of the slate. The result line is regenerated from the actual build output on every seed run (update_r017_result) so the log can never drift from the record.",
+  "ref_strategy": "S-MULTI-01",
+  "research_id": "R-017",
+  "result": "CONFIRMED on the pinned seed: 307 candidate slates where >=2 per-sport backtest windows overlap (MLB&NFL: 36 slates (2023-09-07..2025-09-28); NBA&NFL: 232 slates (2014-10-30..2022-12-29); NFL&NHL: 39 slates (2025-10-09..2026-01-04)). Tickets on record -- S-MULTI-01: 300 tickets / 600 legs over 155 slates, S-MULTI-02: 366 tickets / 1403 legs over 216 slates, S-MULTI-03: 139 tickets / 476 legs over 131 slates, S-MULTI-04: 108 tickets / 651 legs over 108 slates. One decision clock per slate (T12:00Z), closing prices only, the forward admission gate reused unchanged, and the lottery weekly cap enforced per ISO week. Leg independence is still assumed (no correlation model); overlap slates are computed from verified finals only, never padded.",
+  "sport": "MULTI",
+  "status": "tested",
+  "title": "Cross-sport backtest overlap engine (v1.1): window intersections are real and tradeable"
+ },
+ {
+  "created_utc": "2026-09-22T02:00:00Z",
+  "data_window": "seed exports + pre-fix dry run on the pinned seed",
+  "hypothesis": "The parlay builder honors every versioned catalog construction rule.",
+  "method": "Line-by-line review of parlay.build_parlays vs catalog text + live ticket inspection on the pinned seed (2026-09-22).",
+  "ref_strategy": "S-MULTI-01",
+  "research_id": "R-018",
+  "result": "REJECTED the hypothesis, then fixed: (1) S-MULTI-01's '1 leg per sport max' was unenforced -- all 3 pre-fix forward tickets and 214 of 227 dry-run backtest tickets carried up to 3 legs of one sport; the builder now takes a machine-readable max_per_sport cap from the catalog. (2) The lottery 'max 1 ticket per week' relied on a one-off note stamp applied after seeding; run_forward now enforces the ISO-week cap and stamps every ticket at creation, so nightly runs cannot double-file a week. Catalog rule text unchanged (still v1); the engine was brought into compliance.",
+  "sport": "MULTI",
+  "status": "tested",
+  "title": "PASS-3 review: engine violated two documented MULTI rules; both fixed in v1.1"
  }
 ]

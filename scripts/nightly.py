@@ -20,7 +20,7 @@ sys.path.insert(0, str(ROOT))
 
 from parlaysports import engine, export, quality, ratings, store
 from parlaysports.config import DB_PATH
-from parlaysports.strategies import CATALOG_BY_ID
+from parlaysports.strategies import CATALOG_BY_ID, MULTI_SOURCES
 from parlaysports.util import utcnow_iso
 
 UA = {"User-Agent": "ParlaySports-paper-research/1.0 (+https://github.com/buffedlizard55-lab/ParlaySports)"}
@@ -547,6 +547,21 @@ def main() -> dict:
             out[f"elo_{sport}"] = ratings.compute_elo(con, sport)
         except Exception as e:
             out[f"elo_{sport}"] = {"error": str(e)}
+    # Idempotent MULTI-backtest refresh (R-017): a database restored from the
+    # Actions cache may predate the cross-sport overlap engine. Existing
+    # tickets are skipped by parlay_id and settled history is never touched,
+    # so this converges an older record to the current engine deterministically
+    # before the audit gate runs.
+    try:
+        multi_ids = [s for s in CATALOG_BY_ID if s in MULTI_SOURCES]
+        out["backtest_multi"] = engine.run_backtest_multi_all(con, multi_ids)
+        from scripts.seed import update_r017_result
+        update_r017_result(con)
+        con.commit()
+    except Exception as e:
+        out["backtest_multi"] = {"error": str(e)}
+        store.add_issue(con, severity="error", area="backtest",
+                        detail=f"multi-backtest refresh: {e}")
     # Forward generation on fresh slates (next 7 days with scheduled games).
     slates = [r["game_date"] for r in con.execute(
         """SELECT DISTINCT game_date FROM games WHERE status='scheduled'

@@ -178,6 +178,7 @@ CREATE TABLE IF NOT EXISTS parlays (
     result_detail TEXT,
     pnl REAL,
     roi_parlay REAL,
+    payout REAL,
     test_mode TEXT NOT NULL,
     note TEXT
 );

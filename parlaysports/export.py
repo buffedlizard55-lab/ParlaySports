@@ -11,7 +11,7 @@ from pathlib import Path
 from typing import Any
 
 from .books import by_sport_market, leaderboard, strategy_books
-from .config import SITE_DIR
+from .config import SITE_DIR, __version__
 from .store import get_meta
 from .util import utcnow_iso
 
@@ -33,6 +33,7 @@ def export_all(con: sqlite3.Connection) -> dict[str, Any]:
         "exported_utc": utcnow_iso(),
         "data_as_of_utc": get_meta(con, "data_as_of_utc"),
         "seed_manifest_sha256": get_meta(con, "seed_manifest_sha256"),
+        "engine_version": __version__,
         "counts": counts,
         "books": ["backtest", "forward"],
         "disclaimer": ("SIMULATED PAPER COMPETITION. No real money. Model prices are "
@@ -110,8 +111,8 @@ def _history_export(con: sqlite3.Connection) -> int:
     n = 0
     for sid in sids:
         tickets = _parlays_export(
-            con, f"WHERE p.strategy_id='{sid}'",
-            order="p.test_mode, p.slate_date, p.parlay_id")
+            con, "WHERE p.strategy_id=?",
+            order="p.test_mode, p.slate_date, p.parlay_id", params=(sid,))
         _write(f"history_{sid}.json", {"strategy_id": sid, "tickets": tickets,
                                        "count": len(tickets)})
         n += len(tickets)
@@ -119,13 +120,14 @@ def _history_export(con: sqlite3.Connection) -> int:
 
 
 def _parlays_export(con: sqlite3.Connection, where: str, order: str,
-                    limit: int | None = None) -> list[dict[str, Any]]:
+                    limit: int | None = None,
+                    params: tuple = ()) -> list[dict[str, Any]]:
     q = f"""SELECT p.*, (SELECT COUNT(*) FROM legs l WHERE l.parlay_id=p.parlay_id) AS legs_n
             FROM parlays p {where} ORDER BY {order}"""
     if limit:
         q += f" LIMIT {limit}"
     out = []
-    for p in con.execute(q).fetchall():
+    for p in con.execute(q, params).fetchall():
         d = dict(p)
         legs = []
         for l in con.execute(

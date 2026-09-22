@@ -59,10 +59,31 @@ def main() -> int:
                ON s.strategy_id=p.strategy_id AND s.version=p.version
                WHERE s.sport=? AND p.test_mode=?""", (sport, book)).fetchone()["n"]
         check(f"{sport}-{book}-parlays", n > 0, f"{n}")
-    # multi forward only
+    # multi backtests exist and obey the overlap engine's integrity rules (R-017)
+    from parlaysports.engine import BACKTEST_WINDOWS, slate_dates
     n = con.execute("SELECT COUNT(*) AS n FROM parlays WHERE strategy_id LIKE 'S-MULTI-%'"
                     " AND test_mode='backtest'").fetchone()["n"]
-    check("multi-never-backtested", n == 0, f"{n} (must be 0)")
+    check("multi-backtest-tickets-exist", n > 0, f"{n}")
+    bad = 0
+    for r in con.execute(
+            "SELECT parlay_id, sports_json FROM parlays "
+            "WHERE strategy_id LIKE 'S-MULTI-%' AND test_mode='backtest'"):
+        try:
+            if len(set(json.loads(r["sports_json"] or "[]"))) < 2:
+                bad += 1
+        except ValueError:
+            bad += 1
+    check("multi-backtest-two-sports", bad == 0, f"{bad} tickets spanning <2 sports")
+    sport_dates = {sp: set(slate_dates(con, sp, w["seasons"], w["game_types"], "final"))
+                   for sp, w in BACKTEST_WINDOWS.items()}
+    bad = 0
+    for r in con.execute(
+            "SELECT DISTINCT slate_date FROM parlays "
+            "WHERE strategy_id LIKE 'S-MULTI-%' AND test_mode='backtest'"):
+        if sum(r["slate_date"] in s for s in sport_dates.values()) < 2:
+            bad += 1
+    check("multi-backtest-window-dates", bad == 0,
+          f"{bad} slate dates outside a >=2-sport window overlap")
     # 5. settlement integrity
     n = con.execute("SELECT COUNT(*) AS n FROM parlays WHERE status IN ('won','lost','push')"
                     ).fetchone()["n"]
@@ -156,9 +177,10 @@ def main() -> int:
                        "duplicate-events", "conflicting-results", "invalid-stats",
                        "timestamp-order", "stale-snapshots", "settlement-recompute",
                        "ledger-chain", "parlay-math", "backtest-leakage", "odds-sanity",
-                       "missing-historical-periods"}
+                       "missing-historical-periods", "multi-backtest-integrity"}
     lack = sorted(required_checks - names)
-    check("quality-registry-complete", not lack, ",".join(lack) if lack else "13 checks live")
+    check("quality-registry-complete", not lack,
+          ",".join(lack) if lack else f"{len(required_checks)} checks live")
     # 19. competitor accounts persist and are exported
     n = con.execute("SELECT COUNT(*) AS n FROM users").fetchone()["n"]
     check("users-persisted", n == 28, f"{n} accounts")
