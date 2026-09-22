@@ -305,6 +305,11 @@
   "detail": "0 ESPN rows shadow a league-log game"
  },
  {
+  "check": "workflow-files-valid",
+  "status": "PASS",
+  "detail": "1 workflow file(s) linted"
+ },
+ {
   "check": "schedule-completeness-clean",
   "status": "PASS",
   "detail": "every season matches its verified league length (or is documented)"

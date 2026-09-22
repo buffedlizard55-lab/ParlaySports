@@ -6,6 +6,7 @@ Run:  python scripts/audit.py
 from __future__ import annotations
 
 import json
+import re
 import sqlite3
 import subprocess
 import sys
@@ -300,6 +301,28 @@ def main() -> int:
                AND h.game_date BETWEEN date(g.game_date,'-1 day') AND date(g.game_date,'+1 day'))
         """).fetchone()["n"]
     check("no-cross-source-duplicate-games", dup == 0, f"{dup} ESPN rows shadow a league-log game")
+
+    # 29. workflow files parse as YAML (dependency-free structural lint).
+    # A bad workflow file does not fail loudly: GitHub reports "workflow file
+    # issue" and the scheduled job silently stops running. This lint catches the
+    # realistic failure mode -- a block scalar that ends early because a
+    # continuation line was not indented, leaving stray text at column 0.
+    wf_dir = ROOT / ".github" / "workflows"
+    wf_problems: list[str] = []
+    for wf in sorted(wf_dir.glob("*.y*ml")):
+        text = wf.read_text()
+        if "jobs:" not in text:
+            wf_problems.append(f"{wf.name}: no jobs: block")
+        if "\t" in text:
+            wf_problems.append(f"{wf.name}: tab character (YAML forbids tabs for indentation)")
+        for n, line in enumerate(text.splitlines(), 1):
+            if not line.strip() or line.lstrip().startswith("#"):
+                continue
+            if line[0] != " " and not re.match(r"^[A-Za-z_][A-Za-z0-9_-]*:", line):
+                wf_problems.append(f"{wf.name}:{n}: stray text at column 0 "
+                                   f"({line[:40]!r}) - block scalar ended early")
+    check("workflow-files-valid", not wf_problems,
+          "; ".join(wf_problems[:4]) or f"{len(list(wf_dir.glob('*.y*ml')))} workflow file(s) linted")
 
     # 28. schedule completeness has no UNEXPLAINED deviation left
     sc = next((c for c in q["checks"] if c["check"] == "schedule-completeness"), None)

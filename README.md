@@ -37,8 +37,8 @@ on the site, and `data/seed/crosscheck/checks_20260922.json`).
 
 ```bash
 make seed    # build DB from pinned seeds, backtest, forward, settle, export
-make test    # 59 unit tests
-make audit   # 62 PASS-2/PASS-3 checks (must be 62/62)
+make test    # 60 unit tests
+make audit   # 63 PASS-2/PASS-3 checks (must be 63/63)
 make uismoke # all 15 site routes render against the real exports
 make serve   # serve this repo root on 0.0.0.0:8000
 ```
@@ -110,9 +110,9 @@ parlaysports/                      engine: config, store, ingest, ratings,
                                    export, sources, util
 scripts/seed.py                    cold-start pipeline (PASS 1 build path)
 scripts/nightly.py                 live pipeline for GitHub Actions
-scripts/audit.py                   PASS 2 mechanical audit (62 checks)
+scripts/audit.py                   PASS 2 mechanical audit (63 checks)
 scripts/sim_nightly_offline.py     offline re-run of the nightly pipeline + audit
-tests/test_platform.py             59 unit tests (stdlib unittest)
+tests/test_platform.py             60 unit tests (stdlib unittest)
 scripts/ui_smoke.mjs               headless route render test (node)
 docs/VERIFICATION_PASS3.md         PASS 3 line-by-line verification + findings
 ```
@@ -169,21 +169,22 @@ exactly 82 games per team once preseason, play-in/postseason and the NBA Cup cha
 are labelled correctly; and the nightly duplicate-row bug that broke the production run is
 fixed and reproduced/fixed in the offline simulation.
 
-* `tests/test_platform.py`: 59/59 (odds math, settlement incl. push-reduction and the
+* `tests/test_platform.py`: 60/60 (odds math, settlement incl. push-reduction and the
   postponed-game void rule, guards, ledger tamper-evidence, Elo point-in-time + rollover,
   catalog completeness + version immutability, score-correction logging, cover-map push
   exclusion, history-gap flags, cross-sport overlap engine incl. close-only pricing and
   single-sport-date refusal, per-sport leg caps, lottery ISO-week caps in both books,
   settle-summary counting, economic-time equity + bankroll-integrity, price/form time
   guards, NBA game-type boundaries, verified-update provenance, nightly matching + dedupe).
-* `scripts/audit.py`: 62/62 (coverage, books separation, settlement + payout,
+* `scripts/audit.py`: 63/63 (coverage, books separation, settlement + payout,
   ledger↔bankroll consistency, UNPRICED-$0, sources on every row, per-strategy history
   files, upcoming/completed purity, leaderboard columns, users, quality registry, docs,
   MULTI-backtest overlap integrity, economic-time bankroll reconciliation, no preseason
   legs in the forward book, NBA game-type evidence, per-slate cap, verified-update
-  application, no cross-source duplicate games, schedule completeness).
+  application, no cross-source duplicate games, schedule completeness,
+  workflow-file lint).
 * `scripts/sim_nightly_offline.py`: re-runs the nightly collectors (against pinned
-  inputs) and the full audit offline — 62/62 on the committed state.
+  inputs) and the full audit offline — 63/63 on the committed state.
 * `scripts/ui_smoke.mjs`: all 15 site routes render headlessly against the real exports
   (`make uismoke`, also gated in the nightly workflow).
 * `data/audit_report.json` is regenerated on every run.

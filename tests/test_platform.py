@@ -1004,6 +1004,22 @@ class TestPass3Fixes(unittest.TestCase):
         out = [o for o in _schedule_completeness(self.con) if "2098-99" in o]
         self.assertTrue(all("exceed" not in o for o in out), out)
 
+    def test_workflow_files_are_lint_clean(self):
+        """A malformed workflow file silently stops the scheduled job: the audit
+        lints for "block scalar ended early" text at column 0 and tabs."""
+        import re as _re
+        wf_dir = ROOT / ".github" / "workflows"
+        self.assertTrue(wf_dir.exists())
+        for wf in sorted(wf_dir.glob("*.y*ml")):
+            text = wf.read_text()
+            self.assertIn("jobs:", text, wf.name)
+            self.assertNotIn("\t", text, f"{wf.name} uses a tab for indentation")
+            for n, line in enumerate(text.splitlines(), 1):
+                if not line.strip() or line.lstrip().startswith("#") or line[0] == " ":
+                    continue
+                self.assertRegex(line, _re.compile(r"^[A-Za-z_][A-Za-z0-9_-]*:"),
+                                 f"{wf.name}:{n} stray text at column 0")
+
     # ---- nightly collector: dedupe + UTC rollover matching -----------------
     def _nightly(self):
         import importlib.util

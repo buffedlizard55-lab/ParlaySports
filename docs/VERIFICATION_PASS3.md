@@ -158,10 +158,12 @@ checks with detail instead of only a count.
 ## Verification results (this commit)
 
 ```
-make test     -> 59/59 unit tests
+make test     -> 60/60 unit tests
 make uismoke  -> 15/15 routes render
-make audit    -> 62/62 checks
-sim           -> 62/62 via scripts/sim_nightly_offline.py (real collector path)
+lint          -> workflow YAML lint (a malformed workflow file silently stops the
+                 scheduled job, so the audit lints every file in .github/workflows)
+make audit    -> 63/63 checks
+sim           -> 63/63 via scripts/sim_nightly_offline.py (real collector path)
 seed          -> 29,056 games, 60,504 prices, 7,014 parlays, 20,570 legs,
                  8,267 ledger rows, 28 users, 24 research entries, 28 verifications
 ```

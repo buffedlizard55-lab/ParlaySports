@@ -130,9 +130,7 @@ jobs:
           if git diff --cached --quiet; then
             echo "no diagnostics to commit"
           else
-            git commit -m "ci: nightly failed on $(date -u +%F) - commit run logs + audit report
-
-Exports were NOT published. See data/ci/*.log and data/audit_report.json for
-the failing gates."
+            git commit -m "ci: nightly failed on $(date -u +%F) - commit run logs + audit report" \
+              -m "Exports were NOT published. See data/ci/*.log and data/audit_report.json for the failing gates."
             git push origin "${{ github.ref_name }}"
           fi

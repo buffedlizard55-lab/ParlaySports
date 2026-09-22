@@ -53,7 +53,7 @@ def main() -> int:
     # The audit checks the unit-test suite and the static site shell too, so the
     # simulation mirrors them in: symlinks stay current with the working tree and
     # keep the harness honest (a real regression is never masked as "artifact").
-    for name in ("tests", "index.html", "styles.css", "app.js"):
+    for name in ("tests", "index.html", "styles.css", "app.js", ".github"):
         link = SIM_DIR / name
         if not link.exists():
             try:
