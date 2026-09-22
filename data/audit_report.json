@@ -12,7 +12,7 @@
  {
   "check": "sport-MLB-has-games",
   "status": "PASS",
-  "detail": "8706 games"
+  "detail": "8709 games"
  },
  {
   "check": "sport-NHL-has-games",
@@ -112,7 +112,7 @@
  {
   "check": "upcoming-parlays-exist",
   "status": "PASS",
-  "detail": "58"
+  "detail": "59"
  },
  {
   "check": "ledger-bankroll-consistent",
@@ -142,47 +142,47 @@
  {
   "check": "export-meta.json",
   "status": "PASS",
-  "detail": "618B"
+  "detail": "620B"
  },
  {
   "check": "export-leaderboard_forward.json",
   "status": "PASS",
-  "detail": "16878B"
+  "detail": "18238B"
  },
  {
   "check": "export-leaderboard_backtest.json",
   "status": "PASS",
-  "detail": "18693B"
+  "detail": "20089B"
  },
  {
   "check": "export-upcoming.json",
   "status": "PASS",
-  "detail": "208121B"
+  "detail": "215436B"
  },
  {
   "check": "export-completed.json",
   "status": "PASS",
-  "detail": "6772514B"
+  "detail": "6776716B"
  },
  {
   "check": "export-strategies.json",
   "status": "PASS",
-  "detail": "624655B"
+  "detail": "635197B"
  },
  {
   "check": "export-games.json",
   "status": "PASS",
-  "detail": "243817B"
+  "detail": "281599B"
  },
  {
   "check": "export-performance.json",
   "status": "PASS",
-  "detail": "679368B"
+  "detail": "686926B"
  },
  {
   "check": "export-research.json",
   "status": "PASS",
-  "detail": "12871B"
+  "detail": "24303B"
  },
  {
   "check": "export-sources.json",
@@ -192,7 +192,7 @@
  {
   "check": "export-quality.json",
   "status": "PASS",
-  "detail": "7123B"
+  "detail": "30948B"
  },
  {
   "check": "site-index.html",
@@ -212,7 +212,7 @@
  {
   "check": "hard-quality-gates",
   "status": "PASS",
-  "detail": "chain+settle+leakage clean"
+  "detail": "chain+settle+leakage+bankroll+price-time+form-time+schedule clean"
  },
  {
   "check": "strategies-documented",
@@ -252,7 +252,7 @@
  {
   "check": "quality-registry-complete",
   "status": "PASS",
-  "detail": "14 checks live"
+  "detail": "18 checks live"
  },
  {
   "check": "users-persisted",
@@ -268,5 +268,50 @@
   "check": "no-duplicate-price-quotes",
   "status": "PASS",
   "detail": "0 duplicated quote groups"
+ },
+ {
+  "check": "bankroll-economic-integrity",
+  "status": "PASS",
+  "detail": "every book reconciles in economic time; no negative balance; no dd > 100%"
+ },
+ {
+  "check": "leaderboard-economic-columns",
+  "status": "PASS",
+  "detail": "min_balance/ledger_drift/max_drawdown on all rows"
+ },
+ {
+  "check": "forward-excludes-preseason",
+  "status": "PASS",
+  "detail": "0 preseason legs in the forward book"
+ },
+ {
+  "check": "nba-game-type-boundaries",
+  "status": "PASS",
+  "detail": "PRE rows {'2023-24': 64, '2024-25': 70, '2025-26': 66, '2026-27': 66}; seasons over 82/team []; rows without derivation evidence 0"
+ },
+ {
+  "check": "slate-cap-enforced",
+  "status": "PASS",
+  "detail": "cap 3/slate (lotto 1/week) respected"
+ },
+ {
+  "check": "verified-updates-applied",
+  "status": "PASS",
+  "detail": "all pinned verified finals are in the record"
+ },
+ {
+  "check": "no-cross-source-duplicate-games",
+  "status": "PASS",
+  "detail": "0 ESPN rows shadow a league-log game"
+ },
+ {
+  "check": "workflow-files-valid",
+  "status": "PASS",
+  "detail": "1 workflow file(s) linted"
+ },
+ {
+  "check": "schedule-completeness-clean",
+  "status": "PASS",
+  "detail": "every season matches its verified league length (or is documented)"
  }
 ]

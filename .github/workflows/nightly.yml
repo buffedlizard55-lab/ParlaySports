@@ -37,21 +37,28 @@ jobs:
 
       - name: Seed (cold start only)
         run: |
+          mkdir -p data/ci
           if [ -f data/parlaysports.db ]; then
-            echo "database restored from cache; skipping seed"
+            echo "database restored from cache; skipping seed" | tee data/ci/seed.log
           else
-            python3 scripts/seed.py
+            python3 scripts/seed.py 2>&1 | tee data/ci/seed.log
             echo "seeded $(date -u +%FT%TZ)" >> "$GITHUB_STEP_SUMMARY"
           fi
 
-      - name: Nightly collect + forward + settle + export
-        run: python3 scripts/nightly.py
+      # Every step tees its own log into data/ci so a failure is diagnosable
+      # from the repository itself (Actions log download is not available to
+      # everyone, and a red run with no evidence is not acceptable).
+      - name: Unit tests
+        run: python3 -m unittest discover -s tests -q 2>&1 | tee data/ci/tests.log
 
-      - name: Audit (PASS 2 gates)
-        run: python3 scripts/audit.py
+      - name: Nightly collect + forward + settle + export
+        run: python3 scripts/nightly.py 2>&1 | tee data/ci/nightly.log
+
+      - name: Audit (PASS 2/3 gates)
+        run: python3 scripts/audit.py 2>&1 | tee data/ci/audit.log
 
       - name: UI smoke (all routes render against real exports)
-        run: node scripts/ui_smoke.mjs
+        run: node scripts/ui_smoke.mjs 2>&1 | tee data/ci/ui_smoke.log
 
       - name: Save database cache
         if: always()
@@ -60,7 +67,43 @@ jobs:
           path: data/parlaysports.db
           key: parlay-db-${{ hashFiles('data/seed/**', 'parlaysports/**', 'scripts/seed.py') }}-${{ github.run_id }}
 
+      - name: Run summary
+        if: always()
+        run: |
+          {
+            echo "## nightly-refresh $(date -u +%FT%TZ)"
+            echo ""
+            echo "| stage | result |"
+            echo "| --- | --- |"
+            for f in seed tests nightly audit ui_smoke; do
+              if [ -f "data/ci/$f.log" ]; then
+                echo "| $f | $(tail -n 1 "data/ci/$f.log" | cut -c1-160) |"
+              else
+                echo "| $f | did not run |"
+              fi
+            done
+            echo ""
+            echo "<details><summary>audit failures</summary>"
+            echo ""
+            echo '```'
+            grep -E '^\s*FAIL|^\[FAIL\]|-- failing checks --' data/ci/audit.log 2>/dev/null | head -n 40 || true
+            echo '```'
+            echo "</details>"
+          } >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Upload logs
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: nightly-logs-${{ github.run_id }}
+          path: |
+            data/ci/*.log
+            data/audit_report.json
+          if-no-files-found: ignore
+          retention-days: 14
+
       - name: Commit refreshed exports
+        if: success()
         run: |
           git config user.name "parlaysports-bot"
           git config user.email "parlaysports-bot@users.noreply.github.com"
@@ -69,5 +112,25 @@ jobs:
             echo "no changes to commit"
           else
             git commit -m "nightly: refresh data exports ($(date -u +%F))"
+            git push origin "${{ github.ref_name }}"
+          fi
+
+      # On failure the exports are NOT published (nothing unverified reaches
+      # Pages), but the evidence is: logs, the audit report and the current
+      # data-quality state are committed so the failure can be diagnosed and
+      # the record shows what the run actually saw.
+      - name: Commit failure diagnostics
+        if: failure()
+        run: |
+          git config user.name "parlaysports-bot"
+          git config user.email "parlaysports-bot@users.noreply.github.com"
+          git checkout -B "${{ github.ref_name }}" 2>/dev/null || true
+          git pull --ff-only origin "${{ github.ref_name }}" || true
+          git add data/ci/*.log data/audit_report.json data/site/quality.json || true
+          if git diff --cached --quiet; then
+            echo "no diagnostics to commit"
+          else
+            git commit -m "ci: nightly failed on $(date -u +%F) - commit run logs + audit report" \
+              -m "Exports were NOT published. See data/ci/*.log and data/audit_report.json for the failing gates."
             git push origin "${{ github.ref_name }}"
           fi

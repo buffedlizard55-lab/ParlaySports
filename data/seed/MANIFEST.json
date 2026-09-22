@@ -97,6 +97,22 @@
    "retrieved_utc": "2026-09-22T01:30:00Z",
    "rows": 8,
    "note": "hand-verified cross-checks"
+  },
+  {
+   "path": "crosscheck/checks_20260922_pass3.json",
+   "sha256": "417db8ed717aac2cc398cfa1cb0542577fecbbc8a704c3f6b6bb5309b942d122",
+   "source_url": "https://en.wikipedia.org/wiki/2026%E2%80%9327_NHL_season",
+   "retrieved_utc": "2026-09-22T18:45:00Z",
+   "rows": 15,
+   "note": "PASS-3 independent verification of schedule lengths, NBA game-type boundaries and pinned finals"
+  },
+  {
+   "path": "updates/verified_results_20260922.json",
+   "sha256": "e0908d498926b5d0b186fca0b5d7f54b213cced14169596db036bc8b3a93b3a5",
+   "source_url": "https://site.api.espn.com/apis/site/v2/sports/football/nfl/scoreboard?dates=20260921",
+   "retrieved_utc": "2026-09-22T18:45:00Z",
+   "rows": 4,
+   "note": "hand-verified finals pinned during PASS-3 (ESPN scoreboard + MLB StatsAPI)"
   }
  ]
 }

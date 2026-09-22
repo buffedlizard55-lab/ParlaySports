@@ -54,6 +54,10 @@ def run_checks(con: sqlite3.Connection) -> dict[str, Any]:
     check("odds-sanity", lambda: _odds_sanity(con))
     check("missing-historical-periods", lambda: _missing_periods(con))
     check("multi-backtest-integrity", lambda: _multi_backtest_integrity(con))
+    check("bankroll-integrity", lambda: _bankroll_integrity(con))
+    check("price-observed-after-decision", lambda: _price_after_decision(con))
+    check("form-snapshot-leakage", lambda: _form_snapshot_leakage(con))
+    check("schedule-completeness", lambda: _schedule_completeness(con))
     con.commit()
     return {"checks": results,
             "total_problems": sum(r["problems"] for r in results)}
@@ -63,11 +67,12 @@ def _missing_scores(con) -> list[str]:
     # Past-date games (before today UTC) still scheduled with no score.
     today = datetime.now(timezone.utc).strftime("%Y-%m-%d")
     rows = con.execute(
-        """SELECT game_key, sport, game_date, game_type FROM games
-           WHERE status='scheduled' AND game_date < ?
+        """SELECT game_key, sport, game_date, game_type, status FROM games
+           WHERE status IN ('scheduled','live') AND game_date < ?
              AND game_type NOT IN ('PRE','E','S','A') LIMIT 50""",
         (today,)).fetchall()
-    return [f"{r['game_key']} ({r['sport']} {r['game_date']}) still scheduled" for r in rows]
+    return [f"{r['game_key']} ({r['sport']} {r['game_date']}) still {r['status']}: "
+            f"no result recorded" for r in rows]
 
 
 def _missing_odds(con) -> list[str]:
@@ -139,6 +144,15 @@ def _invalid_stats(con) -> list[str]:
             "SELECT game_key FROM games WHERE sport='MLB' AND status='final' "
             "AND away_score=home_score LIMIT 20"):
         out.append(f"{r['game_key']}: tied MLB final (impossible)")
+    # A 0-0 final is impossible in every league we carry (a shootout still
+    # produces a goal, a baseball game still produces a run). Such rows mean the
+    # fixture was not played: ingest records them as postponed, so any 0-0 final
+    # left in the table is an import defect that must be reported.
+    for r in con.execute(
+            "SELECT game_key, sport, game_date FROM games WHERE status='final' "
+            "AND away_score=0 AND home_score=0 LIMIT 20"):
+        out.append(f"{r['game_key']} ({r['sport']} {r['game_date']}): 0-0 final is an "
+                   f"impossible scoreline - the fixture was not played as scheduled")
     for r in con.execute(
             "SELECT game_key, sport, away_score, home_score FROM games "
             "WHERE status='final' AND ((sport='NHL' AND (away_score>15 OR home_score>15)) "
@@ -340,3 +354,195 @@ def _multi_backtest_integrity(con) -> list[str]:
             out.append(f"{r['parlay_id']}: slate {r['slate_date']} is not a "
                        f">=2-sport backtest-window overlap ({n_windows} in window)")
     return out[:20]
+
+# --------------------------------------------------- PASS-3 quality checks
+def _bankroll_integrity(con) -> list[str]:
+    """Recompute every book in economic time and refuse impossible states.
+
+    Flags a negative balance at any point, a drawdown above 100% (an
+    ordering/arithmetic bug) and any drift between the recomputed endpoint and
+    bankroll.current_amount. The walk is order-independent by construction:
+    amounts are summed in economic (entry_ts, entry_id) order, so re-sorting
+    ledger rows cannot make the check pass.
+    """
+    from .util import money
+    out: list[str] = []
+    for b in con.execute("SELECT strategy_id, version, book, start_amount, "
+                         "current_amount FROM bankroll").fetchall():
+        bal = float(b["start_amount"])
+        peak = bal
+        maxdd = 0.0
+        negative_at = None
+        for r in con.execute(
+                "SELECT entry_ts, amount FROM ledger WHERE strategy_id=? AND version=? "
+                "AND book=? ORDER BY entry_ts, entry_id",
+                (b["strategy_id"], b["version"], b["book"])).fetchall():
+            bal = money(bal + float(r["amount"]))
+            peak = max(peak, bal)
+            if bal < 0 and negative_at is None:
+                negative_at = r["entry_ts"]
+            if peak > 0:
+                maxdd = max(maxdd, (peak - bal) / peak)
+        tag = f"{b['strategy_id']}/{b['book']}"
+        if negative_at is not None:
+            out.append(f"{tag}: balance went negative ({bal}) at {negative_at}; flat "
+                       f"staking has no bankroll constraint (documented risk)")
+        if maxdd > 1.0:
+            out.append(f"{tag}: drawdown {maxdd:.1%} exceeds 100% (ordering/arithmetic bug)")
+        if abs(bal - float(b["current_amount"])) > 0.01:
+            out.append(f"{tag}: economic-time balance {bal} != bankroll.current_amount "
+                       f"{b['current_amount']} (ledger drift)")
+    return out[:20]
+
+
+def _leg_detail(row) -> dict:
+    import json as _json
+    try:
+        return _json.loads(row["leg_detail"] or "{}")
+    except ValueError:
+        return {}
+
+
+def _price_after_decision(con) -> list[str]:
+    """Every priced leg must use a price that existed when the bet was made.
+
+    The leg's own price_id is authoritative:
+      * a live snapshot (close_flag=0) must have observed_utc <= decision_utc;
+      * a backtest leg may only price off a historical close (close_flag=1),
+        because a live snapshot cannot have existed before the game was played.
+        Historical closes legitimately carry the import-time stamp, which is
+        why they are exempt from the first rule and required by this one;
+      * an unpriced leg must declare its MODEL grade in the note -- never a
+        silent guess at a market price;
+      * the price stamp recorded in the leg features must match the price row.
+    """
+    out: list[str] = []
+    cache: dict[int, tuple] = {}
+    rows = con.execute(
+        "SELECT p.parlay_id, p.test_mode, p.decision_utc, l.leg_id, l.leg_detail, "
+        "l.odds_type FROM parlays p JOIN legs l ON l.parlay_id=p.parlay_id").fetchall()
+    for r in rows:
+        d = _leg_detail(r)
+        if not d and (r["leg_detail"] or "").strip():
+            out.append(f"{r['parlay_id']}: leg {r['leg_id']} has unparsable leg_detail")
+            continue
+        pid = d.get("price_id")
+        if pid is None:
+            # No market price is legitimate ONLY when the leg says so: a model
+            # fair price (MODEL) or no price at all (UNPRICED, zero stake).
+            note = str(d.get("note") or "")
+            otype = r["odds_type"]
+            if otype == "model_fair" and "MODEL" not in note:
+                out.append(f"{r['parlay_id']}: leg {r['leg_id']} is priced from a model fair "
+                           f"value but its note does not declare the MODEL grade")
+            elif otype is None and "UNPRICED" not in note:
+                out.append(f"{r['parlay_id']}: leg {r['leg_id']} has no price and its note "
+                           f"does not declare the UNPRICED grade")
+            elif otype not in (None, "model_fair") and not note:
+                out.append(f"{r['parlay_id']}: leg {r['leg_id']} carries no price_id and no "
+                           f"grade note (odds_type={otype})")
+            continue
+        if pid not in cache:
+            pr = con.execute("SELECT close_flag, observed_utc FROM prices WHERE price_id=?",
+                             (pid,)).fetchone()
+            cache[pid] = ((pr["close_flag"], pr["observed_utc"]) if pr else (None, None))
+        close_flag, observed = cache[pid]
+        if close_flag is None:
+            out.append(f"{r['parlay_id']}: leg {r['leg_id']} references missing price_id {pid}")
+            continue
+        if close_flag == 0 and observed and str(observed) > str(r["decision_utc"]):
+            out.append(f"{r['parlay_id']} ({r['test_mode']}): leg {r['leg_id']} priced from a "
+                       f"snapshot observed {observed} AFTER the {r['decision_utc']} decision")
+        if r["test_mode"] == "backtest" and close_flag == 0:
+            out.append(f"{r['parlay_id']}: backtest leg {r['leg_id']} priced off a live "
+                       f"snapshot (close_flag=0) instead of a historical close")
+        stamp = (d.get("features") or {}).get("price_observed_utc")
+        if stamp and observed and str(stamp) != str(observed):
+            out.append(f"{r['parlay_id']}: leg {r['leg_id']} records price_observed_utc "
+                       f"{stamp} but price {pid} was observed {observed} (provenance drift)")
+        if len(out) >= 25:
+            break
+    return out
+
+
+def _form_snapshot_leakage(con) -> list[str]:
+    """Standings/form snapshots used by a leg must predate the decision.
+
+    MODEL legs that read team form record the snapshot stamp they used
+    (features.form_as_of). A stamp after the decision is future information.
+    """
+    out: list[str] = []
+    rows = con.execute(
+        "SELECT p.parlay_id, p.decision_utc, l.leg_id, l.game_key, l.leg_detail "
+        "FROM parlays p JOIN legs l ON l.parlay_id=p.parlay_id "
+        "WHERE l.leg_detail LIKE '%form_as_of%'").fetchall()
+    for r in rows:
+        stamp = (_leg_detail(r).get("features") or {}).get("form_as_of")
+        if stamp and str(stamp) > str(r["decision_utc"]):
+            out.append(f"{r['parlay_id']}: leg {r['leg_id']} ({r['game_key']}) used a form "
+                       f"snapshot dated {stamp} after the {r['decision_utc']} decision")
+        if len(out) >= 20:
+            break
+    return out
+
+
+def _schedule_completeness(con) -> list[str]:
+    """Compare the regular-season record with the league's own season length.
+
+    Detects missing games, duplicated schedule rows and mislabeled
+    preseason/postseason rows. Deviations are reported with the numbers; a
+    deviation that has been investigated is recorded in
+    EXPECTED_HISTORY['known_short'] (with the verification pinned in
+    data/seed/crosscheck) and suppressed here. Nothing is ever padded.
+    """
+    import collections
+
+    from .config import REG_GAME_TYPE, season_length
+    from .engine import EXPECTED_HISTORY
+    out: list[str] = []
+    for sport, gtype in REG_GAME_TYPE.items():
+        spec = EXPECTED_HISTORY.get(sport, {})
+        partial = set(spec.get("partial_seasons") or [])
+        in_progress = set(spec.get("in_progress") or [])
+        known_short = spec.get("known_short") or {}
+        # Only games actually PLAYED count toward a season total, and games the
+        # league itself excludes from the record (the NBA Cup championship) are
+        # subtracted: both facts are documented per row in games.extra_json.
+        for r in con.execute(
+                "SELECT season, COUNT(*) AS n FROM games WHERE sport=? AND game_type=? "
+                "AND status='final' AND (extra_json IS NULL "
+                "OR extra_json NOT LIKE '%\"nba_cup_championship\": true%') "
+                "GROUP BY season ORDER BY season", (sport, gtype)).fetchall():
+            season, total = r["season"], r["n"]
+            per_team: collections.Counter = collections.Counter()
+            for g in con.execute(
+                    "SELECT away_team AS a, home_team AS h FROM games "
+                    "WHERE sport=? AND season=? AND game_type=? AND status='final' "
+                    "AND (extra_json IS NULL "
+                    "OR extra_json NOT LIKE '%\"nba_cup_championship\": true%')",
+                    (sport, season, gtype)).fetchall():
+                per_team[g["a"]] += 1
+                per_team[g["h"]] += 1
+            if not per_team:
+                continue
+            length = season_length(sport, season)
+            over = {t: n for t, n in per_team.items() if n > length}
+            if over:
+                out.append(f"{sport} {season}: {len(over)} team(s) exceed the {length}-game "
+                           f"regular season (max {max(over.values())}, e.g. "
+                           f"{sorted(over.items())[:3]}) - mislabeled preseason/postseason "
+                           f"rows or a duplicated schedule")
+            if season in partial or season in in_progress:
+                continue  # documented truncated window / season still running
+            spread = max(per_team.values()) - min(per_team.values())
+            expected = length * len(per_team) // 2
+            if total == expected and spread <= 1:
+                continue
+            note = known_short.get(season)
+            if note and total <= expected and spread <= 2:
+                continue  # investigated and verified (see crosscheck evidence)
+            short = sorted((t, n) for t, n in per_team.items() if n < length)
+            out.append(f"{sport} {season}: {total} regular-season games vs {expected} expected "
+                       f"({length}/team over {len(per_team)} teams); per-team spread {spread}; "
+                       f"short: {short[:4]}")
+    return out[:40]

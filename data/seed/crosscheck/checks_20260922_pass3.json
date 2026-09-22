@@ -1,0 +1,112 @@
+{
+ "generated_utc": "2026-09-22T18:45:00Z",
+ "pass": "PASS-3 line-by-line verification",
+ "checks": [
+  {
+   "subject": "NHL 2026-27 regular season length",
+   "claim": "The 2026-27 NHL regular season is 84 games per team (1344 games), running 2026-09-29 to 2027-04-10.",
+   "source_url": "https://en.wikipedia.org/wiki/2026%E2%80%9327_NHL_season",
+   "result": "match",
+   "detail": "The inherited snapshot holds 1344 game_type=REG rows for season 20262027, which the PASS-2 log had called an anomaly against an assumed 82-game season (R-011). AP News (apnews.com/article/2026-27-nhl-schedule-c8fad72c8c8e17e937c95772ede211ca), TSN and the Wikipedia season article all confirm the new CBA made 2026-27 the first 84-game season since 1993-94: 1344 games, opening 2026-09-29, ending 2027-04-10, preseason cut to four games per team (2026-09-19..26, 65 games). The snapshot is CORRECT; R-011 is resolved and config.SEASON_LENGTH now carries the 84-game override so the schedule-completeness check stops flagging it."
+  },
+  {
+   "subject": "NFL 2022 regular season game count (271 instead of 272)",
+   "claim": "NFL 2022 held 271 regular-season games because BUF@CIN (week 17, 2023-01-02) was suspended and declared a no contest.",
+   "source_url": "https://www.espn.com/nfl/story/_/id/35388199",
+   "result": "match",
+   "detail": "The database holds 271 NFL 2022 REG rows with BUF and CIN at 16 games and every other team at 17. ESPN, USA Today and league records confirm the week 17 Bills@Bengals game was suspended in the first quarter after Damar Hamlin's cardiac arrest on 2023-01-02, cancelled on 2023-01-05 and declared a no contest (never replayed; playoff seeding was adjusted instead). This is a verified real-world deviation, not a data gap: EXPECTED_HISTORY['NFL'] ['known_short']['2022'] records it so the schedule-completeness check reports it as investigated instead of as an error."
+  },
+  {
+   "subject": "MLB 2024 regular season game count (2429 instead of 2430)",
+   "claim": "MLB 2024 held 2429 regular-season games because the 2024-09-29 HOU@CLE finale was rained out and never made up.",
+   "source_url": "https://en.wikipedia.org/wiki/2024_Major_League_Baseball_season",
+   "result": "match",
+   "detail": "The database holds 2429 MLB 2024 R rows with CLE and HOU at 161 games and every other team at 162. The Wikipedia 2024 MLB season article and cleveland.com coverage of the game confirm the season finale at Progressive Field was called off after a 3h05m rain delay and was not rescheduled because it could not affect playoff qualification. Verified real-world deviation, recorded in EXPECTED_HISTORY['MLB']['known_short']['2024']."
+  },
+  {
+   "subject": "NBA 2026-27 opening night and preseason window",
+   "claim": "NBA 2026-27 preseason starts 2026-10-03 and the regular season opens 2026-10-20.",
+   "source_url": "https://www.espn.com/nba/story/_/id/49471934/nba-full-schedule-2026-2027-games-watch-faq-rivalries-matchups",
+   "result": "match",
+   "detail": "ESPN's 2026-27 schedule FAQ and NBC New York coverage give an opening-night tripleheader on Tuesday 2026-10-20 (BOS@DET, PHI@NYK, OKC@SAS) with preseason beginning 2026-10-03 (TOR-MIA in Quebec City). The inherited NBAComp log matches: rows run 2026-10-03..2026-10-16, then a gap, then three games on 2026-10-20. ingest.NBA_REG_OPENERS uses 2026-10-20 so the October 3-16 exhibitions are labelled PRE and can never enter the forward book or the ratings trail as regular-season games."
+  },
+  {
+   "subject": "NBA 2025-26 opening night and last full regular-season slate",
+   "claim": "NBA 2025-26 opened 2025-10-21 and its regular season ended with a full 30-team slate on 2026-04-12.",
+   "source_url": "https://www.nba.com/news/key-dates?experience=app",
+   "result": "match",
+   "detail": "NBA.com key dates gives opening night 2025-10-21 (Rockets@Thunder, Warriors@Lakers) with preseason ending 2025-10-17. The log corroborates: rows 2025-10-02..2025-10-17, a gap, then the 2025-10-21 openers. The regular-season end is derived from the log itself -- 2026-04-12 is the last 15-game (all 30 teams) slate and play-in games begin 2026-04-14 -- because press projections listed 2026-04-14; the derived date is what NBA_REG_ENDS records and it is labelled as derived, not as an official league date."
+  },
+  {
+   "subject": "NBA 2024-25 opening night",
+   "claim": "NBA 2024-25 opened 2024-10-22 and the regular season ended 2025-04-13.",
+   "source_url": "https://www.foxsports.com/stories/nba/nba-schedule-release",
+   "result": "match",
+   "detail": "Fox Sports and CBS Sports schedule-release coverage give opening night 2024-10-22 and a regular-season end of 2025-04-13. The log corroborates both: preseason rows through 2024-10-18, a gap, openers on 2024-10-22, and a final 15-game slate on 2025-04-13 with play-in games from 2025-04-15."
+  },
+  {
+   "subject": "NBA 2023-24 opening night",
+   "claim": "NBA 2023-24 opened 2023-10-24 and the regular season ended 2024-04-14.",
+   "source_url": "https://sportsgeardaily.com/basketball/when-does-nba-basketball-season-start",
+   "result": "match",
+   "detail": "Published season-start tables give 2023-24 opening night 2023-10-24 and regular-season end 2024-04-14. The log corroborates: rows from 2023-10-05 (exhibitions such as DAL@MIN), a gap after 2023-10-20, openers on 2023-10-24, a final 15-game slate on 2024-04-14 and play-in games from 2024-04-16. Seasons 2013-14..2022-23 need no boundary: their earliest rows are already the real openers (SBR Oct-Dec slices), verified season by season against the same public schedule pages."
+  },
+  {
+   "subject": "NBA inherited log has no game-type column",
+   "claim": "NBAComp games.csv carries no game_type field, so PRE/REG/POST must be derived from verified season boundaries.",
+   "source_url": "https://github.com/buffedlizard55-lab/NBAComp",
+   "result": "match",
+   "detail": "Columns are game_id, season, game_date_et, tipoff_utc, away_team, home_team, away_score, home_score, status, source -- no type. The previous importer hardcoded REG for all 4,346 rows, so seasons 2023-24..2026-27 mixed exhibitions, regular season and playoffs and per-team counts reached 110. Boundaries are now derived (NBA_REG_OPENERS / NBA_REG_ENDS) with the evidence string stored on every row in games.verify_note and games.extra_json, so the derivation is auditable per row. NHL, by contrast, ships a real game_type column and needs no derivation."
+  },
+  {
+   "subject": "NFL 2026-09-21 Monday night final (NYG @ LA)",
+   "claim": "Rams 28, Giants 6 (final).",
+   "source_url": "https://site.api.espn.com/apis/site/v2/sports/football/nfl/scoreboard?dates=20260921",
+   "result": "match",
+   "detail": "ESPN scoreboard JSON for 20260921, event 401872947, STATUS_FINAL: away NYG 6 (0-3-3-0), home LAR 28 (7-7-7-7), SoFi Stadium, attendance 73773, startDate 2026-09-22T00:15Z, broadcast ESPN/ABC, week 2; the league highlight is titled 'Rams take down Giants 28-6 on MNF'. Fetched twice in the same session with identical payloads and corroborated by ESPN recap, USA Today and Giants Wire. Applied through data/seed/updates/verified_results_20260922.json. Note the UTC-date trap this exposes: ESPN files the game under 2026-09-22 (00:15Z kickoff) while nflverse files it under the local gameday 2026-09-21, so nightly matching must tolerate +/-1 day or it creates a duplicate row and never settles Monday night."
+  },
+  {
+   "subject": "MLB 2026-09-21 finals (three games)",
+   "claim": "TOR@BAL 3-4 (gamePk 824787), WSH@DET 2-9 (824221), MIN@SF 2-5 (823169).",
+   "source_url": "https://statsapi.mlb.com/api/v1/schedule?sportId=1&date=2026-09-21",
+   "result": "match",
+   "detail": "MLB StatsAPI schedule for date=2026-09-21 returns those three games as Game Over with those linescores. The pinned seed fixtures begin 2026-09-22, so all three were missing from the database and are inserted with full provenance. The same response also showed the standings block reflecting records through 2026-09-20 even when queried on 2026-09-22, which is why team-form snapshots are stored with their own as_of stamp and never treated as same-day."
+  },
+  {
+   "subject": "NBA Cup championship is excluded from the 82-game record",
+   "claim": "Every NBA Cup game counts toward the regular season except the championship, so the two finalists play 83 games.",
+   "source_url": "https://www.sportico.com/feature/nba-in-season-tournament-format-schedule-groups-explainer-1234746081/",
+   "result": "match",
+   "detail": "Sportico: 'The final is the lone game in the NBA Cup that does not count for a team's regular season record'; ESPN's Cup explainer: 'the teams that reach the NBA Cup's finale will actually play 83 games -- though the championship game won't count toward the standings'; Yahoo Sports and The Oklahoman repeat the rule. The inherited log corroborates it exactly: the championship rows are 2023-12-09 IND@LAL, 2024-12-17 MIL@OKC and 2025-12-16 SAS@NYK, and in each of those seasons precisely the two finalists carry one extra game (83) while every other team has 82. ingest.NBA_CUP_FINALS records the dates with the citation, flags the row in games.extra_json (nba_cup_championship), and the schedule-completeness check subtracts it instead of reporting a false over-length season."
+  },
+  {
+   "subject": "NBA 2023-24 postponed fixtures reported as 0-0 finals by the inherited log",
+   "claim": "GSW@UTA 2024-01-17 and DAL@GSW 2024-01-19 were postponed, not played 0-0.",
+   "source_url": "https://www.nba.com/news/nba-postpones-warriors-vs-jazz-game",
+   "result": "match",
+   "detail": "NBA.com: the Warriors@Jazz game on Jan 17 2024 was postponed after the death of Warriors assistant coach Dejan Milojevic; Mercury News/Deseret News: the two postponed Warriors games (Jan 17 at Utah, Jan 19 vs Dallas) were rescheduled to Feb 15 2024 and Apr 2 2024. ESPN's own game page for id 401585204 is titled 'Warriors vs. Jazz (Jan 17, 2024) Postponed'. The log contains both makeups as separate rows with real scores (2024-02-15 GSW 140 UTA 137 = espn:401636113; 2024-04-02 DAL 100 GSW 104 = espn:401636114), which is why GSW appeared with 84 games. Both 0-0 rows are now recorded as postponed with the citation and are never settled or rated."
+  },
+  {
+   "subject": "NBA 2024-25 fixtures postponed by the Los Angeles wildfires",
+   "claim": "CHA@LAL 2025-01-09, SAS@LAL 2025-01-11 and CHA@LAC 2025-01-11 were postponed.",
+   "source_url": "https://pr.nba.com/spurs-lakers-hornets-clippers-games-postponed/",
+   "result": "match",
+   "detail": "NBA Communications released 'Spurs-Lakers and Hornets-Clippers games postponed' (Jan 10 2025) and 'NBA postpones Hornets vs. Lakers game set for Jan. 9' -- all due to the Los Angeles wildfires. The Los Angeles Times reported the makeups: Hornets-Lakers played Feb 19 2025 and Clippers-Hornets played Mar 16 2025. The inherited log carries all three as 0-0 'finals', which is why CHA, LAL, LAC, SAS and NOP appeared with 83-84 games; they are now postponed rows with citations. Two further 0-0 rows in that season (HOU@ATL 2025-01-11 and MIL@NOP 2025-01-22) could NOT be matched to a published postponement notice in this pass: they are recorded as not played with verified=0 and flagged as unverified rather than assigned a reason."
+  },
+  {
+   "subject": "NBA 2025-26 postponed fixtures (four games)",
+   "claim": "MIA@CHI 2026-01-08, GSW@MIN 2026-01-24, DEN@MEM 2026-01-25 and DAL@MIL 2026-01-25 were postponed.",
+   "source_url": "https://en.wikipedia.org/wiki/2025%E2%80%9326_NBA_season",
+   "result": "match",
+   "detail": "The Wikipedia 2025-26 NBA season article has a 'Postponed games' section listing exactly these four: Jan 8 Heat vs Bulls (condensation on the court), Jan 24 Warriors vs Timberwolves, and Jan 25 Nuggets vs Grizzlies plus Mavericks vs Bucks (January 2026 North American winter storm). NBA Communications confirms each ('Heat-Bulls game postponed', rescheduled Jan 29; 'Mavericks-Bucks game postponed'; 'Nuggets-Grizzlies game postponed') and Forbes adds that the Warriors game moved to Jan 25 on safety-and-security grounds in Minneapolis, with the Nuggets-Grizzlies makeup on Mar 18 and Mavericks-Bucks on Mar 31. All four 0-0 rows are now postponed with citations."
+  },
+  {
+   "subject": "NBA 2025-26 season dates (opening night, regular-season end, play-in)",
+   "claim": "The 2025-26 regular season ran 2025-10-21 to 2026-04-12 with the play-in 2026-04-14..17.",
+   "source_url": "https://en.wikipedia.org/wiki/2025%E2%80%9326_NBA_season",
+   "result": "match",
+   "detail": "Wikipedia's season infobox gives Duration: October 21, 2025 - April 12, 2026; NBA Cup Oct 31 - Dec 16 2025; play-in tournament Apr 14-17 2026; playoffs Apr 18 - May 30; Finals Jun 3-13. That confirms both boundaries used by ingest.NBA_REG_OPENERS/NBA_REG_ENDS for 2025-26 from an external source (previously the end date was derived from the log's last full 30-team slate), and the log agrees: last 15-game slate 2026-04-12, play-in pairs from 2026-04-14."
+  }
+ ],
+ "note": "PASS-3 independent verification: schedule lengths (NHL 84-game season, NFL 2022 no contest, MLB 2024 rainout), NBA game-type boundaries, the NBA Cup championship rule, twelve NBA postponed fixtures, and the pinned finals"
+}

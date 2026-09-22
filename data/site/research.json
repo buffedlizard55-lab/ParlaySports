@@ -90,7 +90,7 @@
   "method": "NBAComp snapshots: 672 ESPN/DK forward lines + 59 Kalshi markets/candles for 2026-10-20/21.",
   "ref_strategy": "S-NBA-01",
   "research_id": "R-008",
-  "result": "CONFIRMED. NBA forward book arms on preseason lines; opener parlays generate once non-preseason lines post.",
+  "result": "CONFIRMED, then corrected in PASS-3. Opening-night markets are quotable a month out, but the forward book must NOT arm on preseason lines: the inherited log carries no game_type column and every row used to be imported as REG, so exhibitions were indistinguishable from regular season. ingest.NBA_REG_OPENERS/NBA_REG_ENDS now derive PRE/REG/POST from verified season boundaries (evidence string stored per row) and run_forward admits NBA REG/POST only, so preseason games are excluded by data, not by convention.",
   "sport": "NBA",
   "status": "tested",
   "title": "2026-27 openers already lined (ESPN/DK + Kalshi)"
@@ -122,14 +122,14 @@
  {
   "created_utc": "2026-09-22T02:00:00Z",
   "data_window": "2026-27",
-  "hypothesis": "Imported 2026-27 REG schedule has exactly 1312 games.",
-  "method": "Counted game_type=2 rows for season 20262027 in inherited snapshot.",
+  "hypothesis": "Imported 2026-27 REG schedule has exactly 1312 games (82/team).",
+  "method": "PASS-3: counted game_type=REG rows for season 20262027 in the snapshot (1344) and checked the number against public league/press sources instead of assuming an 82-game season: AP News 2026-27 schedule report, TSN, and the Wikipedia 2026-27 NHL season article (evidence pinned in data/seed/crosscheck/checks_20260922_pass3.json).",
   "ref_strategy": "S-NHL-01",
   "research_id": "R-011",
-  "result": "ANOMALY OPEN: 1344 rows. Imported as scheduled; quality gate flags per-team counts != 82; nightly NHL pull will confirm/trim.",
+  "result": "HYPOTHESIS REJECTED, ANOMALY RESOLVED: the new CBA made 2026-27 an 84-game regular season -- the first since 1993-94 -- so 32 x 84 / 2 = 1344 games is exactly right (opening 2026-09-29, ending 2027-04-10; preseason cut to 4 games/team, 2026-09-19..26, 65 games, which the snapshot also holds). The imported rows are correct and were never trimmed. config.SEASON_LENGTH now carries the 84-game override for season 20262027 and the schedule-completeness check measures per-team counts against that verified length, so the false alarm cannot come back.",
   "sport": "NHL",
-  "status": "hypothesis",
-  "title": "2026-27 schedule row-count anomaly (1344 vs 1312)"
+  "status": "tested",
+  "title": "2026-27 schedule row count (1344) is CORRECT: first 84-game season since 1993-94"
  },
  {
   "created_utc": "2026-09-22T02:00:00Z",
@@ -214,5 +214,77 @@
   "sport": "MULTI",
   "status": "tested",
   "title": "PASS-3 review: engine violated two documented MULTI rules; both fixed in v1.1"
+ },
+ {
+  "created_utc": "2026-09-22T02:00:00Z",
+  "data_window": "2023-24..2026-27 (2013-14..2022-23 slices already start on real openers)",
+  "hypothesis": "Every NBA row in the inherited log is a regular-season game.",
+  "method": "Inspected NBAComp games.csv columns (game_id, season, game_date_et, tipoff_utc, away_team, home_team, away_score, home_score, status, source -- no type column), then counted per-team rows by season (max 110 for SAS, i.e. 28 games above an 82-game season), then derived PRE/POST boundaries and verified them against public schedule pages: opening nights 2023-10-24, 2024-10-22, 2025-10-21, 2026-10-20 and last full 30-team slates 2024-04-14, 2025-04-13, 2026-04-12 (nba.com key dates, ESPN/FOX/CBS schedule coverage, NBC New York; evidence pinned in checks_20260922_pass3.json). The log's own daily counts corroborate every boundary (exhibition cluster, gap, then two/three openers; final 15-game slate, then play-in pairs).",
+  "ref_strategy": "S-NBA-01",
+  "research_id": "R-019",
+  "result": "HYPOTHESIS REJECTED, then fixed. Consequences before the fix: exhibitions polluted the Elo trail and could enter the forward book as soon as a line posted, violating the documented preseason exclusion. After the fix each row carries game_type PRE/REG/POST with the derivation evidence in games.verify_note and games.extra_json; per-team REG counts are exactly 82 for 2023-24..2025-26. Limitation kept honest: only boundaries with public evidence are used -- seasons without one keep the inherited REG label and the new schedule-completeness check reports any per-team count above the league length instead of silently relabelling rows.",
+  "sport": "NBA",
+  "status": "tested",
+  "title": "PASS-3: NBA game_type was hardcoded REG; boundaries now derived from verified openers/ends"
+ },
+ {
+  "created_utc": "2026-09-22T02:00:00Z",
+  "data_window": "NFL 2022, MLB 2024, NHL 2026-27",
+  "hypothesis": "Seasons whose game counts fall short of teams x league-length have import gaps that must be backfilled.",
+  "method": "Measured per-team regular-season counts for every season, then checked each short season against public records: NFL 2022 (271 games; BUF and CIN at 16), MLB 2024 (2429 games; CLE and HOU at 161), NHL 2026-27 (1344 games; 84/team). Sources: ESPN/USA Today on the cancelled Bills@Bengals week-17 game, the Wikipedia 2024 MLB season article and cleveland.com on the rained-out 2024-09-29 HOU@CLE finale, AP News/TSN/Wikipedia on the 84-game 2026-27 NHL season (all pinned in checks_20260922_pass3.json).",
+  "ref_strategy": "S-NFL-01",
+  "research_id": "R-020",
+  "result": "HYPOTHESIS REJECTED for all three: (1) NFL 2022 week 17 BUF@CIN was suspended after Damar Hamlin's cardiac arrest on 2023-01-02, cancelled on 2023-01-05 and declared a no contest -- never replayed, so 271 is the real total; (2) MLB's 2024-09-29 HOU@CLE finale was rained out after a 3h05m delay and not rescheduled because it could not affect playoff qualification, so 2429 is the real total; (3) NHL 2026-27 is an 84-game season (see R-011), so 1344 is the real total. Nothing was padded and nothing was 'fixed'. engine.EXPECTED_HISTORY now records known_short/in_progress/partial_seasons per sport so the schedule-completeness check reports unexplained deviations only, with the verified explanation attached to the three above.",
+  "sport": "MULTI",
+  "status": "tested",
+  "title": "PASS-3: three 'missing games' were verified real-world cancellations, not data gaps"
+ },
+ {
+  "created_utc": "2026-09-22T02:00:00Z",
+  "data_window": "nightly runs, 2026 season",
+  "hypothesis": "The nightly ESPN collector settles every finished game it can see.",
+  "method": "Traced _upsert_espn_event on the verified 2026-09-21 MNF fixture: ESPN reports startDate 2026-09-22T00:15Z (UTC), so its date key is 2026-09-22, while nflverse files the local gameday 2026-09-21. The old lookup matched on an exact game_date, found nothing, and inserted a SECOND row keyed NFL:espn:401872947 -- the real result never reached the nflverse row the forward book had bet on.",
+  "ref_strategy": "S-NFL-01",
+  "research_id": "R-021",
+  "result": "CONFIRMED BUG, fixed: the lookup now tolerates +/-1 day around the ESPN date (preferring an exact league-game-id hit), so evening games that roll over UTC settle onto the existing row instead of duplicating it. Same pass also de-duplicated _price: a snapshot with an identical (game_key, market, selection, source_id, observed stamp) or an identical value inside one night is no longer stacked, which was inflating closing-value statistics and database size. Both behaviours are asserted by tests and by the audit's duplicate/economic-integrity checks.",
+  "sport": "NFL",
+  "status": "tested",
+  "title": "PASS-3: nightly ESPN matching dropped Monday-night results (UTC vs local gameday)"
+ },
+ {
+  "created_utc": "2026-09-22T02:00:00Z",
+  "data_window": "all books, backtest + forward",
+  "hypothesis": "bankroll.current_amount and the published equity curve / max drawdown describe the same path.",
+  "method": "Walked the ledger for every book: a replayed backtest writes all stakes first and settles later, so balance_after follows INSERT order. Recomputed each curve by summing amounts in (entry_ts, entry_id) order and compared the endpoint with bankroll.current_amount, then measured the drawdown both ways.",
+  "ref_strategy": "S-MLB-01",
+  "research_id": "R-022",
+  "result": "HYPOTHESIS REJECTED as published, fixed in the record: insertion-order curves showed impossible troughs (drawdowns above 100%, e.g. S-MLB-01 at 129.1%), because every stake was debited before any payout. books.summary now recomputes the curve in economic time, reports min_balance and ledger_drift alongside max_drawdown, and settle_all stamps each ledger row with the economic entry_ts. The new bankroll-integrity quality check independently re-walks every book and fails the run on a negative balance, a >100% drawdown, or any drift between the recomputed endpoint and current_amount -- so the check is order-independent and cannot be satisfied by re-sorting rows.",
+  "sport": "MULTI",
+  "status": "tested",
+  "title": "PASS-3: equity curves were plotted in ledger-insertion order, not economic time"
+ },
+ {
+  "created_utc": "2026-09-22T02:00:00Z",
+  "data_window": "2023-24..2025-26 (12 rows), plus one NHL preseason row captured mid-game",
+  "hypothesis": "Every row the inherited NBA log marks final carries a real score.",
+  "method": "The new schedule-completeness check reported 5, 9 and 10 NBA teams above the 82-game regular season in 2023-24, 2024-25 and 2025-26. Tracing the extra games found 12 rows with away_score=0 and home_score=0 marked final -- an impossible basketball scoreline. Each was checked against public records (NBA.com and NBA Communications releases, ESPN's own game page for id 401585204, Mercury News/Deseret News, the LA Times, Forbes and the Wikipedia 2025-26 season article; all pinned in checks_20260922_pass3.json) and against the log itself, which contains the makeups as separate rows with real scores (e.g. 2024-02-15 GSW 140 UTA 137 and 2024-04-02 DAL 100 GSW 104 for the two January 2024 Warriors postponements).",
+  "ref_strategy": "S-NBA-01",
+  "research_id": "R-023",
+  "result": "HYPOTHESIS REJECTED, defect fixed at ingest: 9 of the 12 are documented postponements -- Warriors@Jazz and Mavericks@Warriors (Jan 2024, after assistant coach Dejan Milojevic's death), Hornets@Lakers, Spurs@Lakers and Hornets@Clippers (Jan 2025 LA wildfires), Heat@Bulls (Jan 2026, moisture on the floor), Warriors@Timberwolves (Jan 2026, Minneapolis safety grounds), Nuggets@Grizzlies and Mavericks@Bucks (Jan 2026 winter storm). Those rows are recorded as status='postponed' with scores NULL, verified=1 and the citation in verify_note. The other three (HOU@ATL 2025-01-11, MIL@NOP 2025-01-22, NOP@ORL 2024-10-11 preseason) could not be matched to a published notice in this pass: they are recorded the same way with verified=0 and an explicit 'reason NOT independently verified' note -- flagged, never guessed. Every case files an impossible-scoreline issue, settle_leg now voids a leg on a postponed game (stake refunded, standard book rule) instead of leaving it pending forever, and _invalid_stats reports any 0-0 final that reaches the table again. Consequences before the fix: GSW was rated on a 0-0 'result', three seasons looked over-length, and any bet on those fixtures could have settled on an invented score.",
+  "sport": "NBA",
+  "status": "tested",
+  "title": "PASS-3: the inherited log reports postponed games as 0-0 'finals'"
+ },
+ {
+  "created_utc": "2026-09-22T02:00:00Z",
+  "data_window": "NBA 2023-24..2025-26, NHL 2026-27 preseason",
+  "hypothesis": "A game's presence in the regular-season log means it counts toward the season record, and any score in a snapshot is a result.",
+  "method": "Checked the NBA Cup rules against ESPN's Cup explainer, Sportico, Yahoo Sports and The Oklahoman, then against the log: the championship rows are 2023-12-09 IND@LAL, 2024-12-17 MIL@OKC and 2025-12-16 SAS@NYK and in each season exactly the two finalists carry 83 games. Separately inspected the NHL snapshot's state column and found a preseason fixture (NHL:2026010017 DET@CBJ 2026-09-21) captured as state=LIVE with 0-0, which the importer had turned into a final because it inferred status from score presence alone.",
+  "ref_strategy": "S-NHL-01",
+  "research_id": "R-024",
+  "result": "HYPOTHESIS REJECTED on both counts, and both are now encoded: (1) every NBA Cup game counts toward the 82 EXCEPT the championship, so ingest.NBA_CUP_FINALS flags those rows (extra_json.nba_cup_championship + citation) and the completeness check subtracts them -- the finalists' 83rd game is real, played and rated, just not part of the 82. (2) ingest_nhl now trusts the upstream state before inferring anything from scores: LIVE stays live (never a result, never rated, never bettable -- the forward book admits status='scheduled' only), PRE/FUT stay scheduled, and a FINAL with 0-0 is recorded as postponed. _missing_scores was widened to report past-dated games still live or scheduled with no result.",
+  "sport": "MULTI",
+  "status": "tested",
+  "title": "PASS-3: two league rules the record had to respect (NBA Cup final, live snapshots)"
  }
 ]

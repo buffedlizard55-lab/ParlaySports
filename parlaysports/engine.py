@@ -53,14 +53,47 @@ BACKTEST_WINDOWS = {
 # with data. Anything inside span but outside have is a flagged gap, not a
 # guess-filled period.
 EXPECTED_HISTORY = {
-    "NFL": {"span": ("1999", "2026"), "have": [str(y) for y in range(1999, 2027)]},
-    "MLB": {"span": ("2015", "2025"), "have": ["2015", "2023", "2024", "2025"]},
-    "NHL": {"span": ("20242025", "20252026"), "have": ["20242025", "20252026"]},
+    "NFL": {"span": ("1999", "2026"), "have": [str(y) for y in range(1999, 2027)],
+            # 2022 held 271 regular-season games: the Week 17 BUF@CIN game was
+            # cancelled and declared a no contest (verified, see crosscheck).
+            "known_short": {"2022": "BUF@CIN week 17 cancelled (no contest); "
+                                    "BUF and CIN finished with 16 games"},
+            "in_progress": ["2026"]},
+    "MLB": {"span": ("2015", "2025"), "have": ["2015", "2023", "2024", "2025"],
+            # 2024 held 2429 games: the 2024-09-29 HOU@CLE finale was rained
+            # out and never made up (verified, see crosscheck).
+            "known_short": {"2024": "2024-09-29 HOU@CLE rained out, never made up; "
+                                    "CLE and HOU finished with 161 games"},
+            "partial_seasons": ["2015"], "in_progress": ["2026"]},
+    "NHL": {"span": ("20242025", "20252026"), "have": ["20242025", "20252026"],
+            "known_short": {}, "in_progress": ["20262027"]},
     "NBA": {"span": ("2013-14", "2022-23"), "have": ["2013-14", "2014-15", "2015-16",
                                                     "2016-17", "2017-18", "2018-19",
-                                                    "2019-20", "2020-21", "2021-22",
-                                                    "2022-23"]},
+                                                    "2019-20", "2021-22", "2022-23",
+                                                    "2020-21"],
+            # SBR archive holds October-December slices only (documented).
+            "partial_seasons": ["2013-14", "2014-15", "2015-16", "2016-17", "2017-18",
+                                "2018-19", "2019-20", "2020-21", "2021-22", "2022-23"],
+            "known_short": {}, "in_progress": ["2023-24", "2024-25", "2025-26", "2026-27"]},
 }
+
+
+def existing_slate_tickets(con: sqlite3.Connection, strategy_id: str, version: str,
+                           slate_date: str, test_mode: str) -> int:
+    """Tickets this strategy already holds on this slate in this book."""
+    return int(con.execute(
+        """SELECT COUNT(*) AS n FROM parlays WHERE strategy_id=? AND version=?
+           AND test_mode=? AND slate_date=?""",
+        (strategy_id, version, test_mode, slate_date)).fetchone()["n"])
+
+
+def slate_cap(con: sqlite3.Connection, strategy_id: str, version: str,
+              slate_date: str, test_mode: str) -> int:
+    """Remaining tickets allowed on a slate (documented per-slate cap)."""
+    from .config import MAX_PARLAYS_PER_SLATE
+    limit = 1 if strategy_id == "S-MULTI-04" else MAX_PARLAYS_PER_SLATE
+    return max(0, limit - existing_slate_tickets(con, strategy_id, version,
+                                                  slate_date, test_mode))
 
 
 def slate_dates(con: sqlite3.Connection, sport: str, seasons: list[str],
@@ -97,7 +130,7 @@ def run_backtest(con: sqlite3.Connection, strategy_id: str,
     dates = slate_dates(con, sport, window["seasons"], window["game_types"], "final")
     if max_slates:
         dates = dates[:max_slates]
-    n_parlays = n_legs = 0
+    n_parlays = n_legs = skipped_cap = 0
     for slate in dates:
         games = slate_games(con, sport, slate, window["seasons"],
                             window["game_types"], "final")
@@ -109,7 +142,12 @@ def run_backtest(con: sqlite3.Connection, strategy_id: str,
             signals.extend(signals_for_game(con, strategy_id, g, decision_utc, "backtest"))
         if len({s["game_key"] for s in signals}) < 2:
             continue
-        for p in build_parlays(signals, strat, slate, decision_utc, "backtest"):
+        cap = slate_cap(con, strategy_id, strat.get("version", "v1"), slate, "backtest")
+        if cap <= 0:
+            skipped_cap += 1
+            continue
+        for p in build_parlays(signals, strat, slate, decision_utc, "backtest",
+                               max_parlays_override=cap):
             if get_parlay(con, p["parlay_id"]) is not None:
                 continue
             insert_parlay(con, p)
@@ -123,7 +161,7 @@ def run_backtest(con: sqlite3.Connection, strategy_id: str,
     settle_all(con, test_mode="backtest", strategy_id=strategy_id)
     con.commit()
     return {"strategy_id": strategy_id, "slates": len(dates),
-            "parlays": n_parlays, "legs": n_legs}
+            "parlays": n_parlays, "legs": n_legs, "skipped_cap": skipped_cap}
 
 
 # ------------------------------------------------- cross-sport overlap engine
@@ -228,7 +266,7 @@ def run_backtest_multi(con: sqlite3.Connection, strategy_id: str,
     is_lotto = strategy_id == "S-MULTI-04"
     weeks_done = _lotto_weeks_from_db(con, strategy_id, "backtest") if is_lotto else set()
     gate = multi_gate(strategy_id, strat["min_edge"])
-    n_parlays = n_legs = skipped_week = 0
+    n_parlays = n_legs = skipped_week = skipped_cap = 0
     for slate in dates:
         if is_lotto and _iso_week(slate) in weeks_done:
             skipped_week += 1
@@ -257,7 +295,12 @@ def run_backtest_multi(con: sqlite3.Connection, strategy_id: str,
             signals.sort(key=lambda s: (-(s.get("odds_american") or -9999)))
         if len({s["game_key"] for s in signals}) < 2:
             continue
-        for p in build_parlays(signals, strat, slate, decision_utc, "backtest"):
+        cap = slate_cap(con, strategy_id, strat.get("version", "v1"), slate, "backtest")
+        if cap <= 0:
+            skipped_cap += 1
+            continue
+        for p in build_parlays(signals, strat, slate, decision_utc, "backtest",
+                               max_parlays_override=cap):
             if get_parlay(con, p["parlay_id"]) is not None:
                 continue
             insert_parlay(con, p)
@@ -274,7 +317,8 @@ def run_backtest_multi(con: sqlite3.Connection, strategy_id: str,
     settle_all(con, test_mode="backtest", strategy_id=strategy_id)
     con.commit()
     return {"strategy_id": strategy_id, "slates": len(dates),
-            "parlays": n_parlays, "legs": n_legs, "skipped_week": skipped_week}
+            "parlays": n_parlays, "legs": n_legs, "skipped_week": skipped_week,
+            "skipped_cap": skipped_cap}
 
 
 def run_backtest_multi_all(con: sqlite3.Connection,
@@ -319,7 +363,7 @@ def run_forward(con: sqlite3.Connection, strategy_id: str,
     # at creation time and stamped into the ticket note, so nightly runs can
     # never file a second ticket in a week the record already covers.
     weeks_done = _lotto_weeks_from_db(con, strategy_id, "forward") if is_lotto else set()
-    n_parlays = n_legs = skipped_past = skipped_week = 0
+    n_parlays = n_legs = skipped_past = skipped_week = skipped_cap = 0
     for slate in slates:
         if is_lotto and _iso_week(slate) in weeks_done:
             skipped_week += 1
@@ -360,7 +404,12 @@ def run_forward(con: sqlite3.Connection, strategy_id: str,
                 signals.extend(signals_for_game(con, strategy_id, g, decision_utc, "forward"))
         if len({s["game_key"] for s in signals}) < 2:
             continue
-        for p in build_parlays(signals, strat, slate, decision_utc, "forward"):
+        cap = slate_cap(con, strategy_id, strat.get("version", "v1"), slate, "forward")
+        if cap <= 0:
+            skipped_cap += 1
+            continue
+        for p in build_parlays(signals, strat, slate, decision_utc, "forward",
+                               max_parlays_override=cap):
             if get_parlay(con, p["parlay_id"]) is not None:
                 continue
             insert_parlay(con, p)
@@ -376,7 +425,7 @@ def run_forward(con: sqlite3.Connection, strategy_id: str,
     con.commit()
     return {"strategy_id": strategy_id, "slates": len(slates),
             "parlays": n_parlays, "legs": n_legs, "skipped_past": skipped_past,
-            "skipped_week": skipped_week}
+            "skipped_week": skipped_week, "skipped_cap": skipped_cap}
 
 
 def settle_all(con: sqlite3.Connection, test_mode: str | None = None,
@@ -392,6 +441,7 @@ def settle_all(con: sqlite3.Connection, test_mode: str | None = None,
         q += " AND strategy_id=?"
         args.append(strategy_id)
     settled = {"won": 0, "lost": 0, "push": 0, "still_live": 0}
+    settled_now = utcnow_iso()
     for p in con.execute(q, args).fetchall():
         if is_settled(p["status"]):
             continue  # immutable; belt and suspenders
@@ -426,18 +476,27 @@ def settle_all(con: sqlite3.Connection, test_mode: str | None = None,
         con.execute(
             """UPDATE parlays SET status=?, settled_utc=?, settlement_source=?,
                result_detail=?, pnl=?, roi_parlay=?, payout=? WHERE parlay_id=? AND status IN ('upcoming','live')""",
-            (outcome["status"], utcnow_iso(), settlement_source,
+            (outcome["status"], settled_now, settlement_source,
              outcome["detail"], outcome["pnl"], roi, outcome["payout"],
              p["parlay_id"]))
+        # Ledger entries carry the ECONOMIC time of the cash movement, so the
+        # equity curve and drawdown are chronological: a replayed (backtest)
+        # ticket settles when its slate finished, a forward ticket settles when
+        # the platform actually settled it. `parlays.settled_utc` always keeps
+        # the real wall-clock settlement moment (the record is never rewritten).
+        econ_ts = settled_now if p["test_mode"] != "backtest" else \
+            f"{p['slate_date']}T23:59:00Z"
         if p["stake"] > 0 and outcome["payout"]:
             ledger_append(con, strategy_id=p["strategy_id"], version=p["version"],
                           book=p["test_mode"], parlay_id=p["parlay_id"],
                           kind="settle", amount=outcome["payout"],
-                          note=f"settle {outcome['status']}: {outcome['detail']}")
+                          note=f"settle {outcome['status']}: {outcome['detail']}",
+                          entry_ts=econ_ts)
         elif p["stake"] > 0 and outcome["status"] == "push":
             ledger_append(con, strategy_id=p["strategy_id"], version=p["version"],
                           book=p["test_mode"], parlay_id=p["parlay_id"],
-                          kind="settle", amount=p["stake"], note="stake refunded")
+                          kind="settle", amount=p["stake"], note="stake refunded",
+                          entry_ts=econ_ts)
         # Summary counters: statuses outside the tracked set (e.g. a future
         # 'void') fold into 'push' -- increment the FOLDED key, never clobber
         # it from the unfolded one.

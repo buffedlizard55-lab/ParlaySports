@@ -37,8 +37,8 @@ on the site, and `data/seed/crosscheck/checks_20260922.json`).
 
 ```bash
 make seed    # build DB from pinned seeds, backtest, forward, settle, export
-make test    # 39 unit tests
-make audit   # 54 PASS-2 checks (must be 54/54)
+make test    # 60 unit tests
+make audit   # 63 PASS-2/PASS-3 checks (must be 63/63)
 make uismoke # all 15 site routes render against the real exports
 make serve   # serve this repo root on 0.0.0.0:8000
 ```
@@ -110,9 +110,11 @@ parlaysports/                      engine: config, store, ingest, ratings,
                                    export, sources, util
 scripts/seed.py                    cold-start pipeline (PASS 1 build path)
 scripts/nightly.py                 live pipeline for GitHub Actions
-scripts/audit.py                   PASS 2 mechanical audit (54 checks)
-tests/test_platform.py             39 unit tests (stdlib unittest)
+scripts/audit.py                   PASS 2 mechanical audit (63 checks)
+scripts/sim_nightly_offline.py     offline re-run of the nightly pipeline + audit
+tests/test_platform.py             60 unit tests (stdlib unittest)
 scripts/ui_smoke.mjs               headless route render test (node)
+docs/VERIFICATION_PASS3.md         PASS 3 line-by-line verification + findings
 ```
 
 ## Limits (read before trusting any number)
@@ -136,19 +138,53 @@ scripts/ui_smoke.mjs               headless route render test (node)
   provide it (nflverse QBs, MLB probables) but no strategy conditions on it yet (R-016).
 * Forward tickets use a conservative whole-date cutoff when a game has no recorded
   start time (R-015): better to miss a ticket than to bet a started game.
+* Season-length expectations are per season, not per league: the 2026-27 NHL season is 84
+  games per team (R-011, verified), and declared `known_short` seasons (NFL 2022 with the
+  cancelled BUF@CIN no contest, MLB 2024 with the rained-out HOU@CLE finale) carry their
+  verification in `engine.EXPECTED_HISTORY` (R-020).
+* Twelve inherited NBA rows were 0-0 "finals" for games that were postponed (R-023): nine
+  are verified against published postponement notices and three are recorded as not played
+  with `verified=0` and an explicit "reason NOT independently verified" note. Postponed
+  games are never settled and never rated; a ticket leg on one is voided and its stake
+  refunded. The NBA Cup championship game is played and rated but does not count toward the
+  82-game record (R-024).
+* Equity curves, drawdowns and bankroll reconciliation are computed in economic time from
+  the ledger amounts (R-022). A flat-stake book can exceed its starting bankroll on paper,
+  which is stated rather than hidden; the integrity checks fail the run on a negative
+  balance, a drawdown above 100% or any drift against `bankroll.current_amount`.
+* The nightly collector matches ESPN events across a ±1-day window so evening games that
+  cross midnight UTC settle onto the league's own row instead of creating a duplicate
+  (R-021); identical price snapshots are no longer stacked, and contradictory same-stamp
+  quotes are logged, never silently overwritten.
 
 ## Verification
 
-* `tests/test_platform.py`: 39/39 (odds math, settlement incl. push-reduction, guards,
-  ledger tamper-evidence, Elo point-in-time + rollover, catalog completeness + version
-  immutability, score-correction logging, cover-map push exclusion, history-gap flags,
-  cross-sport overlap engine incl. close-only pricing and single-sport-date refusal,
-  per-sport leg caps, lottery ISO-week caps in both books, settle-summary counting).
-* `scripts/audit.py`: 54/54 (coverage, books separation, settlement + payout,
+`docs/VERIFICATION_PASS3.md` records the PASS 3 line-by-line verification: what was
+checked against independent public sources, which claims turned out to be wrong, and what
+changed as a result. Highlights: the 2026-27 NHL season really is 84 games per team; the
+NFL 2022 (271) and MLB 2024 (2429) game counts are real cancellations, not import gaps;
+twelve NBA "0-0 finals" were postponed games (all twelve traced to published
+postponements or explicitly flagged as unverified); NBA regular seasons now reconcile to
+exactly 82 games per team once preseason, play-in/postseason and the NBA Cup championship
+are labelled correctly; and the nightly duplicate-row bug that broke the production run is
+fixed and reproduced/fixed in the offline simulation.
+
+* `tests/test_platform.py`: 60/60 (odds math, settlement incl. push-reduction and the
+  postponed-game void rule, guards, ledger tamper-evidence, Elo point-in-time + rollover,
+  catalog completeness + version immutability, score-correction logging, cover-map push
+  exclusion, history-gap flags, cross-sport overlap engine incl. close-only pricing and
+  single-sport-date refusal, per-sport leg caps, lottery ISO-week caps in both books,
+  settle-summary counting, economic-time equity + bankroll-integrity, price/form time
+  guards, NBA game-type boundaries, verified-update provenance, nightly matching + dedupe).
+* `scripts/audit.py`: 63/63 (coverage, books separation, settlement + payout,
   ledger↔bankroll consistency, UNPRICED-$0, sources on every row, per-strategy history
   files, upcoming/completed purity, leaderboard columns, users, quality registry, docs,
-  MULTI-backtest overlap integrity: tickets exist, every ticket spans ≥2 sports and
-  every slate is a real ≥2-sport window overlap).
+  MULTI-backtest overlap integrity, economic-time bankroll reconciliation, no preseason
+  legs in the forward book, NBA game-type evidence, per-slate cap, verified-update
+  application, no cross-source duplicate games, schedule completeness,
+  workflow-file lint).
+* `scripts/sim_nightly_offline.py`: re-runs the nightly collectors (against pinned
+  inputs) and the full audit offline — 63/63 on the committed state.
 * `scripts/ui_smoke.mjs`: all 15 site routes render headlessly against the real exports
   (`make uismoke`, also gated in the nightly workflow).
 * `data/audit_report.json` is regenerated on every run.

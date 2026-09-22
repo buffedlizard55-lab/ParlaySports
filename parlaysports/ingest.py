@@ -344,20 +344,31 @@ def ingest_nhl(con: sqlite3.Connection, seed_dir: str | Path | None = None,
             game_key = f"NHL:{r['game_id']}"
             a_score, h_score = _int(r["away_score"]), _int(r["home_score"])
             state = (r.get("state") or "").upper()
-            if a_score is not None and h_score is not None:
+            # Trust the upstream state before inferring anything from scores:
+            # a snapshot taken while a game is LIVE carries 0-0 and must never
+            # be recorded as a final result, and a 0-0 "FINAL" is impossible in
+            # hockey (a shootout still produces a goal) so it means the fixture
+            # was not played as scheduled.
+            zero_zero = (a_score in (0, None) and h_score in (0, None))
+            if state == "LIVE":
+                status = "live"
+                stats["live"] = stats.get("live", 0) + 1
+            elif state in ("PRE", "FUT", ""):
+                status = "scheduled" if zero_zero else "final"
+                stats["scheduled" if status == "scheduled" else "finals"] += 1
+            elif zero_zero:
+                status = "postponed"
+                a_score = h_score = None
+                stats["postponed"] = stats.get("postponed", 0) + 1
+                detail = (f"impossible-scoreline: NHL {game_key} {r['game_date']} "
+                          f"reported FINAL with 0-0 by the inherited snapshot; recorded as "
+                          f"not played, never settled, never rated - flagged, not guessed")
+                if not con.execute("SELECT 1 FROM issues WHERE detail=?", (detail,)).fetchone():
+                    add_issue(con, severity="error", area="ingest", sport="NHL",
+                              game_key=game_key, detail=detail)
+            else:
                 status = "final"
                 stats["finals"] += 1
-            elif state in ("LIVE",):
-                status = "live"
-            elif state in ("PRE", "FUT"):
-                status = "scheduled"
-                stats["scheduled"] += 1
-            else:
-                status = "scheduled" if a_score is None else "final"
-                if a_score is None:
-                    stats["scheduled"] += 1
-                else:
-                    stats["finals"] += 1
             _insert_game(con, {
                 "game_key": game_key, "sport": "NHL",
                 "league_game_id": str(r["game_id"]), "season": str(r["season"]),
@@ -372,7 +383,11 @@ def ingest_nhl(con: sqlite3.Connection, seed_dir: str | Path | None = None,
                 "source_id": "SRC_SIBLING_NHLCOMP",
                 "source_url": "https://github.com/buffedlizard55-lab/NHLComp",
                 "retrieved_utc": retrieved_utc, "verified": 0,
-                "verify_note": "inherited snapshot; re-verified by nightly NHL API pull",
+                "verify_note": ("inherited snapshot; re-verified by nightly NHL API pull"
+                                + (f"; upstream state {state} -- a live/pre-game snapshot is "
+                                   f"never recorded as a result" if status == "live" else "")
+                                + ("; 0-0 FINAL is impossible in hockey, recorded as not played"
+                                   if status == "postponed" else "")),
                 "extra_json": dump_json({"nhl_state": state,
                                          "away_id": r.get("away_id"),
                                          "home_id": r.get("home_id")}),
@@ -443,6 +458,105 @@ def _dk_line(qual: str | None, market: str) -> float | None:
 
 
 # --------------------------------------------------------------------- NBA
+# The inherited NBAComp log carries no game-type column, and every row was
+# previously imported as REG -- which mixed preseason exhibitions into the
+# ratings trail and left the forward book free to bet them. Opening nights
+# below are VERIFIED against public league/press sources (see
+# data/seed/crosscheck); rows dated before the opener are preseason (PRE).
+# Seasons 2013-14..2022-23 need no split: their earliest rows already sit on
+# the real openers (checked season by season against the same sources).
+NBA_REG_OPENERS: dict[str, tuple[str, str]] = {
+    "2023-24": ("2023-10-24",
+                "https://sportsgeardaily.com/basketball/when-does-nba-basketball-season-start"),
+    "2024-25": ("2024-10-22",
+                "https://www.foxsports.com/stories/nba/nba-schedule-release"),
+    "2025-26": ("2025-10-21", "https://www.nba.com/news/key-dates?experience=app"),
+    "2026-27": ("2026-10-20",
+                "https://www.espn.com/nba/story/_/id/49471934/nba-full-schedule-2026-2027-games-watch-faq-rivalries-matchups"),
+}
+
+
+# Last full 30-team regular-season slate per season; everything after it is
+# play-in/postseason (POST). Two of the three are externally verified, the
+# third is derived from the log itself (see the evidence strings).
+NBA_REG_ENDS: dict[str, tuple[str, str]] = {
+    "2023-24": ("2024-04-14",
+                "https://sportsgeardaily.com/basketball/when-does-nba-basketball-season-start"),
+    "2024-25": ("2025-04-13",
+                "https://www.foxsports.com/stories/nba/nba-schedule-release"),
+    "2025-26": ("2026-04-12",
+                "https://en.wikipedia.org/wiki/2025%E2%80%9326_NBA_season "
+                "(regular season Oct 21 2025 - Apr 12 2026, play-in Apr 14-17; the log's "
+                "last 15-game slate is 2026-04-12 and play-in pairs start 2026-04-14)"),
+}
+
+
+# The inherited NBAComp log reports these fixtures as 0-0 "finals". A 0-0
+# finish is impossible in basketball, and every row below is an externally
+# documented postponement: the league kept the fixture on the schedule and the
+# upstream collector wrote zeros. Each carries its citation; a row WITHOUT one
+# is still treated as not played (never settled, never rated) and stays flagged
+# as unverified rather than being guessed at.
+NBA_POSTPONEMENTS: dict[str, tuple[str, str]] = {
+    "401585204": ("postponed 2024-01-17 after the death of Warriors assistant coach "
+                  "Dejan Milojevic; replayed 2024-02-15 (GSW 140 UTA 137)",
+                  "https://www.nba.com/news/nba-postpones-warriors-vs-jazz-game"),
+    "401585217": ("postponed 2024-01-19 in the same week; replayed 2024-04-02 "
+                  "(DAL 100 GSW 104)",
+                  "https://www.mercurynews.com/2024-01-26/nba-reschedules-postponed-games-following-dejan-milojevics-death/"),
+    "401705090": ("postponed 2025-01-09 by the Los Angeles wildfires; replayed 2025-02-19",
+                  "https://www.nba.com/news/nba-postpones-hornets-vs-lakers-jan-9-2025"),
+    "401705103": ("postponed 2025-01-11 by the Los Angeles wildfires",
+                  "https://pr.nba.com/spurs-lakers-hornets-clippers-games-postponed/"),
+    "401705104": ("postponed 2025-01-11 by the Los Angeles wildfires; replayed 2025-03-16",
+                  "https://pr.nba.com/spurs-lakers-hornets-clippers-games-postponed/"),
+    "401810384": ("postponed 2026-01-08 (moisture on the floor at United Center); "
+                  "replayed 2026-01-29",
+                  "https://pr.nba.com/category/nba-schedule/"),
+    "401810499": ("postponed 2026-01-24 on safety-and-security grounds in Minneapolis; "
+                  "replayed 2026-01-25",
+                  "https://www.forbes.com/sites/mikefore/2026-01-27/nba-games-postponed-due-to-the-2026-winter-storm-revised-dates/"),
+    "401810506": ("postponed 2026-01-25 by the January 2026 North American winter storm; "
+                  "replayed 2026-03-18",
+                  "https://www.nba.com/news/nba-postpones-games-in-memphis-and-milwaukee-due-to-massive-winter-storm"),
+    "401810507": ("postponed 2026-01-25 by the January 2026 North American winter storm; "
+                  "replayed 2026-03-31",
+                  "https://www.nba.com/news/nba-postpones-games-in-memphis-and-milwaukee-due-to-massive-winter-storm"),
+}
+
+# NBA Cup championship dates. Every Cup game counts toward the 82-game record
+# EXCEPT the final, so the two finalists legitimately play 83 (ESPN 2025 Cup
+# explainer; Sportico: "the final is the lone game in the NBA Cup that does not
+# count for a team's regular season record"). The log itself corroborates it:
+# exactly the two finalists carry one extra game per season.
+NBA_CUP_FINALS: dict[str, tuple[str, str]] = {
+    "2023-24": ("2023-12-09", "https://www.espn.com/nba/story/_/id/46609036/"
+                               "2025-nba-season-tournament-cup-format-highlights-updates"),
+    "2024-25": ("2024-12-17", "https://www.sportico.com/feature/nba-in-season-tournament"
+                               "-format-schedule-groups-explainer-1234746081/"),
+    "2025-26": ("2025-12-16", "https://www.sportico.com/feature/nba-in-season-tournament"
+                               "-format-schedule-groups-explainer-1234746081/"),
+}
+
+
+def _nba_game_type(season: str, game_date: str) -> tuple[str, str]:
+    """(game_type, evidence) for one NBA row.
+
+    PRE before the verified opening night, POST after the last full regular
+    season slate, REG in between. Seasons without a verified boundary keep the
+    inherited REG label (their slices start on the real opener).
+    """
+    opener = NBA_REG_OPENERS.get(season)
+    end = NBA_REG_ENDS.get(season)
+    if opener and game_date < opener[0]:
+        return "PRE", f"derived: before verified {season} opening night {opener[0]} ({opener[1]})"
+    if end and game_date > end[0]:
+        return "POST", f"derived: after {season} regular season end {end[0]} ({end[1]})"
+    if opener:
+        return "REG", f"verified {season} opening night {opener[0]} ({opener[1]})"
+    return "REG", "inherited snapshot starts on the season opener (SBR Oct-Dec slice)"
+
+
 def ingest_nba(con: sqlite3.Connection, seed_dir: str | Path | None = None,
                retrieved_utc: str | None = None) -> dict[str, Any]:
     """Import NBA games + SBR historical closes + ESPN forward lines (seed CSVs)."""
@@ -455,18 +569,53 @@ def ingest_nba(con: sqlite3.Connection, seed_dir: str | Path | None = None,
         for r in csv.DictReader(fh):
             stats["seasons"].add(r["season"])
             game_key = f"NBA:{r['game_id']}"
+            nba_type, type_evidence = _nba_game_type(str(r["season"]), r["game_date_et"])
+            stats["preseason"] = stats.get("preseason", 0) + (1 if nba_type == "PRE" else 0)
+            stats["postseason"] = stats.get("postseason", 0) + (1 if nba_type == "POST" else 0)
             a_score, h_score = _int(r["away_score"]), _int(r["home_score"])
             status = (r.get("status") or "").lower()
-            status = "final" if status == "final" and a_score is not None else (
-                "scheduled" if a_score is None else "final")
-            if a_score is not None:
+            espn_id = str(r["game_id"]).split(":")[-1]
+            # A 0-0 "final" is an impossible basketball scoreline: upstream kept
+            # the postponed fixture and wrote zeros. Record it as not played,
+            # drop the invented scores, cite the postponement when one is
+            # verified, and file an issue so the correction is never silent.
+            postponed = status == "final" and a_score == 0 and h_score == 0
+            postpone_note = ""
+            if postponed:
+                status = "postponed"
+                a_score = h_score = None
+                stats["postponed"] = stats.get("postponed", 0) + 1
+                reason, cite = NBA_POSTPONEMENTS.get(espn_id, (None, None))
+                if reason:
+                    postpone_note = f"verified postponement: {reason} ({cite})"
+                    stats["postponed_verified"] = stats.get("postponed_verified", 0) + 1
+                else:
+                    postpone_note = ("inherited log reports a 0-0 'final' (impossible "
+                                     "scoreline); recorded as not played, reason NOT "
+                                     "independently verified - flagged, never guessed")
+                detail = (f"impossible-scoreline: NBA {game_key} {r['game_date_et']} "
+                          f"{r['away_team']}@{r['home_team']} reported as a 0-0 final by the "
+                          f"inherited log; {postpone_note}")
+                if not con.execute("SELECT 1 FROM issues WHERE detail=?", (detail,)).fetchone():
+                    add_issue(con, severity="error", area="ingest", sport="NBA",
+                              game_key=game_key, detail=detail)
+            cup = NBA_CUP_FINALS.get(str(r["season"]))
+            cup_final = bool(cup and r["game_date_et"] == cup[0])
+            if postponed:
+                pass                      # keep status='postponed': never re-infer it
+            else:
+                status = "final" if status == "final" and a_score is not None else (
+                    "scheduled" if a_score is None else "final")
+            if status == "final":
                 stats["finals"] += 1
+            elif status == "postponed":
+                pass                      # counted above, with its verification state
             else:
                 stats["scheduled"] += 1
             _insert_game(con, {
                 "game_key": game_key, "sport": "NBA",
                 "league_game_id": str(r["game_id"]), "season": str(r["season"]),
-                "game_type": "REG", "game_date": r["game_date_et"],
+                "game_type": nba_type, "game_date": r["game_date_et"],
                 "start_utc": r.get("tipoff_utc") or None,
                 "week_or_slate": None,
                 "away_team": r["away_team"], "home_team": r["home_team"],
@@ -475,9 +624,19 @@ def ingest_nba(con: sqlite3.Connection, seed_dir: str | Path | None = None,
                 "overtime": None,
                 "source_id": "SRC_SIBLING_NBACOMP",
                 "source_url": "https://github.com/buffedlizard55-lab/NBAComp",
-                "retrieved_utc": retrieved_utc, "verified": 0,
-                "verify_note": "inherited snapshot; re-verified by nightly ESPN pull",
-                "extra_json": dump_json({"upstream_source": r.get("source")}),
+                "retrieved_utc": retrieved_utc,
+                "verified": 1 if (nba_type in ("PRE", "POST") or postpone_note.startswith(
+                    "verified") or cup_final) else 0,
+                "verify_note": "; ".join(filter(None, [
+                    "inherited snapshot; re-verified by nightly ESPN pull",
+                    f"game_type {type_evidence}", postpone_note,
+                    (f"NBA Cup championship {cup[0]}: played but NOT counted toward the "
+                     f"82-game record ({cup[1]})" if cup_final else "")])),
+                "extra_json": dump_json({"upstream_source": r.get("source"),
+                                         "game_type_evidence": type_evidence,
+                                         "postponed": postpone_note or None,
+                                         "nba_cup_championship": cup_final or None,
+                                         "cup_evidence": cup[1] if cup_final else None}),
             })
             stats["games"] += 1
     spath = seed_dir / "sbr_odds.csv"
@@ -577,14 +736,81 @@ def ingest_nba(con: sqlite3.Connection, seed_dir: str | Path | None = None,
 # ------------------------------------------------- cross-check evidence
 def ingest_crosscheck(con: sqlite3.Connection,
                       json_path: str | Path | None = None) -> dict[str, Any]:
-    """Record hand-verified cross-checks (Kalshi NFL sample, ESPN MNF block)."""
+    """Record hand-verified cross-checks.
+
+    Loads EVERY ``data/seed/crosscheck/checks_*.json`` file (sorted) so new
+    independent verification passes accumulate instead of replacing the old
+    evidence. Each check carries subject, claim, source URL, result + detail.
+    """
     from .store import add_verification
-    json_path = Path(json_path or SEED_DIR / "crosscheck" / "checks_20260922.json")
-    data = json.loads(Path(json_path).read_text())
+    paths = ([Path(json_path)] if json_path
+             else sorted((SEED_DIR / "crosscheck").glob("checks_*.json")))
     n = 0
-    for c in data["checks"]:
-        add_verification(con, subject=c["subject"], claim=c["claim"],
-                         source_url=c["source_url"], result=c["result"],
-                         detail=c["detail"])
-        n += 1
-    return {"checks": n}
+    files = 0
+    for path in paths:
+        data = json.loads(Path(path).read_text())
+        files += 1
+        for c in data["checks"]:
+            add_verification(con, subject=c["subject"], claim=c["claim"],
+                             source_url=c["source_url"], result=c["result"],
+                             detail=f"[{Path(path).name}] {c['detail']}")
+            n += 1
+    return {"checks": n, "files": files}
+
+
+# ------------------------------------------------- verified result updates
+def ingest_verified_updates(con: sqlite3.Connection,
+                            directory: str | Path | None = None) -> dict[str, Any]:
+    """Apply hand-verified results/fixtures from ``data/seed/updates/*.json``.
+
+    Every row must carry its own source_id, source_url and retrieved_utc plus a
+    verification block; rows without them are refused (never guessed). Existing
+    rows are updated field-by-field (a changed final score files a
+    conflicting-results issue via _insert_game); new rows are inserted whole.
+    """
+    from .store import add_verification
+    directory = Path(directory or SEED_DIR / "updates")
+    stats = {"files": 0, "applied": 0, "inserted": 0, "updated": 0, "refused": 0}
+    if not directory.exists():
+        return stats
+    for path in sorted(directory.glob("*.json")):
+        blob = json.loads(path.read_text())
+        stats["files"] += 1
+        for u in blob.get("updates", []):
+            missing = [k for k in ("game_key", "sport", "source_id", "source_url",
+                                   "retrieved_utc") if not u.get(k)]
+            if missing:
+                stats["refused"] += 1
+                add_issue(con, severity="error", area="ingest", sport=u.get("sport"),
+                          game_key=u.get("game_key"),
+                          detail=f"verified-update refused from {path.name}: "
+                                 f"missing {missing} (never guess provenance)")
+                continue
+            prev = con.execute("SELECT * FROM games WHERE game_key=?",
+                               (u["game_key"],)).fetchone()
+            row = dict(prev) if prev is not None else {}
+            row.update({k: v for k, v in u.items()
+                        if k not in ("verification",) and v is not None})
+            row.setdefault("league_game_id", u["game_key"].split(":", 1)[1])
+            row.setdefault("season", "")
+            row.setdefault("game_type", "REG")
+            row.setdefault("neutral", 0)
+            row.setdefault("venue", None)
+            row.setdefault("week_or_slate", None)
+            row.setdefault("away_score", None)
+            row.setdefault("home_score", None)
+            row.setdefault("overtime", None)
+            row.setdefault("start_utc", None)
+            row.setdefault("extra_json", None)
+            row["verified"] = 1
+            row["verify_note"] = (u.get("verify_note")
+                                  or f"hand-verified update ({path.name})")
+            _insert_game(con, row)
+            stats["applied"] += 1
+            stats["updated" if prev is not None else "inserted"] += 1
+            v = u.get("verification")
+            if v:
+                add_verification(con, subject=v["subject"], claim=v["claim"],
+                                 source_url=v.get("source_url", u["source_url"]),
+                                 result=v["result"], detail=v["detail"])
+    return stats
