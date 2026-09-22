@@ -129,10 +129,13 @@ def main() -> int:
     q = quality.run_checks(con)
     con.commit()
     hard = [c for c in q["checks"]
-            if c["check"] in ("ledger-chain", "settlement-recompute", "backtest-leakage")
+            if c["check"] in ("ledger-chain", "settlement-recompute", "backtest-leakage",
+                              "bankroll-integrity", "price-observed-after-decision",
+                              "form-snapshot-leakage", "schedule-completeness")
             and c["problems"] > 0]
     check("hard-quality-gates", not hard, "; ".join(
-        f"{c['check']}:{c['problems']}" for c in hard) or "chain+settle+leakage clean")
+        f"{c['check']}:{c['problems']}" for c in hard)
+        or "chain+settle+leakage+bankroll+price-time+form-time+schedule clean")
     # 12. no fabricated markers: every strategy has limitations + required data
     n = con.execute("SELECT COUNT(*) AS n FROM strategies WHERE limitations='' OR required_data=''"
                     ).fetchone()["n"]
@@ -177,7 +180,9 @@ def main() -> int:
                        "duplicate-events", "conflicting-results", "invalid-stats",
                        "timestamp-order", "stale-snapshots", "settlement-recompute",
                        "ledger-chain", "parlay-math", "backtest-leakage", "odds-sanity",
-                       "missing-historical-periods", "multi-backtest-integrity"}
+                       "missing-historical-periods", "multi-backtest-integrity",
+                       "bankroll-integrity", "price-observed-after-decision",
+                       "form-snapshot-leakage", "schedule-completeness"}
     lack = sorted(required_checks - names)
     check("quality-registry-complete", not lack,
           ",".join(lack) if lack else f"{len(required_checks)} checks live")
@@ -195,11 +200,123 @@ def main() -> int:
              GROUP BY game_key, market, selection, line, odds_american,
                       source_id, observed_utc, close_flag HAVING c > 1)""").fetchone()["n"]
     check("no-duplicate-price-quotes", n == 0, f"{n} duplicated quote groups")
+
+    # 21. bankroll curves are recomputed in ECONOMIC time and reconcile exactly
+    from parlaysports.config import MAX_PARLAYS_PER_SLATE
+    from parlaysports.util import money
+    drift, negative, over_dd = [], [], []
+    for b in con.execute("SELECT strategy_id, book, start_amount, current_amount "
+                         "FROM bankroll").fetchall():
+        bal = float(b["start_amount"])
+        peak, maxdd = bal, 0.0
+        for r in con.execute(
+                "SELECT entry_ts, amount FROM ledger WHERE strategy_id=? AND book=? "
+                "ORDER BY entry_ts, entry_id", (b["strategy_id"], b["book"])).fetchall():
+            bal = money(bal + float(r["amount"]))
+            peak = max(peak, bal)
+            if peak > 0:
+                maxdd = max(maxdd, (peak - bal) / peak)
+            if bal < 0:
+                negative.append(f"{b['strategy_id']}/{b['book']}")
+        if abs(bal - float(b["current_amount"])) > 0.01:
+            drift.append(f"{b['strategy_id']}/{b['book']}:{bal}!={b['current_amount']}")
+        if maxdd > 1.0:
+            over_dd.append(f"{b['strategy_id']}/{b['book']}:{maxdd:.1%}")
+    check("bankroll-economic-integrity", not (drift or negative or over_dd),
+          "; ".join(drift[:3] + negative[:3] + over_dd[:3]) or
+          "every book reconciles in economic time; no negative balance; no dd > 100%")
+
+    # 22. exported leaderboards carry the economic fields
+    bad_cols = []
+    for f in ("leaderboard_backtest.json", "leaderboard_forward.json"):
+        for row in json.loads((SITE_DIR / f).read_text()):
+            for k in ("min_balance", "ledger_drift", "max_drawdown"):
+                if k not in row:
+                    bad_cols.append(f"{f}:{row.get('strategy_id')}:{k}")
+            if abs(float(row.get("ledger_drift") or 0)) > 0.01:
+                bad_cols.append(f"{f}:{row.get('strategy_id')}:drift={row.get('ledger_drift')}")
+    check("leaderboard-economic-columns", not bad_cols,
+          ",".join(sorted(set(bad_cols))[:5]) or "min_balance/ledger_drift/max_drawdown on all rows")
+
+    # 23. forward book never bets a preseason exhibition
+    n = con.execute(
+        """SELECT COUNT(*) AS n FROM parlays p JOIN legs l ON l.parlay_id=p.parlay_id
+           JOIN games g ON g.game_key=l.game_key
+           WHERE p.test_mode='forward' AND g.game_type='PRE'""").fetchone()["n"]
+    check("forward-excludes-preseason", n == 0, f"{n} preseason legs in the forward book")
+
+    # 24. NBA game-type boundaries are derived, evidenced and within league length
+    pre = {r["season"]: r["n"] for r in con.execute(
+        "SELECT season, COUNT(*) AS n FROM games WHERE sport='NBA' AND game_type='PRE' "
+        "GROUP BY season")}
+    over = con.execute(
+        """SELECT season, COUNT(*) AS n FROM (
+             SELECT season, away_team AS t, COUNT(*) AS c FROM games
+             WHERE sport='NBA' AND game_type='REG' GROUP BY season, away_team
+             UNION ALL
+             SELECT season, home_team AS t, COUNT(*) AS c FROM games
+             WHERE sport='NBA' AND game_type='REG' GROUP BY season, home_team)
+           GROUP BY season HAVING MAX(c) > 82""").fetchall()
+    no_evidence = con.execute(
+        "SELECT COUNT(*) AS n FROM games WHERE sport='NBA' AND game_type IN ('PRE','POST') "
+        "AND (verify_note IS NULL OR verify_note NOT LIKE '%derived%')").fetchone()["n"]
+    expected_pre = {"2023-24", "2024-25", "2025-26", "2026-27"}
+    check("nba-game-type-boundaries",
+          not over and no_evidence == 0 and expected_pre <= set(pre),
+          f"PRE rows {pre}; seasons over 82/team "
+          f"{[dict(r) for r in over]}; rows without derivation evidence {no_evidence}")
+
+    # 25. documented per-slate ticket cap is actually enforced
+    over_cap = []
+    for r in con.execute(
+            "SELECT strategy_id, test_mode, slate_date, COUNT(*) AS n FROM parlays "
+            "GROUP BY strategy_id, test_mode, slate_date").fetchall():
+        limit = 1 if r["strategy_id"] == "S-MULTI-04" else MAX_PARLAYS_PER_SLATE
+        if r["n"] > limit:
+            over_cap.append(f"{r['strategy_id']}/{r['test_mode']}/{r['slate_date']}:"
+                            f"{r['n']}>{limit}")
+    check("slate-cap-enforced", not over_cap,
+          ",".join(over_cap[:5]) or f"cap {MAX_PARLAYS_PER_SLATE}/slate (lotto 1/week) respected")
+
+    # 26. hand-verified pinned updates are present in the record
+    missing_updates = []
+    for path in sorted((ROOT / "data" / "seed" / "updates").glob("*.json")):
+        for u in json.loads(path.read_text()).get("updates", []):
+            row = con.execute("SELECT status, away_score, home_score, verified "
+                              "FROM games WHERE game_key=?", (u["game_key"],)).fetchone()
+            if row is None:
+                missing_updates.append(f"{u['game_key']}:absent")
+            elif (row["status"], row["away_score"], row["home_score"], row["verified"]) != (
+                    u.get("status"), u.get("away_score"), u.get("home_score"), 1):
+                missing_updates.append(f"{u['game_key']}:{dict(row)}")
+    check("verified-updates-applied", not missing_updates,
+          ",".join(missing_updates[:4]) or "all pinned verified finals are in the record")
+
+    # 27. no ESPN row duplicates a league-log matchup (UTC rollover handled)
+    dup = con.execute(
+        """SELECT COUNT(*) AS n FROM games g WHERE g.game_key LIKE '%:espn:%' AND EXISTS (
+             SELECT 1 FROM games h WHERE h.sport=g.sport AND h.away_team=g.away_team
+               AND h.home_team=g.home_team AND h.game_key NOT LIKE '%:espn:%'
+               AND h.game_date BETWEEN date(g.game_date,'-1 day') AND date(g.game_date,'+1 day'))
+        """).fetchone()["n"]
+    check("no-cross-source-duplicate-games", dup == 0, f"{dup} ESPN rows shadow a league-log game")
+
+    # 28. schedule completeness has no UNEXPLAINED deviation left
+    sc = next((c for c in q["checks"] if c["check"] == "schedule-completeness"), None)
+    check("schedule-completeness-clean", bool(sc) and sc["problems"] == 0,
+          "; ".join(sc["detail"][:3]) if sc and sc["problems"] else
+          "every season matches its verified league length (or is documented)")
     return print_summary()
 
 
 def print_summary() -> int:
     fails = [r for r in report if r["status"] == FAIL]
+    if fails:
+        # A CI failure must be diagnosable from the log alone: print the first
+        # failing checks with their detail instead of only a count.
+        print("-- failing checks --", flush=True)
+        for r in fails[:25]:
+            print(f"  FAIL {r['check']}: {r['detail'][:400]}", flush=True)
     print(f"== audit: {len(report) - len(fails)}/{len(report)} passed ==", flush=True)
     (ROOT / "data" / "audit_report.json").write_text(json.dumps(report, indent=1))
     return 1 if fails else 0

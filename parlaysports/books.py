@@ -49,19 +49,39 @@ def strategy_books(con: sqlite3.Connection, strategy_id: str,
         decided_legs = leg_counts.get("win", 0) + leg_counts.get("loss", 0)
         decided_parlays = counts.get("won", 0) + counts.get("lost", 0)
         # equity curve + max drawdown from the ledger (chronological)
+        # Chronological order (economic time, then insertion order for ties):
+        # a replayed backtest writes every stake first and settles afterwards,
+        # so entry_id order is NOT the order the money moved. Drawdown and the
+        # equity curve are only meaningful in economic-time order.
+        # The stored balance_after follows ledger INSERT order, and a replayed
+        # backtest writes every stake before it settles, so plotting that column
+        # as-is shows an impossible trough (drawdowns above 100%). Re-summing the
+        # amounts in economic order gives the real curve; addition is
+        # commutative, so the endpoint must still equal current_amount and any
+        # drift is a bug the bankroll-integrity check reports.
         entries = con.execute(
-            "SELECT entry_ts, balance_after FROM ledger "
-            "WHERE strategy_id=? AND version=? AND book=? ORDER BY entry_id",
+            "SELECT entry_ts, amount FROM ledger "
+            "WHERE strategy_id=? AND version=? AND book=? ORDER BY entry_ts, entry_id",
             (strategy_id, version, book)).fetchall()
-        equity = [{"t": e["entry_ts"], "b": e["balance_after"]} for e in entries]
-        peak, maxdd = start, 0.0
+        equity: list[dict[str, Any]] = []
+        bal, peak, maxdd, min_bal = start, start, 0.0, start
         for e in entries:
-            peak = max(peak, float(e["balance_after"]))
-            maxdd = max(maxdd, (peak - float(e["balance_after"])) / peak if peak else 0)
+            bal = money(bal + float(e["amount"]))
+            equity.append({"t": e["entry_ts"], "b": bal})
+            peak = max(peak, bal)
+            min_bal = min(min_bal, bal)
+            if peak > 0:
+                maxdd = max(maxdd, (peak - bal) / peak)
+        ledger_drift = money(bal - current)
         # current streak from settled parlays (newest first)
+        # A replayed book settles in one pass, so settled_utc cannot order it;
+        # use the slate (the economic order) there and the real settlement time
+        # for the live forward book.
+        order = ("slate_date DESC, parlay_id DESC" if book == "backtest"
+                 else "settled_utc DESC, slate_date DESC, parlay_id DESC")
         seq = con.execute(
-            "SELECT status FROM parlays WHERE strategy_id=? AND version=? AND test_mode=? "
-            "AND status IN ('won','lost','push') ORDER BY settled_utc DESC, slate_date DESC",
+            f"SELECT status FROM parlays WHERE strategy_id=? AND version=? AND test_mode=? "
+            f"AND status IN ('won','lost','push') ORDER BY {order}",
             (strategy_id, version, book)).fetchall()
         streak_n, streak_kind = 0, None
         for r in seq:
@@ -98,6 +118,8 @@ def strategy_books(con: sqlite3.Connection, strategy_id: str,
             "legs": leg_counts,
             "avg_legs": _avg_legs(con, strategy_id, version, book),
             "max_drawdown": round(maxdd, 4),
+            "min_balance": money(min_bal),
+            "ledger_drift": ledger_drift,
             "streak": f"{streak_kind}{streak_n}" if streak_kind else None,
             "last_activity": last["slate_date"] if last else None,
             "grades": grade_counts,
@@ -115,7 +137,8 @@ def _empty_book() -> dict[str, Any]:
         "start": money(STARTING_BANKROLL), "pnl": 0.0, "roi": None,
         "staked": 0.0, "total_payout": 0.0, "parlays": 0, "upcoming": 0, "won": 0, "lost": 0,
         "push": 0, "parlay_hit_rate": None, "leg_hit_rate": None,
-        "legs": {}, "avg_legs": None, "max_drawdown": 0.0, "streak": None,
+        "legs": {}, "avg_legs": None, "max_drawdown": 0.0,
+        "min_balance": money(STARTING_BANKROLL), "ledger_drift": 0.0, "streak": None,
         "last_activity": None, "grades": {}, "verified_share": None,
         "equity": [],
     }

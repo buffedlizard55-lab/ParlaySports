@@ -44,14 +44,23 @@ def _sort_key_leg(sig: dict[str, Any]) -> tuple:
 
 def build_parlays(signals: list[dict[str, Any]], strategy: dict[str, Any],
                   slate_date: str, decision_utc: str,
-                  test_mode: str) -> list[dict[str, Any]]:
-    """Greedily pack sorted signals into parlays. Returns parlay dicts (no DB writes)."""
+                  test_mode: str,
+                  max_parlays_override: int | None = None) -> list[dict[str, Any]]:
+    """Greedily pack sorted signals into parlays. Returns parlay dicts (no DB writes).
+
+    `max_parlays_override` lets a runner cap the batch by how many tickets the
+    strategy ALREADY has on this slate in this book, so the documented
+    per-slate cap holds across repeated runs (a nightly re-run must not add a
+    4th ticket to a slate that already holds 3).
+    """
     sid = strategy["strategy_id"]
     is_lotto = sid == "S-MULTI-04"
     max_legs = min(strategy.get("max_legs", MAX_LEGS_STANDARD),
                    MAX_LEGS_LOTTO if is_lotto else MAX_LEGS_STANDARD)
     min_prob = MIN_MODEL_PROB_LOTTO if is_lotto else MIN_MODEL_PROB_STANDARD
     max_parlays = 1 if is_lotto else MAX_PARLAYS_PER_SLATE
+    if max_parlays_override is not None:
+        max_parlays = max(0, min(max_parlays, int(max_parlays_override)))
     require_multi = strategy.get("sport") == "MULTI"
     # Catalog construction rules can cap legs per sport (e.g. S-MULTI-01:
     # "1 leg per sport max" -- the top-edge leg of each sport, since the pool
@@ -176,6 +185,14 @@ def settle_leg(leg: dict[str, Any], game: dict[str, Any]) -> dict[str, Any]:
     Standard sportsbook rules: OT included; exact-line spread/total => push;
     MLB ties impossible (validated at ingest); NFL ties => ML push.
     """
+    if game.get("status") == "postponed":
+        # The fixture was not played as scheduled (verified postponement, or an
+        # impossible 0-0 scoreline in the source log). Standard book rule: the
+        # leg is voided and the stake refunded -- it is never settled on an
+        # unplayed game, and it never sits pending forever.
+        return {"result": VOID,
+                "detail": (f"game postponed/not played as scheduled "
+                           f"({game.get('game_date')}): leg voided, stake refunded")}
     if game.get("status") != "final" or game.get("away_score") is None:
         return {"result": PENDING, "detail": "game not final"}
     a_s, h_s = int(game["away_score"]), int(game["home_score"])

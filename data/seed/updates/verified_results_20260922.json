@@ -1,0 +1,109 @@
+{
+ "pinned_utc": "2026-09-22T18:45:00Z",
+ "method": "Hand-verified updates applied at seed time. Every row carries its own source, URL, retrieval stamp and an independent verification block; rows without full provenance are refused by ingest_verified_updates (never guessed). The evidence was fetched through the sandbox fetch channel during the PASS-3 verification session on 2026-09-22; retrieved_utc records the seed-pin time because the sandbox keeps no per-request clock, and the source URL is the authority.",
+ "updates": [
+  {
+   "game_key": "NFL:2026_02_NYG_LA",
+   "sport": "NFL",
+   "league_game_id": "2026_02_NYG_LA",
+   "season": "2026",
+   "game_type": "REG",
+   "game_date": "2026-09-21",
+   "week_or_slate": "2",
+   "away_team": "NYG",
+   "home_team": "LA",
+   "status": "final",
+   "away_score": 6,
+   "home_score": 28,
+   "venue": "SoFi Stadium",
+   "source_id": "SRC_ESPN_SCOREBOARD",
+   "source_url": "https://site.api.espn.com/apis/site/v2/sports/football/nfl/scoreboard?dates=20260921",
+   "retrieved_utc": "2026-09-22T18:45:00Z",
+   "verify_note": "hand-verified final score (ESPN scoreboard event 401872947)",
+   "verification": {
+    "subject": "NFL 2026 week 2 Monday night: NY Giants @ LA Rams, 2026-09-21",
+    "claim": "Final score Rams 28, Giants 6 at SoFi Stadium (ESPN event 401872947).",
+    "source_url": "https://site.api.espn.com/apis/site/v2/sports/football/nfl/scoreboard?dates=20260921",
+    "result": "match",
+    "detail": "ESPN scoreboard JSON for dates=20260921 lists event 401872947 (uid s:20~l:28~e:401872947) as STATUS_FINAL: away NYG 6 (0-3-3-0), home LAR 28 (7-7-7-7), SoFi Stadium, attendance 73773, startDate 2026-09-22T00:15Z, broadcast ESPN/ABC, week 2, and the league highlight clip is titled 'Rams take down Giants 28-6 on MNF'. Re-fetched live during this pass and identical to the earlier session fetch; also corroborated by ESPN recap, USA Today and Giants Wire coverage. The nflverse games.csv pin still carried this fixture as 'scheduled' with no score, so the row is updated from the live primary source. Note the date trap: ESPN files the game under UTC 2026-09-22 while nflverse files the local gameday 2026-09-21, so nightly matching must tolerate +/-1 day (see R-021) or it duplicates the row and never settles Monday night."
+   },
+   "start_utc": "2026-09-22T00:15:00Z",
+   "extra_json": "{\"espn_event_id\": \"401872947\", \"attendance\": 73773, \"broadcast\": \"ESPN/ABC\", \"linescores\": {\"LAR\": [7, 7, 7, 7], \"NYG\": [0, 3, 3, 0]}}"
+  },
+  {
+   "game_key": "MLB:824787",
+   "sport": "MLB",
+   "league_game_id": "824787",
+   "season": "2026",
+   "game_type": "R",
+   "game_date": "2026-09-21",
+   "away_team": "TOR",
+   "home_team": "BAL",
+   "status": "final",
+   "away_score": 3,
+   "home_score": 4,
+   "start_utc": "2026-09-21T22:35:00Z",
+   "source_id": "SRC_MLB_STATSAPI",
+   "source_url": "https://statsapi.mlb.com/api/v1/schedule?sportId=1&date=2026-09-21",
+   "retrieved_utc": "2026-09-22T18:45:00Z",
+   "verify_note": "hand-verified final score from MLB StatsAPI schedule (gamePk 824787)",
+   "verification": {
+    "subject": "MLB 2026-09-21 TOR @ BAL (gamePk 824787)",
+    "claim": "Final score TOR 3, BAL 4; regular season, official.",
+    "source_url": "https://statsapi.mlb.com/api/v1/schedule?sportId=1&date=2026-09-21",
+    "result": "match",
+    "detail": "MLB StatsAPI schedule for date=2026-09-21 returns gamePk 824787 with status Game Over and linescore away 3 / home 4. The pinned seed fixture file starts at 2026-09-22, so this game was absent from the database; it is inserted from the live primary source. Start time is the StatsAPI gameDate for this gamePk."
+   }
+  },
+  {
+   "game_key": "MLB:824221",
+   "sport": "MLB",
+   "league_game_id": "824221",
+   "season": "2026",
+   "game_type": "R",
+   "game_date": "2026-09-21",
+   "away_team": "WSH",
+   "home_team": "DET",
+   "status": "final",
+   "away_score": 2,
+   "home_score": 9,
+   "start_utc": "2026-09-21T22:40:00Z",
+   "source_id": "SRC_MLB_STATSAPI",
+   "source_url": "https://statsapi.mlb.com/api/v1/schedule?sportId=1&date=2026-09-21",
+   "retrieved_utc": "2026-09-22T18:45:00Z",
+   "verify_note": "hand-verified final score from MLB StatsAPI schedule (gamePk 824221)",
+   "verification": {
+    "subject": "MLB 2026-09-21 WSH @ DET (gamePk 824221)",
+    "claim": "Final score WSH 2, DET 9; regular season, official.",
+    "source_url": "https://statsapi.mlb.com/api/v1/schedule?sportId=1&date=2026-09-21",
+    "result": "match",
+    "detail": "MLB StatsAPI schedule for date=2026-09-21 returns gamePk 824221 with status Game Over and linescore away 2 / home 9. The pinned seed fixture file starts at 2026-09-22, so this game was absent from the database; it is inserted from the live primary source. Start time is the StatsAPI gameDate for this gamePk."
+   }
+  },
+  {
+   "game_key": "MLB:823169",
+   "sport": "MLB",
+   "league_game_id": "823169",
+   "season": "2026",
+   "game_type": "R",
+   "game_date": "2026-09-21",
+   "away_team": "MIN",
+   "home_team": "SF",
+   "status": "final",
+   "away_score": 2,
+   "home_score": 5,
+   "start_utc": "2026-09-22T01:45:00Z",
+   "source_id": "SRC_MLB_STATSAPI",
+   "source_url": "https://statsapi.mlb.com/api/v1/schedule?sportId=1&date=2026-09-21",
+   "retrieved_utc": "2026-09-22T18:45:00Z",
+   "verify_note": "hand-verified final score from MLB StatsAPI schedule (gamePk 823169)",
+   "verification": {
+    "subject": "MLB 2026-09-21 MIN @ SF (gamePk 823169)",
+    "claim": "Final score MIN 2, SF 5; regular season, official.",
+    "source_url": "https://statsapi.mlb.com/api/v1/schedule?sportId=1&date=2026-09-21",
+    "result": "match",
+    "detail": "MLB StatsAPI schedule for date=2026-09-21 returns gamePk 823169 with status Game Over and linescore away 2 / home 5. The pinned seed fixture file starts at 2026-09-22, so this game was absent from the database; it is inserted from the live primary source. Start time is the StatsAPI gameDate for this gamePk."
+   }
+  }
+ ]
+}

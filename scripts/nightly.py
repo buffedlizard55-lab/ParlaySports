@@ -96,14 +96,28 @@ def _guarded_upsert_game(con, *, sport, espn_id, season, game_type, date, start_
     results issue before any final-score change. Returns the row's game_key.
     """
     prev = con.execute(
-        "SELECT game_key, status, away_score, home_score, source_id FROM games "
+        "SELECT game_key, game_date, status, away_score, home_score, source_id FROM games "
         "WHERE game_key=?", (f"{sport}:espn:{espn_id}",)).fetchone()
+    matched_across_utc_rollover = False
     if prev is None:
         cands = con.execute(
-            """SELECT game_key, status, away_score, home_score, source_id FROM games
+            """SELECT game_key, game_date, status, away_score, home_score, source_id FROM games
                WHERE sport=? AND game_date=? AND away_team=? AND home_team=?
                ORDER BY game_key""",
             (sport, date, away, home)).fetchall()
+        if not cands:
+            # Evening games roll over UTC: ESPN files a Monday-night kickoff
+            # (2026-09-22T00:15Z) under the next UTC day while the league log
+            # keeps the local gameday (2026-09-21). Without this window the
+            # event never matches, a duplicate row is created, and the real
+            # result never reaches the row the forward book bet on.
+            cands = con.execute(
+                """SELECT game_key, game_date, status, away_score, home_score, source_id
+                   FROM games WHERE sport=? AND away_team=? AND home_team=?
+                     AND game_date BETWEEN date(?, '-1 day') AND date(?, '+1 day')
+                   ORDER BY game_date, game_key""",
+                (sport, away, home, date, date)).fetchall()
+            matched_across_utc_rollover = bool(cands)
         if status == "final" and away_score is not None:
             for c in cands:
                 if (c["away_score"], c["home_score"]) == (away_score, home_score):
@@ -117,6 +131,7 @@ def _guarded_upsert_game(con, *, sport, espn_id, season, game_type, date, start_
                     prev = c
                     break
     key = prev["game_key"] if prev is not None else f"{sport}:espn:{espn_id}"
+    matched_date = prev["game_date"] if prev is not None else date
     if (prev is not None and prev["status"] == "final" and status == "final"
             and None not in (prev["away_score"], prev["home_score"])
             and (prev["away_score"], prev["home_score"]) != (away_score, home_score)):
@@ -137,8 +152,15 @@ def _guarded_upsert_game(con, *, sport, espn_id, season, game_type, date, start_
              start_utc=COALESCE(excluded.start_utc, games.start_utc),
              retrieved_utc=excluded.retrieved_utc""",
         (key, sport, espn_id, season, game_type,
-         date, start_utc, week, away, home, venue,
+         matched_date, start_utc, week, away, home, venue,
          status, away_score, home_score, url, utcnow_iso()))
+    if prev is not None and matched_across_utc_rollover and matched_date != date:
+        # Never rewrite the league's own gameday: keep it and record why the
+        # ESPN stamp differs, so the cross-day match stays auditable per row.
+        con.execute(
+            "UPDATE games SET verify_note=? WHERE game_key=?",
+            (f"ESPN nightly pull; matched across UTC date rollover "
+             f"(ESPN {date} -> league gameday {matched_date})", key))
     return key
 
 
@@ -204,13 +226,42 @@ def _upsert_espn_event(con, sport, ev, url) -> tuple[int, int]:
 
 
 def _price(con, game_key, market, selection, line, odds, otype, source_id,
-           source_url, observed_utc, note) -> None:
+           source_url, observed_utc, note) -> bool:
+    """Store one live snapshot, refusing to stack duplicates.
+
+    Dedupe key: (game_key, market, selection, line, source_id) plus either the
+    same observed stamp or the same value inside one UTC night. Without it a
+    collector that visits a market twice in a night (or two collectors covering
+    the same market) piles up identical rows, which distorts closing-value
+    statistics and bloats the database. The first snapshot keeps its provenance.
+    Returns True when a row was written.
+    """
+    prior = con.execute(
+        """SELECT observed_utc, odds_american FROM prices
+           WHERE game_key=? AND market=? AND selection=? AND line IS ?
+             AND source_id=? AND close_flag=0""",
+        (game_key, market, selection, line, source_id)).fetchall()
+    for row in prior:
+        if row["observed_utc"] == observed_utc:
+            if row["odds_american"] != odds:
+                # Two different values for one stamp is contradictory data:
+                # keep the first (its provenance stands) and say so.
+                store.add_issue(
+                    con, severity="warning", area="collect", game_key=game_key,
+                    detail=(f"conflicting-price-same-stamp: {market}/{selection} "
+                            f"{line} at {observed_utc} already recorded as "
+                            f"{row['odds_american']} from {source_id}; ignoring {odds}"))
+            return False
+        if (row["odds_american"] == odds
+                and str(row["observed_utc"] or "")[:10] == str(observed_utc or "")[:10]):
+            return False
     con.execute(
         """INSERT INTO prices(game_key, market, selection, line, odds_american,
            odds_type, source_id, source_url, observed_utc, close_flag, note)
            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, 0, ?)""",
         (game_key, market, selection, line, odds, otype, source_id,
          source_url, observed_utc, note))
+    return True
 
 
 def _int_or_none(x):

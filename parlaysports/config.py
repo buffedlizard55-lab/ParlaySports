@@ -60,6 +60,34 @@ SEASON_STATE = {
     },
 }
 
+# Regular-season length per team, used ONLY to flag deviations in the
+# schedule-completeness quality check -- never to fill a gap. Every value is a
+# verifiable league fact (evidence in data/seed/crosscheck):
+#   NFL 17 games since 2021 (16 before), MLB 162, NBA 82,
+#   NHL 82 except 2026-27 which is an 84-game season (AP/TSN/Wikipedia).
+SEASON_LENGTH: dict[str, dict] = {
+    "NFL": {"default": 17, "through": {"2020": 16}},
+    "MLB": {"default": 162},
+    "NHL": {"default": 82, "overrides": {"20262027": 84}},
+    "NBA": {"default": 82},
+}
+
+# Which game_type value means "regular season" per sport.
+REG_GAME_TYPE = {"NFL": "REG", "MLB": "R", "NHL": "REG", "NBA": "REG"}
+
+
+def season_length(sport: str, season: str) -> int:
+    """Expected regular-season games per team for one sport/season."""
+    spec = SEASON_LENGTH[sport]
+    override = (spec.get("overrides") or {}).get(season)
+    if override:
+        return int(override)
+    for last_season, n in sorted((spec.get("through") or {}).items()):
+        if season <= last_season:
+            return int(n)
+    return int(spec["default"])
+
+
 # Sportsbook-style settlement constants.
 PUSH = "push"
 WIN = "win"

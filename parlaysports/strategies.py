@@ -562,20 +562,43 @@ def ats_streak(con: sqlite3.Connection, sport: str, team: str,
 
 
 # ------------------------------------------------------------- MLB model
+def _wl_pair(pair: Any) -> tuple[int, int] | None:
+    """Normalize a (wins, losses) pair. None/short/NULL components => None.
+
+    A snapshot with a missing split is MISSING DATA: callers must refuse the
+    signal rather than treat it as 0-0 (which would silently change the rule).
+    """
+    if not pair:
+        return None
+    try:
+        w, l = pair[0], pair[1]
+    except (IndexError, TypeError):
+        return None
+    if w is None or l is None:
+        return None
+    return int(w), int(l)
+
+
 def mlb_team_strength(con: sqlite3.Connection, team: str, game_date: str,
-                      game_key: str, season: str) -> dict[str, Any]:
+                      game_key: str, season: str,
+                      as_of: str | None = None) -> dict[str, Any]:
     """Blended strength for MLB: season Pythag (60%) + last-20 Pythag (25%) + L10 win% (15%).
 
     2026 forward games use the verified standings snapshot (no 2026 game log yet).
     Historical games use the rolling game log. Sources recorded in `basis`.
+
+    `as_of` is the decision timestamp: a snapshot recorded AFTER the decision
+    was made is future information and is never used (look-ahead guard). With
+    as_of=None the newest snapshot is used (only acceptable for display).
     """
     if season == "2026":
         row = con.execute(
             """SELECT w, l, rs, ra, last10_w, last10_l, home_w, home_l, away_w, away_l,
                       xw, xl, streak_code, streak_n, as_of_utc
                FROM team_form WHERE sport='MLB' AND team=? AND season='2026'
-               ORDER BY as_of_utc DESC LIMIT 1""", (team,)).fetchone()
-        if row is None or row["rs"] is None:
+                 AND (? IS NULL OR as_of_utc <= ?)
+               ORDER BY as_of_utc DESC LIMIT 1""", (team, as_of, as_of)).fetchone()
+        if row is None or row["rs"] is None or row["ra"] is None:
             return {"p": None, "basis": "no-2026-snapshot"}
         season_py = pythag(row["rs"], row["ra"])
         l10 = (row["last10_w"] / (row["last10_w"] + row["last10_l"])
@@ -583,6 +606,7 @@ def mlb_team_strength(con: sqlite3.Connection, team: str, game_date: str,
         p = 0.70 * season_py + 0.30 * l10
         return {"p": p, "basis": "standings-snapshot-2026", "season_py": season_py,
                 "l10": l10, "w": row["w"], "l": row["l"],
+                "rs": row["rs"], "ra": row["ra"],
                 "home": (row["home_w"], row["home_l"]),
                 "away": (row["away_w"], row["away_l"]),
                 "xw": row["xw"], "xl": row["xl"],
@@ -602,10 +626,15 @@ def mlb_team_strength(con: sqlite3.Connection, team: str, game_date: str,
 
 
 def mlb_prob(con: sqlite3.Connection, away: str, home: str, game_date: str,
-             game_key: str, season: str) -> dict[str, Any]:
-    """Home win prob via log5(blended strengths) with +HFA to home strength."""
-    sa = mlb_team_strength(con, away, game_date, game_key, season)
-    sh = mlb_team_strength(con, home, game_date, game_key, season)
+             game_key: str, season: str,
+             as_of: str | None = None) -> dict[str, Any]:
+    """Home win prob via log5(blended strengths) with +HFA to home strength.
+
+    `as_of` (the decision timestamp) caps every snapshot read: information
+    recorded after the decision is never used.
+    """
+    sa = mlb_team_strength(con, away, game_date, game_key, season, as_of=as_of)
+    sh = mlb_team_strength(con, home, game_date, game_key, season, as_of=as_of)
     if sa["p"] is None or sh["p"] is None:
         return {"p_home": None, "basis": "missing-strength"}
     # Home-field advantage as a strength bump (documented assumption: +0.020).
@@ -650,6 +679,17 @@ def _attach_price(sig: Signal,
     sig["features"]["price_source"] = pr["source_id"]
     sig["features"]["price_observed_utc"] = pr["observed_utc"]
     return sig
+
+
+def _mlb_form_as_of(mp: dict[str, Any]) -> str | None:
+    """Latest standings-snapshot timestamp behind an MLB model leg (audit trail).
+
+    Recorded on the leg so the quality gate can prove no snapshot recorded
+    AFTER the decision was ever used (look-ahead guard).
+    """
+    stamps = [d.get("as_of") for d in (mp.get("away"), mp.get("home"))
+              if isinstance(d, dict) and d.get("as_of")]
+    return max(stamps) if stamps else None
 
 
 def _model_price_ml(sig: Signal, p: float, fair_american: float) -> Signal:
@@ -809,7 +849,8 @@ def sig_mlb_01(con, game, prices, decision_utc, close_only) -> list[Signal]:
     if game["game_type"] != "R":
         return []
     mp = mlb_prob(con, game["away_team"], game["home_team"],
-                  game["game_date"], game["game_key"], game["season"])
+                  game["game_date"], game["game_key"], game["season"],
+                  as_of=decision_utc)
     if mp["p_home"] is None:
         return []
     out = []
@@ -819,7 +860,8 @@ def sig_mlb_01(con, game, prices, decision_utc, close_only) -> list[Signal]:
         if edge_proxy >= 0.10:  # >=55%/45% conviction
             s = _base_signal("S-MLB-01", game, "ML", side, decision_utc)
             _model_price_ml(s, p, fair)
-            s["features"] = {"basis": mp["model"], "conviction": round(edge_proxy, 3)}
+            s["features"] = {"basis": mp["model"], "conviction": round(edge_proxy, 3),
+                             "form_as_of": _mlb_form_as_of(mp)}
             s["note"] = "MODEL-grade: no market odds feed; fair price from log5 blend"
             out.append(s)
     return out
@@ -829,7 +871,8 @@ def sig_mlb_02(con, game, prices, decision_utc, close_only) -> list[Signal]:
     if game["game_type"] != "R":
         return []
     mp = mlb_prob(con, game["away_team"], game["home_team"],
-                  game["game_date"], game["game_key"], game["season"])
+                  game["game_date"], game["game_key"], game["season"],
+                  as_of=decision_utc)
     if mp["p_home"] is None:
         return []
     out = []
@@ -856,7 +899,8 @@ def sig_mlb_02(con, game, prices, decision_utc, close_only) -> list[Signal]:
                 p = mp["p_away"] if side == "away" else mp["p_home"]
                 s = _base_signal("S-MLB-02", game, "ML", side, decision_utc)
                 _model_price_ml(s, p, prob_to_american(p))
-                s["features"] = {"streak": streak, "l10": l10, "opp_l10": opp_l10}
+                s["features"] = {"streak": streak, "l10": l10, "opp_l10": opp_l10,
+                                 "form_as_of": _mlb_form_as_of(mp)}
                 s["note"] = "MODEL-grade leg"
                 out.append(s)
     return out
@@ -866,7 +910,8 @@ def sig_mlb_03(con, game, prices, decision_utc, close_only) -> list[Signal]:
     if game["game_type"] != "R":
         return []
     mp = mlb_prob(con, game["away_team"], game["home_team"],
-                  game["game_date"], game["game_key"], game["season"])
+                  game["game_date"], game["game_key"], game["season"],
+                  as_of=decision_utc)
     if mp["p_home"] is None:
         return []
     out = []
@@ -875,7 +920,10 @@ def sig_mlb_03(con, game, prices, decision_utc, close_only) -> list[Signal]:
         if p >= 0.5:
             continue  # dogs only
         info = mp[side]
-        if game["season"] == "2026" and info.get("xw") is not None:
+        if (game["season"] == "2026" and info.get("xw") is not None
+                and info.get("xl") is not None and info.get("w") is not None
+                and info.get("l") is not None
+                and (info["xw"] + info["xl"]) > 0 and (info["w"] + info["l"]) > 0):
             xwp = info["xw"] / (info["xw"] + info["xl"])
             wp = info["w"] / (info["w"] + info["l"])
         else:
@@ -887,7 +935,8 @@ def sig_mlb_03(con, game, prices, decision_utc, close_only) -> list[Signal]:
         if xwp - wp >= 0.050:
             s = _base_signal("S-MLB-03", game, "ML", side, decision_utc)
             _model_price_ml(s, p, prob_to_american(p))
-            s["features"] = {"xw_pct": round(xwp, 3), "w_pct": round(wp, 3)}
+            s["features"] = {"xw_pct": round(xwp, 3), "w_pct": round(wp, 3),
+                             "form_as_of": _mlb_form_as_of(mp)}
             s["note"] = "MODEL-grade leg"
             out.append(s)
     return out
@@ -897,12 +946,16 @@ def sig_mlb_04(con, game, prices, decision_utc, close_only) -> list[Signal]:
     if game["game_type"] != "R":
         return []
     mp = mlb_prob(con, game["away_team"], game["home_team"],
-                  game["game_date"], game["game_key"], game["season"])
+                  game["game_date"], game["game_key"], game["season"],
+                  as_of=decision_utc)
     if mp["p_home"] is None:
         return []
     if game["season"] == "2026":
-        hw, hl = mp["home"].get("home") or (0, 0)
-        aw, al = mp["away"].get("away") or (0, 0)
+        hp = _wl_pair(mp["home"].get("home"))
+        ap = _wl_pair(mp["away"].get("away"))
+        if hp is None or ap is None:
+            return []  # snapshot has no home/road split: missing data, not 0-0
+        (hw, hl), (aw, al) = hp, ap
     else:
         sh = home_away_split(con, "MLB", game["home_team"], game["game_date"],
                              game["game_key"], game["season"])
@@ -917,7 +970,8 @@ def sig_mlb_04(con, game, prices, decision_utc, close_only) -> list[Signal]:
     s = _base_signal("S-MLB-04", game, "ML", "home", decision_utc)
     _model_price_ml(s, p, prob_to_american(p))
     s["features"] = {"home_home_pct": round(hw / (hw + hl), 3),
-                     "away_away_pct": round(aw / (aw + al), 3)}
+                     "away_away_pct": round(aw / (aw + al), 3),
+                     "form_as_of": _mlb_form_as_of(mp)}
     s["note"] = "MODEL-grade leg"
     return [s]
 
@@ -926,22 +980,22 @@ def sig_mlb_05(con, game, prices, decision_utc, close_only) -> list[Signal]:
     if game["game_type"] != "R":
         return []
     season, gd, gk = game["season"], game["game_date"], game["game_key"]
+    form_as_of = None  # snapshot stamp behind this leg (2026 branch only)
     if season == "2026":
-        ma = mlb_team_strength(con, game["away_team"], gd, gk, season)
-        mh = mlb_team_strength(con, game["home_team"], gd, gk, season)
+        ma = mlb_team_strength(con, game["away_team"], gd, gk, season,
+                               as_of=decision_utc)
+        mh = mlb_team_strength(con, game["home_team"], gd, gk, season,
+                               as_of=decision_utc)
         if ma["p"] is None or mh["p"] is None:
             return []
-        # Need RS/RA per game: pull from snapshot via team_form directly.
-        ra = con.execute("SELECT rs, ra, w, l FROM team_form WHERE sport='MLB' AND team=? "
-                         "AND season='2026' ORDER BY as_of_utc DESC LIMIT 1",
-                         (game["away_team"],)).fetchone()
-        rh = con.execute("SELECT rs, ra, w, l FROM team_form WHERE sport='MLB' AND team=? "
-                         "AND season='2026' ORDER BY as_of_utc DESC LIMIT 1",
-                         (game["home_team"],)).fetchone()
-        if ra is None or rh is None:
-            return []
-        a_rs, a_ra = ra["rs"] / (ra["w"] + ra["l"]), ra["ra"] / (ra["w"] + ra["l"])
-        h_rs, h_ra = rh["rs"] / (rh["w"] + rh["l"]), rh["ra"] / (rh["w"] + rh["l"])
+        # RS/RA per game come from the same decision-capped snapshot read.
+        a_gp = (ma.get("w") or 0) + (ma.get("l") or 0)
+        h_gp = (mh.get("w") or 0) + (mh.get("l") or 0)
+        if not a_gp or not h_gp or ma.get("rs") is None or mh.get("rs") is None:
+            return []  # snapshot without games played / run totals: no signal
+        a_rs, a_ra = ma["rs"] / a_gp, ma["ra"] / a_gp
+        h_rs, h_ra = mh["rs"] / h_gp, mh["ra"] / h_gp
+        form_as_of = _mlb_form_as_of({"away": ma, "home": mh})
     else:
         rra = rolling_rates(con, "MLB", game["away_team"], gd, gk, season, 20)
         rrh = rolling_rates(con, "MLB", game["home_team"], gd, gk, season, 20)
@@ -949,10 +1003,9 @@ def sig_mlb_05(con, game, prices, decision_utc, close_only) -> list[Signal]:
             return []
         a_rs, a_ra = rra["scored_season"], rra["allowed_season"]
         h_rs, h_ra = rrh["scored_season"], rrh["allowed_season"]
-    lg = league_average(con, "MLB", season if season != "2026" else "2025", gd)
-    lg_pg = (lg / 2.0) if lg else 4.5
-    exp_a = (a_rs + h_ra) / 2.0 / lg_pg * lg_pg
-    exp_h = (h_rs + a_ra) / 2.0 / lg_pg * lg_pg
+    # Cross-team run expectation: (my scoring + opponent's allowing) / 2.
+    exp_a = (a_rs + h_ra) / 2.0
+    exp_h = (h_rs + a_ra) / 2.0
     model_total = exp_a + exp_h
     pf = park_factor(con, game["home_team"]) or 1.0
     model_total *= pf
@@ -969,7 +1022,7 @@ def sig_mlb_05(con, game, prices, decision_utc, close_only) -> list[Signal]:
     _model_price_ml(s, p, prob_to_american(p))
     s["line"] = round(proxy_line, 1)
     s["features"] = {"model_total": round(model_total, 2), "proxy_line": proxy_line,
-                     "park_factor": pf, "sigma": sigma}
+                     "park_factor": pf, "sigma": sigma, "form_as_of": form_as_of}
     s["note"] = "MODEL-grade leg: proxy line, no market total feed"
     return [s]
 
@@ -1007,13 +1060,15 @@ def sig_mlb_06(con, game, prices, decision_utc, close_only) -> list[Signal]:
     if side is None:
         return []
     mp = mlb_prob(con, game["away_team"], game["home_team"],
-                  game["game_date"], game["game_key"], game["season"])
+                  game["game_date"], game["game_key"], game["season"],
+                  as_of=decision_utc)
     if mp["p_home"] is None:
         return []
     p = mp["p_away"] if side == "away" else mp["p_home"]
     s = _base_signal("S-MLB-06", game, "ML", side, decision_utc)
     _model_price_ml(s, p, prob_to_american(p))
-    s["features"] = {"away_race": a, "home_race": h}
+    s["features"] = {"away_race": a, "home_race": h,
+                     "form_as_of": _mlb_form_as_of(mp)}
     s["note"] = "MODEL-grade leg; motivation signal"
     return [s]
 

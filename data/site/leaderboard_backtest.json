@@ -7,13 +7,15 @@
    "MODEL": 160
   },
   "last_activity": "2025-09-28",
+  "ledger_drift": 0.0,
   "leg_hit_rate": 0.4536,
   "legs": {
    "loss": 200,
    "win": 166
   },
   "lost": 126,
-  "max_drawdown": 0.16,
+  "max_drawdown": 0.0145,
+  "min_balance": 9890.0,
   "name": "xW-Luck fade",
   "parlay_hit_rate": 0.2125,
   "parlays": 160,
@@ -42,13 +44,15 @@
    "VERIFIED": 115
   },
   "last_activity": "2026-04-16",
+  "ledger_drift": 0.0,
   "leg_hit_rate": 0.588,
   "legs": {
    "loss": 124,
    "win": 177
   },
   "lost": 84,
-  "max_drawdown": 0.115,
+  "max_drawdown": 0.0132,
+  "min_balance": 9980.0,
   "name": "B2B fade",
   "parlay_hit_rate": 0.2696,
   "parlays": 115,
@@ -77,6 +81,7 @@
    "REFERENCE": 286
   },
   "last_activity": "2026-01-04",
+  "ledger_drift": 0.0,
   "leg_hit_rate": 0.5021,
   "legs": {
    "loss": 361,
@@ -84,7 +89,8 @@
    "win": 364
   },
   "lost": 226,
-  "max_drawdown": 0.286,
+  "max_drawdown": 0.0202,
+  "min_balance": 9949.12,
   "name": "Rest mismatch",
   "parlay_hit_rate": 0.2098,
   "parlays": 286,
@@ -113,13 +119,15 @@
    "VERIFIED": 82
   },
   "last_activity": "2026-04-16",
+  "ledger_drift": 0.0,
   "leg_hit_rate": 0.628,
   "legs": {
    "loss": 77,
    "win": 130
   },
   "lost": 54,
-  "max_drawdown": 0.082,
+  "max_drawdown": 0.0132,
+  "min_balance": 9980.0,
   "name": "Home ice + rest",
   "parlay_hit_rate": 0.3415,
   "parlays": 82,
@@ -148,6 +156,7 @@
    "REFERENCE": 89
   },
   "last_activity": "2022-12-27",
+  "ledger_drift": 0.0,
   "leg_hit_rate": 0.5545,
   "legs": {
    "loss": 90,
@@ -155,7 +164,8 @@
    "win": 112
   },
   "lost": 66,
-  "max_drawdown": 0.089,
+  "max_drawdown": 0.0189,
+  "min_balance": 9970.0,
   "name": "ATS streak fade",
   "parlay_hit_rate": 0.2584,
   "parlays": 89,
@@ -184,6 +194,7 @@
    "REFERENCE": 159
   },
   "last_activity": "2026-01-04",
+  "ledger_drift": 0.0,
   "leg_hit_rate": 0.5212,
   "legs": {
    "loss": 181,
@@ -191,7 +202,8 @@
    "win": 197
   },
   "lost": 123,
-  "max_drawdown": 0.159,
+  "max_drawdown": 0.0221,
+  "min_balance": 9857.11,
   "name": "Divisional home dogs",
   "parlay_hit_rate": 0.2264,
   "parlays": 159,
@@ -220,13 +232,15 @@
    "VERIFIED": 44
   },
   "last_activity": "2026-05-10",
+  "ledger_drift": 0.0,
   "leg_hit_rate": 0.4375,
   "legs": {
    "loss": 54,
    "win": 42
   },
   "lost": 35,
-  "max_drawdown": 0.044,
+  "max_drawdown": 0.013,
+  "min_balance": 9870.0,
   "name": "Road dog process",
   "parlay_hit_rate": 0.2045,
   "parlays": 44,
@@ -253,10 +267,12 @@
   "category": "situational",
   "grades": {},
   "last_activity": null,
+  "ledger_drift": 0.0,
   "leg_hit_rate": null,
   "legs": {},
   "lost": 0,
   "max_drawdown": 0.0,
+  "min_balance": 10000.0,
   "name": "September motivation",
   "parlay_hit_rate": null,
   "parlays": 0,
@@ -283,10 +299,12 @@
   "category": "spread mapping",
   "grades": {},
   "last_activity": null,
+  "ledger_drift": 0.0,
   "leg_hit_rate": null,
   "legs": {},
   "lost": 0,
   "max_drawdown": 0.0,
+  "min_balance": 10000.0,
   "name": "Puck-line value",
   "parlay_hit_rate": null,
   "parlays": 0,
@@ -315,6 +333,7 @@
    "REFERENCE": 317
   },
   "last_activity": "2026-01-04",
+  "ledger_drift": 0.0,
   "leg_hit_rate": 0.6568,
   "legs": {
    "loss": 290,
@@ -322,7 +341,8 @@
    "win": 555
   },
   "lost": 207,
-  "max_drawdown": 0.317,
+  "max_drawdown": 0.0232,
+  "min_balance": 9825.41,
   "name": "Elo edge favorites",
   "parlay_hit_rate": 0.347,
   "parlays": 317,
@@ -352,6 +372,7 @@
    "REFERENCE": 260
   },
   "last_activity": "2026-01-04",
+  "ledger_drift": 0.0,
   "leg_hit_rate": 0.5459,
   "legs": {
    "loss": 272,
@@ -359,7 +380,8 @@
    "win": 327
   },
   "lost": 210,
-  "max_drawdown": 0.3,
+  "max_drawdown": 0.0323,
+  "min_balance": 9857.16,
   "name": "Cross-sport favorites",
   "parlay_hit_rate": 0.3,
   "parlays": 300,
@@ -372,7 +394,7 @@
   "started": true,
   "status": "active",
   "strategy_id": "S-MULTI-01",
-  "streak": "L4",
+  "streak": "L2",
   "total_payout": 2895.28,
   "upcoming": 0,
   "username": "FourSportFavor",
@@ -388,6 +410,7 @@
    "REFERENCE": 120
   },
   "last_activity": "2022-12-31",
+  "ledger_drift": 0.0,
   "leg_hit_rate": 0.491,
   "legs": {
    "loss": 142,
@@ -395,7 +418,8 @@
    "win": 137
   },
   "lost": 95,
-  "max_drawdown": 0.12,
+  "max_drawdown": 0.0185,
+  "min_balance": 9815.15,
   "name": "Rested road dogs",
   "parlay_hit_rate": 0.2083,
   "parlays": 120,
@@ -424,6 +448,7 @@
    "REFERENCE": 144
   },
   "last_activity": "2022-12-30",
+  "ledger_drift": 0.0,
   "leg_hit_rate": 0.5073,
   "legs": {
    "loss": 168,
@@ -431,7 +456,8 @@
    "win": 173
   },
   "lost": 114,
-  "max_drawdown": 0.144,
+  "max_drawdown": 0.0336,
+  "min_balance": 9755.54,
   "name": "Elite home cover",
   "parlay_hit_rate": 0.2028,
   "parlays": 144,
@@ -460,6 +486,7 @@
    "REFERENCE": 329
   },
   "last_activity": "2022-12-31",
+  "ledger_drift": 0.0,
   "leg_hit_rate": 0.5024,
   "legs": {
    "loss": 415,
@@ -467,7 +494,8 @@
    "win": 419
   },
   "lost": 271,
-  "max_drawdown": 0.329,
+  "max_drawdown": 0.0469,
+  "min_balance": 9549.31,
   "name": "Schedule-spot fade",
   "parlay_hit_rate": 0.1763,
   "parlays": 329,
@@ -496,6 +524,7 @@
    "REFERENCE": 137
   },
   "last_activity": "2026-01-04",
+  "ledger_drift": 0.0,
   "leg_hit_rate": 0.5175,
   "legs": {
    "loss": 165,
@@ -503,7 +532,8 @@
    "win": 177
   },
   "lost": 114,
-  "max_drawdown": 0.137,
+  "max_drawdown": 0.0247,
+  "min_balance": 9752.91,
   "name": "Wind chill under",
   "parlay_hit_rate": 0.1679,
   "parlays": 137,
@@ -532,13 +562,15 @@
    "MODEL": 103
   },
   "last_activity": "2025-08-06",
+  "ledger_drift": 0.0,
   "leg_hit_rate": 0.6009,
   "legs": {
    "loss": 89,
    "win": 134
   },
   "lost": 70,
-  "max_drawdown": 0.103,
+  "max_drawdown": 0.0257,
+  "min_balance": 9743.06,
   "name": "Park-aware totals",
   "parlay_hit_rate": 0.3204,
   "parlays": 103,
@@ -567,13 +599,15 @@
    "VERIFIED": 230
   },
   "last_activity": "2026-05-01",
+  "ledger_drift": 0.0,
   "leg_hit_rate": 0.4507,
   "legs": {
    "loss": 340,
    "win": 279
   },
   "lost": 200,
-  "max_drawdown": 0.23,
+  "max_drawdown": 0.0696,
+  "min_balance": 9304.47,
   "name": "Puck Elo edge",
   "parlay_hit_rate": 0.1304,
   "parlays": 230,
@@ -602,6 +636,7 @@
    "MODEL": 90
   },
   "last_activity": "2026-05-04",
+  "ledger_drift": 0.0,
   "leg_hit_rate": 0.5573,
   "legs": {
    "loss": 85,
@@ -609,7 +644,8 @@
    "win": 107
   },
   "lost": 64,
-  "max_drawdown": 0.09,
+  "max_drawdown": 0.0331,
+  "min_balance": 9669.18,
   "name": "Goals-model totals",
   "parlay_hit_rate": 0.2727,
   "parlays": 90,
@@ -638,13 +674,15 @@
    "MODEL": 225
   },
   "last_activity": "2025-09-28",
+  "ledger_drift": 0.0,
   "leg_hit_rate": 0.5554,
   "legs": {
    "loss": 273,
    "win": 341
   },
   "lost": 174,
-  "max_drawdown": 0.225,
+  "max_drawdown": 0.0815,
+  "min_balance": 9240.89,
   "name": "Form streaks",
   "parlay_hit_rate": 0.2267,
   "parlays": 225,
@@ -673,6 +711,7 @@
    "REFERENCE": 211
   },
   "last_activity": "2025-12-28",
+  "ledger_drift": 0.0,
   "leg_hit_rate": 0.4844,
   "legs": {
    "loss": 264,
@@ -680,7 +719,8 @@
    "win": 248
   },
   "lost": 179,
-  "max_drawdown": 0.211,
+  "max_drawdown": 0.0774,
+  "min_balance": 9297.78,
   "name": "Short road chalk fade",
   "parlay_hit_rate": 0.1517,
   "parlays": 211,
@@ -709,6 +749,7 @@
    "REFERENCE": 282
   },
   "last_activity": "2022-12-31",
+  "ledger_drift": 0.0,
   "leg_hit_rate": 0.477,
   "legs": {
    "loss": 364,
@@ -716,7 +757,8 @@
    "win": 332
   },
   "lost": 236,
-  "max_drawdown": 0.282,
+  "max_drawdown": 0.1108,
+  "min_balance": 9116.8,
   "name": "Pace totals",
   "parlay_hit_rate": 0.1631,
   "parlays": 282,
@@ -745,13 +787,15 @@
    "MODEL": 281
   },
   "last_activity": "2025-09-28",
+  "ledger_drift": 0.0,
   "leg_hit_rate": 0.6226,
   "legs": {
    "loss": 294,
    "win": 485
   },
   "lost": 205,
-  "max_drawdown": 0.281,
+  "max_drawdown": 0.0891,
+  "min_balance": 9139.05,
   "name": "Home/road splits",
   "parlay_hit_rate": 0.2705,
   "parlays": 281,
@@ -781,6 +825,7 @@
    "REFERENCE": 113
   },
   "last_activity": "2026-01-03",
+  "ledger_drift": 0.0,
   "leg_hit_rate": 0.4904,
   "legs": {
    "loss": 238,
@@ -788,7 +833,8 @@
    "win": 229
   },
   "lost": 129,
-  "max_drawdown": 0.139,
+  "max_drawdown": 0.0849,
+  "min_balance": 9151.45,
   "name": "Cross-sport totals",
   "parlay_hit_rate": 0.0719,
   "parlays": 139,
@@ -817,6 +863,7 @@
    "REFERENCE": 470
   },
   "last_activity": "2026-01-04",
+  "ledger_drift": 0.0,
   "leg_hit_rate": 0.4996,
   "legs": {
    "loss": 648,
@@ -824,7 +871,8 @@
    "win": 647
   },
   "lost": 405,
-  "max_drawdown": 0.47,
+  "max_drawdown": 0.1137,
+  "min_balance": 8973.48,
   "name": "Efficiency totals",
   "parlay_hit_rate": 0.1383,
   "parlays": 470,
@@ -837,7 +885,7 @@
   "started": true,
   "status": "active",
   "strategy_id": "S-NFL-03",
-  "streak": "L1",
+  "streak": "W1",
   "total_payout": 3779.89,
   "upcoming": 0,
   "username": "Totalician",
@@ -854,6 +902,7 @@
    "REFERENCE": 321
   },
   "last_activity": "2026-01-04",
+  "ledger_drift": 0.0,
   "leg_hit_rate": 0.4964,
   "legs": {
    "loss": 703,
@@ -861,7 +910,8 @@
    "win": 693
   },
   "lost": 341,
-  "max_drawdown": 0.366,
+  "max_drawdown": 0.1233,
+  "min_balance": 8767.16,
   "name": "Best edges any sport",
   "parlay_hit_rate": 0.0683,
   "parlays": 366,
@@ -874,7 +924,7 @@
   "started": true,
   "status": "active",
   "strategy_id": "S-MULTI-02",
-  "streak": "L40",
+  "streak": "L38",
   "total_payout": 2427.16,
   "upcoming": 0,
   "username": "CrossSportEdge",
@@ -890,13 +940,15 @@
    "MODEL": 1291
   },
   "last_activity": "2025-09-28",
+  "ledger_drift": 0.0,
   "leg_hit_rate": 0.5474,
   "legs": {
    "loss": 2184,
    "win": 2641
   },
   "lost": 1124,
-  "max_drawdown": 1.291,
+  "max_drawdown": 0.1691,
+  "min_balance": 8354.63,
   "name": "Pythagorean log5",
   "parlay_hit_rate": 0.1294,
   "parlays": 1291,
@@ -909,7 +961,7 @@
   "started": true,
   "status": "active",
   "strategy_id": "S-MLB-01",
-  "streak": "L2",
+  "streak": "W1",
   "total_payout": 11504.17,
   "upcoming": 0,
   "username": "Pythagoras",
@@ -925,6 +977,7 @@
    "REFERENCE": 877
   },
   "last_activity": "2022-12-31",
+  "ledger_drift": 0.0,
   "leg_hit_rate": 0.4306,
   "legs": {
    "loss": 1378,
@@ -932,7 +985,8 @@
    "win": 1042
   },
   "lost": 774,
-  "max_drawdown": 0.877,
+  "max_drawdown": 0.2149,
+  "min_balance": 7886.04,
   "name": "Elo vs close",
   "parlay_hit_rate": 0.1174,
   "parlays": 877,
@@ -962,6 +1016,7 @@
    "REFERENCE": 95
   },
   "last_activity": "2026-01-03",
+  "ledger_drift": 0.0,
   "leg_hit_rate": 0.4806,
   "legs": {
    "loss": 335,
@@ -970,6 +1025,7 @@
   },
   "lost": 108,
   "max_drawdown": 0.27,
+  "min_balance": 7300.0,
   "name": "Longshot lottery",
   "parlay_hit_rate": 0.0,
   "parlays": 108,

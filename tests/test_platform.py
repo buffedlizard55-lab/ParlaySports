@@ -687,5 +687,415 @@ class TestSettleSummary(unittest.TestCase):
         self.assertEqual(st, {"S-W": "won", "S-L": "lost", "S-P": "push"})
 
 
+class TestPass3Fixes(unittest.TestCase):
+    """PASS-3 line-by-line verification fixes (data labelling, economic time,
+    provenance-gated updates and nightly matching)."""
+
+    def setUp(self):
+        self.tmp = tempfile.TemporaryDirectory()
+        self.con = store.connect(Path(self.tmp.name) / "t.db")
+
+    def tearDown(self):
+        self.con.close()
+        self.tmp.cleanup()
+
+    def _game(self, key, sport="NFL", season="2026", gtype="REG", date="2026-09-21",
+              away="NYG", home="LA", status="scheduled", a=None, h=None, **kw):
+        from parlaysports.ingest import _insert_game
+        g = {"game_key": key, "sport": sport, "league_game_id": key.split(":", 1)[1],
+             "season": season, "game_type": gtype, "game_date": date,
+             "start_utc": None, "week_or_slate": None, "away_team": away,
+             "home_team": home, "neutral": 0, "venue": None, "status": status,
+             "away_score": a, "home_score": h, "overtime": None,
+             "source_id": "t", "source_url": "u",
+             "retrieved_utc": "2026-09-22T01:30:00Z", "verified": 0,
+             "verify_note": "", "extra_json": None}
+        g.update(kw)
+        _insert_game(self.con, g)
+        return g
+
+    # ---- verified league facts drive the season-length expectations -------
+    def test_season_length_uses_verified_league_facts(self):
+        from parlaysports.config import season_length
+        self.assertEqual(season_length("NHL", "20262027"), 84)   # new CBA, first since 1993-94
+        self.assertEqual(season_length("NHL", "20252026"), 82)
+        self.assertEqual(season_length("NFL", "2020"), 16)
+        self.assertEqual(season_length("NFL", "2021"), 17)
+        self.assertEqual(season_length("MLB", "2024"), 162)
+        self.assertEqual(season_length("NBA", "2024-25"), 82)
+
+    def test_known_short_seasons_are_documented(self):
+        from parlaysports.engine import EXPECTED_HISTORY
+        self.assertIn("2022", EXPECTED_HISTORY["NFL"]["known_short"])   # BUF@CIN no contest
+        self.assertIn("2024", EXPECTED_HISTORY["MLB"]["known_short"])   # HOU@CLE rainout
+        self.assertIn("20262027", EXPECTED_HISTORY["NHL"]["in_progress"])
+
+    # ---- NBA game_type is derived from verified boundaries, never guessed --
+    def test_nba_game_type_boundaries(self):
+        from parlaysports.ingest import _nba_game_type
+        t, ev = _nba_game_type("2023-24", "2023-10-05")
+        self.assertEqual(t, "PRE")
+        self.assertIn("http", ev)                       # evidence is a citation
+        self.assertEqual(_nba_game_type("2023-24", "2023-10-24")[0], "REG")
+        self.assertEqual(_nba_game_type("2023-24", "2024-04-14")[0], "REG")
+        self.assertEqual(_nba_game_type("2023-24", "2024-04-16")[0], "POST")
+        self.assertEqual(_nba_game_type("2026-27", "2026-10-16")[0], "PRE")
+        self.assertEqual(_nba_game_type("2026-27", "2026-10-20")[0], "REG")
+        # a season with no verified boundary keeps the inherited label
+        self.assertEqual(_nba_game_type("2015-16", "2015-10-27")[0], "REG")
+
+    def test_schedule_completeness_flags_overlength_and_spread(self):
+        from parlaysports.quality import _schedule_completeness
+        c = self.con
+        # 4-team NBA season where one team is given 90 REG games (mislabeled
+        # exhibitions/playoffs) and another only 78 -> both must be reported.
+        teams = ["AAA", "BBB", "CCC", "DDD"]
+        i = 0
+        # 28 meetings per pairing -> 84 games per team, i.e. two above the
+        # verified 82-game NBA regular season (mislabeled exhibitions).
+        for a in range(len(teams)):
+            for b in range(a + 1, len(teams)):
+                for _ in range(28):
+                    i += 1
+                    self._game(f"NBA:t{i}", sport="NBA", season="2099-00", gtype="REG",
+                               date=f"2099-11-{(i % 28) + 1:02d}", away=teams[a],
+                               home=teams[b], status="final", a=110, h=104)
+        out = _schedule_completeness(c)
+        self.assertTrue(any("NBA 2099-00" in o and "exceed" in o for o in out), out)
+
+    def test_schedule_completeness_accepts_verified_short_season(self):
+        from parlaysports.quality import _schedule_completeness
+        # NFL 2022 shape: 32 teams, BUF and CIN one game short (verified no
+        # contest). Nothing may be reported for a documented known_short season.
+        # Real 2022 shape: 32 teams, everyone 17 games except BUF (T00) and
+        # CIN (T01) at 16 -- the cancelled week-17 no contest. 271 games.
+        teams = [f"T{i:02d}" for i in range(32)]
+        i = 0
+        for cycle in range(8):            # 8 cycles x 32 games = 256, 16/team
+            for a in range(32):
+                i += 1
+                self._game(f"NFL:s{i}", sport="NFL", season="2022", gtype="REG",
+                           date=f"2022-{(i % 12) + 1:02d}-{(i % 27) + 1:02d}",
+                           away=teams[a], home=teams[(a + 1) % 32],
+                           status="final", a=20, h=17)
+        for a in range(2, 32, 2):         # 15 more games: T02..T31 reach 17
+            i += 1
+            self._game(f"NFL:s{i}", sport="NFL", season="2022", gtype="REG",
+                       date=f"2022-{(i % 12) + 1:02d}-{(i % 27) + 1:02d}",
+                       away=teams[a], home=teams[a + 1], status="final", a=20, h=17)
+        self.assertEqual(i, 271)
+        out = [o for o in _schedule_completeness(self.con) if o.startswith("NFL 2022")]
+        self.assertEqual(out, [])
+
+    # ---- verified updates: provenance is mandatory, results are applied ----
+    def test_verified_updates_require_full_provenance(self):
+        import json as _json
+        from parlaysports.ingest import ingest_verified_updates
+        d = Path(self.tmp.name) / "updates"
+        d.mkdir()
+        (d / "bad.json").write_text(_json.dumps({"updates": [
+            {"game_key": "NFL:x", "sport": "NFL", "status": "final",
+             "away_score": 1, "home_score": 2}]}))          # no source/url/stamp
+        (d / "good.json").write_text(_json.dumps({"updates": [
+            {"game_key": "NFL:2026_02_NYG_LA", "sport": "NFL", "season": "2026",
+             "game_type": "REG", "game_date": "2026-09-21", "away_team": "NYG",
+             "home_team": "LA", "status": "final", "away_score": 6, "home_score": 28,
+             "source_id": "SRC_ESPN_SCOREBOARD",
+             "source_url": "https://site.api.espn.com/apis/site/v2/sports/football/nfl/"
+                           "scoreboard?dates=20260921",
+             "retrieved_utc": "2026-09-22T18:45:00Z",
+             "verification": {"subject": "NYG @ LAR 2026-09-21",
+                              "claim": "Rams 28, Giants 6",
+                              "source_url": "https://www.espn.com/nfl/",
+                              "result": "match", "detail": "scoreboard event 401872947"}}]}))
+        self._game("NFL:2026_02_NYG_LA")
+        out = ingest_verified_updates(self.con, d)
+        self.assertEqual(out["refused"], 1)
+        self.assertEqual(out["updated"], 1)
+        row = self.con.execute("SELECT status, away_score, home_score, verified, "
+                               "verify_note FROM games WHERE game_key='NFL:2026_02_NYG_LA'"
+                               ).fetchone()
+        self.assertEqual((row["status"], row["away_score"], row["home_score"]),
+                         ("final", 6, 28))
+        self.assertEqual(row["verified"], 1)
+        self.assertIn("good.json", row["verify_note"])
+        v = self.con.execute("SELECT COUNT(*) AS n FROM verifications "
+                             "WHERE subject LIKE '%NYG @ LAR%'").fetchone()["n"]
+        self.assertEqual(v, 1)
+        self.assertTrue(self.con.execute(
+            "SELECT COUNT(*) AS n FROM issues WHERE detail LIKE '%refused%'").fetchone()["n"])
+        # the refused row was never written
+        self.assertIsNone(self.con.execute(
+            "SELECT 1 FROM games WHERE game_key='NFL:x'").fetchone())
+
+    # ---- equity curves are economic-time and reconcile exactly -------------
+    def test_equity_curve_is_economic_time_and_reconciles(self):
+        from parlaysports import books
+        c = self.con
+        # A replayed backtest writes every stake before settling: insertion
+        # order would show an impossible trough, economic order must not.
+        for pid, dec in (("p1", "2026-01-01T12:00:00Z"), ("p2", "2026-01-02T12:00:00Z")):
+            store.ledger_append(c, strategy_id="S", version="v1", book="backtest",
+                                parlay_id=pid, kind="stake", amount=-100.0,
+                                entry_ts=dec)
+        for pid, dec, amt in (("p1", "2026-01-01T12:00:00Z", 190.0),
+                              ("p2", "2026-01-02T12:00:00Z", 0.0)):
+            store.ledger_append(c, strategy_id="S", version="v1", book="backtest",
+                                parlay_id=pid, kind="settle", amount=amt,
+                                entry_ts=dec)
+        c.commit()
+        summ = books.strategy_books(c, "S", "v1")["backtest"]
+        self.assertEqual(summ["ledger_drift"], 0.0)
+        self.assertAlmostEqual(summ["bankroll"], 10000.0 - 200.0 + 190.0, places=2)
+        balances = [e["b"] for e in summ["equity"]]
+        # the book-open row (amount 0) anchors the curve at the starting bankroll
+        self.assertEqual(balances[0], 10000.0)
+        self.assertEqual(balances[1:], [9900.0, 10090.0, 9990.0, 9990.0])
+        self.assertLessEqual(summ["max_drawdown"], 0.02)
+        self.assertAlmostEqual(summ["min_balance"], 9900.0, places=2)
+        self.assertEqual(store.verify_ledger_chain(c), [])
+
+    def test_bankroll_integrity_flags_impossible_states(self):
+        from parlaysports.quality import _bankroll_integrity
+        c = self.con
+        store.ledger_append(c, strategy_id="S", version="v1", book="backtest",
+                            parlay_id="p", kind="stake", amount=-20000.0,
+                            entry_ts="2026-01-01T12:00:00Z")
+        c.commit()
+        out = _bankroll_integrity(c)
+        self.assertTrue(any("negative" in o for o in out), out)
+        self.assertTrue(any("exceeds 100%" in o for o in out), out)
+
+    # ---- price/form time-travel guards ------------------------------------
+    def _parlay_with_leg(self, decision, features, price_id=None, note="MODEL-grade leg"):
+        from parlaysports.parlay import insert_parlay
+        insert_parlay(self.con, {
+            "parlay_id": "FW-T-1", "strategy_id": "S-MLB-01", "version": "v1",
+            "username": "t", "sport_scope": "MLB", "sports": ["MLB"], "n_legs": 1,
+            "market_mix": "ML", "stake": 0.0, "pricing_grade": "MODEL",
+            "combined_decimal": 1.9, "combined_american": -111.0,
+            "potential_payout": 0.0, "model_prob": 0.55,
+            "decision_utc": decision, "slate_date": decision[:10],
+            "test_mode": "forward", "status": "upcoming",
+            "legs": [{"strategy_id": "S-MLB-01", "version": "v1", "game_key": "MLB:1",
+                      "sport": "MLB", "market": "ML", "selection": "home", "line": None,
+                      "odds_american": -111.0, "odds_type": "model",
+                      "model_prob": 0.55, "features": features, "price_id": price_id,
+                      "note": note, "decision_utc": decision}]})
+
+    def test_form_snapshot_leakage_is_flagged(self):
+        from parlaysports.quality import _form_snapshot_leakage
+        self._parlay_with_leg("2026-09-21T12:00:00Z",
+                              {"form_as_of": "2026-09-22T01:30:00Z"})
+        out = _form_snapshot_leakage(self.con)
+        self.assertEqual(len(out), 1)
+        self.assertIn("FW-T-1", out[0])
+
+    def test_form_snapshot_before_decision_is_clean(self):
+        from parlaysports.quality import _form_snapshot_leakage
+        self._parlay_with_leg("2026-09-22T12:00:00Z",
+                              {"form_as_of": "2026-09-22T01:30:00Z"})
+        self.assertEqual(_form_snapshot_leakage(self.con), [])
+
+    def test_live_price_after_decision_is_flagged_and_close_exempt(self):
+        from parlaysports.quality import _price_after_decision
+        c = self.con
+        c.execute("""INSERT INTO prices(price_id, game_key, market, selection, line,
+                     odds_american, odds_type, source_id, source_url, observed_utc,
+                     close_flag, note) VALUES
+                     (1,'MLB:1','ML','home',NULL,-110.0,'market_reference','s','u',
+                      '2026-09-21T20:00:00Z',0,'live'),
+                     (2,'MLB:1','ML','home',NULL,-115.0,'market_close','s','u',
+                      '2026-09-22T01:30:00Z',1,'close')""")
+        c.commit()
+        self._parlay_with_leg("2026-09-21T12:00:00Z", {}, price_id=1,
+                              note="REFERENCE-grade leg")
+        out = _price_after_decision(c)
+        self.assertTrue(any("AFTER" in o for o in out), out)
+        # historical closes are pre-game by definition: exempt from the stamp rule
+        c.execute("DELETE FROM parlays"); c.execute("DELETE FROM legs"); c.commit()
+        self._parlay_with_leg("2026-09-21T12:00:00Z", {}, price_id=2,
+                              note="VERIFIED-grade leg")
+        out = [o for o in _price_after_decision(c) if "AFTER" in o]
+        self.assertEqual(out, [])
+
+    def test_backtest_leg_may_not_use_live_snapshot(self):
+        from parlaysports.quality import _price_after_decision
+        c = self.con
+        c.execute("""INSERT INTO prices(price_id, game_key, market, selection, line,
+                     odds_american, odds_type, source_id, source_url, observed_utc,
+                     close_flag, note) VALUES
+                     (1,'MLB:1','ML','home',NULL,-110.0,'market_reference','s','u',
+                      '2015-04-05T12:00:00Z',0,'live')""")
+        c.commit()
+        from parlaysports.parlay import insert_parlay
+        insert_parlay(c, {
+            "parlay_id": "BA-T-9", "strategy_id": "S-MLB-01", "version": "v1",
+            "username": "t", "sport_scope": "MLB", "sports": ["MLB"], "n_legs": 1,
+            "market_mix": "ML", "stake": 10.0, "pricing_grade": "REFERENCE",
+            "combined_decimal": 1.9, "combined_american": -111.0,
+            "potential_payout": 19.0, "model_prob": 0.55,
+            "decision_utc": "2015-04-05T12:00:00Z", "slate_date": "2015-04-05",
+            "test_mode": "backtest", "status": "upcoming",
+            "legs": [{"strategy_id": "S-MLB-01", "version": "v1", "game_key": "MLB:1",
+                      "sport": "MLB", "market": "ML", "selection": "home", "line": None,
+                      "odds_american": -110.0, "odds_type": "market_reference",
+                      "model_prob": 0.55, "features": {}, "price_id": 1,
+                      "note": "", "decision_utc": "2015-04-05T12:00:00Z"}]})
+        out = _price_after_decision(c)
+        self.assertTrue(any("live snapshot" in o for o in out), out)
+
+    def test_unpriced_leg_must_declare_its_grade(self):
+        from parlaysports.quality import _price_after_decision
+        # model fair value with no grade note -> flagged
+        self._parlay_with_leg("2026-09-21T12:00:00Z", {}, price_id=None, note="")
+        out = _price_after_decision(self.con)
+        self.assertTrue(any("grade" in o for o in out), out)
+        # an honestly declared MODEL leg and an UNPRICED leg are both clean
+        self.con.execute("DELETE FROM parlays"); self.con.execute("DELETE FROM legs")
+        self.con.commit()
+        self._parlay_with_leg("2026-09-21T12:00:00Z", {}, price_id=None,
+                              note="MODEL-grade leg")
+        self.assertEqual(_price_after_decision(self.con), [])
+
+    def test_postponed_game_voids_the_leg(self):
+        from parlaysports.parlay import settle_leg, settle_parlay
+        game = {"status": "postponed", "game_date": "2025-01-11", "away_team": "SAS",
+                "home_team": "LAL", "away_score": None, "home_score": None}
+        leg = {"market": "ML", "selection": "home", "line": None, "odds_american": -150.0}
+        out = settle_leg(leg, game)
+        self.assertEqual(out["result"], "void")
+        self.assertIn("postponed", out["detail"])
+        par = settle_parlay({"stake": 100.0, "combined_decimal": 1.67},
+                            [dict(out, odds_american=-150.0)])
+        self.assertEqual(par["status"], "push")       # all legs void -> refund
+        self.assertEqual(par["payout"], 100.0)
+        self.assertEqual(par["pnl"], 0.0)
+        # a two-legger keeps the surviving leg at its RECORDED odds
+        win = {"result": "win", "detail": "final", "odds_american": 100.0}
+        par2 = settle_parlay({"stake": 100.0, "combined_decimal": 3.34},
+                             [win, dict(out, odds_american=-150.0)])
+        self.assertEqual(par2["status"], "won")
+        self.assertAlmostEqual(par2["payout"], 200.0, places=2)
+
+    def test_impossible_zero_zero_final_is_reported(self):
+        from parlaysports.quality import _invalid_stats
+        self._game("NBA:zz", sport="NBA", season="2024-25", gtype="REG",
+                   date="2025-01-11", away="SAS", home="LAL", status="final", a=0, h=0)
+        out = _invalid_stats(self.con)
+        self.assertTrue(any("impossible scoreline" in o for o in out), out)
+
+    def test_postponed_games_do_not_count_toward_season_length(self):
+        from parlaysports.quality import _schedule_completeness
+        teams = ["AAA", "BBB", "CCC", "DDD"]
+        i = 0
+        for a in range(4):            # 21 meetings per pair -> 42 games/team... 
+            for b in range(a + 1, 4):
+                for _ in range(21):
+                    i += 1
+                    self._game(f"NBA:p{i}", sport="NBA", season="2098-99", gtype="REG",
+                               date=f"2098-11-{(i % 28) + 1:02d}", away=teams[a],
+                               home=teams[b], status="final", a=100, h=99)
+        # ... plus one postponed fixture per team: must NOT be counted as played
+        for t in teams:
+            i += 1
+            self._game(f"NBA:p{i}", sport="NBA", season="2098-99", gtype="REG",
+                       date="2098-12-01", away=t, home=teams[0], status="postponed")
+        out = [o for o in _schedule_completeness(self.con) if "2098-99" in o]
+        self.assertTrue(all("exceed" not in o for o in out), out)
+
+    # ---- nightly collector: dedupe + UTC rollover matching -----------------
+    def _nightly(self):
+        import importlib.util
+        spec = importlib.util.spec_from_file_location(
+            "nightly_mod", ROOT / "scripts" / "nightly.py")
+        mod = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(mod)
+        return mod
+
+    def test_nightly_price_dedupe(self):
+        nightly = self._nightly()
+        c = self.con
+        args = ("NFL:1", "ML", "home", None, -110.0, "market_reference",
+                "SRC_ESPN_SCOREBOARD", "u", "2026-09-22T08:05:00Z", "n")
+        self.assertTrue(nightly._price(c, *args))
+        self.assertFalse(nightly._price(c, *args))            # identical stamp
+        self.assertFalse(nightly._price(c, *args[:8], "2026-09-22T09:00:00Z", "n"))
+        # a moved line at a LATER stamp is a new snapshot and is stored
+        self.assertTrue(nightly._price(c, *args[:4], -120.0, *args[5:8],
+                                       "2026-09-22T10:00:00Z", "n"))
+        # two different values under one identical stamp is contradictory:
+        # the first provenance stands and the conflict is logged, not silent
+        self.assertFalse(nightly._price(c, *args[:4], -130.0, *args[5:]))
+        self.assertTrue(c.execute("SELECT COUNT(*) AS n FROM issues "
+                                 "WHERE detail LIKE '%conflicting-price-same-stamp%'"
+                                 ).fetchone()["n"])
+        n = c.execute("SELECT COUNT(*) AS n FROM prices").fetchone()["n"]
+        self.assertEqual(n, 2)
+
+    def test_nightly_matches_espn_event_across_utc_rollover(self):
+        nightly = self._nightly()
+        c = self.con
+        # nflverse files the Monday game under the local gameday
+        self._game("NFL:2026_02_NYG_LA", date="2026-09-21")
+        key = nightly._guarded_upsert_game(
+            c, sport="NFL", espn_id="401872947", season="2026", game_type="REG",
+            date="2026-09-22", start_utc="2026-09-22T00:15Z", week="Week 2",
+            away="NYG", home="LA", venue="SoFi Stadium", status="final",
+            away_score=6, home_score=28, url="u")
+        self.assertEqual(key, "NFL:2026_02_NYG_LA")            # matched, not duplicated
+        row = c.execute("SELECT game_date, status, away_score, home_score, start_utc, "
+                        "verify_note FROM games WHERE game_key=?", (key,)).fetchone()
+        self.assertEqual(row["game_date"], "2026-09-21")        # league gameday preserved
+        self.assertEqual((row["status"], row["away_score"], row["home_score"]),
+                         ("final", 6, 28))
+        self.assertEqual(row["start_utc"], "2026-09-22T00:15Z")  # kickoff filled from ESPN
+        self.assertIn("UTC date rollover", row["verify_note"])
+        n = c.execute("SELECT COUNT(*) AS n FROM games WHERE sport='NFL'").fetchone()["n"]
+        self.assertEqual(n, 1)
+
+    def test_nightly_conflicting_final_is_logged_not_silent(self):
+        nightly = self._nightly()
+        c = self.con
+        self._game("NFL:2026_02_NYG_LA", date="2026-09-21", status="final", a=6, h=28,
+                   source_id="SRC_NFLVERSE_GAMES")
+        nightly._guarded_upsert_game(
+            c, sport="NFL", espn_id="401872947", season="2026", game_type="REG",
+            date="2026-09-21", start_utc=None, week="Week 2", away="NYG", home="LA",
+            venue=None, status="final", away_score=7, home_score=28, url="u")
+        det = [r["detail"] for r in c.execute("SELECT detail FROM issues")]
+        self.assertTrue(any("conflicting-results" in d for d in det), det)
+
+    # ---- documented per-slate cap ------------------------------------------
+    def test_slate_cap_counts_existing_tickets(self):
+        from parlaysports import engine
+        from parlaysports.config import MAX_PARLAYS_PER_SLATE
+        from parlaysports.parlay import insert_parlay
+        c = self.con
+        for i in range(MAX_PARLAYS_PER_SLATE):
+            insert_parlay(c, {
+                "parlay_id": f"BA-CAP-{i}", "strategy_id": "S-NFL-01", "version": "v1",
+                "username": "t", "sport_scope": "NFL", "sports": ["NFL"], "n_legs": 2,
+                "market_mix": "ML", "stake": 10.0, "pricing_grade": "REFERENCE",
+                "combined_decimal": 3.6, "combined_american": 260.0,
+                "potential_payout": 36.0, "model_prob": 0.3,
+                "decision_utc": "2020-09-13T12:00:00Z", "slate_date": "2020-09-13",
+                "test_mode": "backtest", "status": "upcoming", "legs": []})
+        c.commit()
+        self.assertEqual(engine.slate_cap(c, "S-NFL-01", "v1", "2020-09-13", "backtest"), 0)
+        self.assertEqual(engine.slate_cap(c, "S-NFL-01", "v1", "2020-09-14", "backtest"),
+                         MAX_PARLAYS_PER_SLATE)
+        insert_parlay(c, {
+            "parlay_id": "FW-LOTTO-1", "strategy_id": "S-MULTI-04", "version": "v1",
+            "username": "t", "sport_scope": "MULTI", "sports": ["NFL", "MLB"],
+            "n_legs": 6, "market_mix": "ML", "stake": 25.0, "pricing_grade": "MIXED",
+            "combined_decimal": 40.0, "combined_american": 3900.0,
+            "potential_payout": 1000.0, "model_prob": 0.02,
+            "decision_utc": "2026-09-22T01:30:00Z", "slate_date": "2026-09-22",
+            "test_mode": "forward", "status": "upcoming", "legs": []})
+        c.commit()
+        self.assertEqual(engine.slate_cap(c, "S-MULTI-04", "v1", "2026-09-22", "forward"), 0)
+
+
 if __name__ == "__main__":
     unittest.main()
