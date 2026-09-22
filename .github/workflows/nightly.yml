@@ -1,0 +1,70 @@
+name: nightly-refresh
+
+on:
+  schedule:
+    # 08:05 UTC daily: after US evening games settle, before the next slates.
+    - cron: "5 8 * * *"
+  workflow_dispatch:
+
+concurrency:
+  group: nightly-refresh
+  cancel-in-progress: false
+
+permissions:
+  contents: write
+
+jobs:
+  refresh:
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.ref }}
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Restore database cache
+        uses: actions/cache/restore@v4
+        with:
+          path: data/parlaysports.db
+          # Unique key per run; restore-keys falls back to the latest
+          # database built from identical seed inputs + code.
+          key: parlay-db-${{ hashFiles('data/seed/**', 'parlaysports/**', 'scripts/seed.py') }}-${{ github.run_id }}
+          restore-keys: parlay-db-${{ hashFiles('data/seed/**', 'parlaysports/**', 'scripts/seed.py') }}-
+
+      - name: Seed (cold start only)
+        run: |
+          if [ -f data/parlaysports.db ]; then
+            echo "database restored from cache; skipping seed"
+          else
+            python3 scripts/seed.py
+            echo "seeded $(date -u +%FT%TZ)" >> "$GITHUB_STEP_SUMMARY"
+          fi
+
+      - name: Nightly collect + forward + settle + export
+        run: python3 scripts/nightly.py
+
+      - name: Audit (PASS 2 gates)
+        run: python3 scripts/audit.py
+
+      - name: Save database cache
+        if: always()
+        uses: actions/cache/save@v4
+        with:
+          path: data/parlaysports.db
+          key: parlay-db-${{ hashFiles('data/seed/**', 'parlaysports/**', 'scripts/seed.py') }}-${{ github.run_id }}
+
+      - name: Commit refreshed exports
+        run: |
+          git config user.name "parlaysports-bot"
+          git config user.email "parlaysports-bot@users.noreply.github.com"
+          git add data/site/*.json data/audit_report.json
+          if git diff --cached --quiet; then
+            echo "no changes to commit"
+          else
+            git commit -m "nightly: refresh data exports ($(date -u +%F))"
+            git push origin "${{ github.ref_name }}"
+          fi

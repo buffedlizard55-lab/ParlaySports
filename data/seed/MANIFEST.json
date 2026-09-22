@@ -1,0 +1,102 @@
+{
+ "generated_utc": "2026-09-22T01:30:00Z",
+ "generator": "sportrefs/extract_seed.py (one-off, not shipped)",
+ "files": [
+  {
+   "path": "nfl/games.csv",
+   "sha256": "2ff66bda80b5c857c885f6baf40d0af1670531a126540367658b6ed622ec35ec",
+   "source_url": "https://github.com/nflverse/nfldata/blob/master/data/games.csv",
+   "retrieved_utc": "2026-09-22T00:00:23Z",
+   "rows": 7548,
+   "note": "fresh clone 2026-09-22; commit 190cfda Automated data update"
+  },
+  {
+   "path": "mlb/results_2015_2025.csv",
+   "sha256": "ff75931007a12b6071cdaab138e223c122266783a2bbe7692f7b258e9fb36ead",
+   "source_url": "https://github.com/buffedlizard55-lab/MLB-Prediction-model-backtest/blob/main/data/games.csv",
+   "retrieved_utc": "2026-09-22T01:30:00Z",
+   "rows": 8619,
+   "note": "2015-2025 regular-season results, no odds"
+  },
+  {
+   "path": "nhl/teams.csv",
+   "sha256": "94c4abd101059f8d958a30652255a8ddce0315ecb92c8d00ea647a241ea41ade",
+   "source_url": "https://github.com/buffedlizard55-lab/NHLComp (data/ledger.db teams)",
+   "retrieved_utc": "2026-09-22T01:30:00Z",
+   "rows": 32,
+   "note": "active NHL teams"
+  },
+  {
+   "path": "nhl/games.csv",
+   "sha256": "ef96808c2bcedbdee65fcc04a0eef2a946491a0b90b20036d072fafc649923f0",
+   "source_url": "https://github.com/buffedlizard55-lab/NHLComp (data/ledger.db games)",
+   "retrieved_utc": "2026-09-22T01:30:00Z",
+   "rows": 4410,
+   "note": "2024-25..2026-27 incl. preseason + scheduled REG"
+  },
+  {
+   "path": "nhl/kalshi_game_prices.csv",
+   "sha256": "3743614f0739b0489fa628037743c694a4e4459f1226bb005e6287ae3c331646",
+   "source_url": "https://api.elections.kalshi.com/trade-api/v2 (via NHLComp market_price_points point=close)",
+   "retrieved_utc": "2026-09-22T01:30:00Z",
+   "rows": 3100,
+   "note": "GAME close asks; fees excluded (documented)"
+  },
+  {
+   "path": "nhl/dk_snapshots.csv",
+   "sha256": "5069e41e45da22207c64eb78e900ec7358e2eaea65cd4e4bbe63337dc7216ef4",
+   "source_url": "https://api-web.nhle.com/v1/partner-game/US/now (via NHLComp odds_snapshots)",
+   "retrieved_utc": "2026-09-22T01:30:00Z",
+   "rows": 208,
+   "note": "DK reference lines from 2026-09-20"
+  },
+  {
+   "path": "nba/games.csv",
+   "sha256": "4322b9342220d6fbc2dd38740340e69f13185c5537e05e7c40229e1510d8cacb",
+   "source_url": "https://github.com/buffedlizard55-lab/NBAComp (data/nbacomp.db games)",
+   "retrieved_utc": "2026-09-22T01:30:00Z",
+   "rows": 4346,
+   "note": "2024-27 ESPN/BRef log incl. 173 scheduled 2026-27"
+  },
+  {
+   "path": "nba/sbr_odds.csv",
+   "sha256": "10d6c226caed49f51206291fe211c100f6b874b9fdb20bd97a1c17bc369b3cd9",
+   "source_url": "https://www.sportsbookreviewsonline.com/scoresoddsarchives/ (via NBAComp hist_odds)",
+   "retrieved_utc": "2026-09-22T01:30:00Z",
+   "rows": 4043,
+   "note": "Oct-Dec closes 2013-2022; juice -110 assumed+labeled"
+  },
+  {
+   "path": "nba/forward_lines.csv",
+   "sha256": "5ee123bddddf75b5eac99ab8d3ae8ae1b4e5ef9f2e44434cbe6e3f549fb268a3",
+   "source_url": "ESPN scoreboard DK lines + Kalshi KXNBAGAME (via NBAComp)",
+   "retrieved_utc": "2026-09-22T01:30:00Z",
+   "rows": 678,
+   "note": "51 DK lines (juice assumed) + 6 Kalshi ML asks (cents->american)"
+  },
+  {
+   "path": "mlb/standings_2026_20260922.json",
+   "sha256": "5242d6365036c0d575b731218c15cc5b071ac906bd9fe88e8f527afdab173855",
+   "source_url": "https://statsapi.mlb.com/api/v1/standings?leagueId=103,104&season=2026&standingsTypes=regularSeason",
+   "retrieved_utc": "2026-09-22T01:30:00Z",
+   "rows": 30,
+   "note": "hand-transcribed official standings, all 30 clubs"
+  },
+  {
+   "path": "mlb/fixtures_2026_final_week.json",
+   "sha256": "57d6e08e7d1b8db433af4838ca7ba7bbc85fb745d6500b7d91fafb24ff0649fc",
+   "source_url": "https://statsapi.mlb.com/api/v1/schedule?sportId=1&startDate=2026-01-01&endDate=2026-12-31 (via VacationSchedule verified export)",
+   "retrieved_utc": "2026-09-21T23:27:21Z",
+   "rows": 140,
+   "note": "87 final-week R fixtures + 53 postseason placeholders"
+  },
+  {
+   "path": "crosscheck/checks_20260922.json",
+   "sha256": "0b05c598a9400d59879e05e0d6e98b12bf009ae8e8c60ec5cebef213ea6d1070",
+   "source_url": "multiple (see file)",
+   "retrieved_utc": "2026-09-22T01:30:00Z",
+   "rows": 8,
+   "note": "hand-verified cross-checks"
+  }
+ ]
+}

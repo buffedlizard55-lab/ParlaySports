@@ -1,0 +1,62 @@
+{
+  "as_of_utc": "2026-09-22T01:30:00Z",
+  "note": "Hand-verified cross-checks performed during the seed build. Each check names the claim, the source URL, and the verdict.",
+  "checks": [
+    {
+      "subject": "NFL 2026_02_NYG_LA spread",
+      "claim": "nflverse spread_line=6.5 (LA -6.5) equals the DraftKings line on ESPN",
+      "source_url": "https://site.api.espn.com/apis/site/v2/sports/football/nfl/scoreboard?dates=20260921",
+      "result": "match",
+      "detail": "ESPN DK block: details 'LAR -6.5', home close line -6.5 odds -115, away +6.5 odds -105; nflverse row: spread 6.5 / -105 / -115. Open was -8.5 (moved toward NYG)."
+    },
+    {
+      "subject": "NFL 2026_02_NYG_LA total",
+      "claim": "nflverse total_line=47.5 equals the DraftKings total on ESPN",
+      "source_url": "https://site.api.espn.com/apis/site/v2/sports/football/nfl/scoreboard?dates=20260921",
+      "result": "match",
+      "detail": "ESPN DK block: overUnder 47.5, o47.5 -110 / u47.5 -110; nflverse: 47.5 / -110 / -110."
+    },
+    {
+      "subject": "NFL 2026_02_NYG_LA moneyline",
+      "claim": "nflverse MLs (NYG +240 / LA -298) equal DraftKings MLs on ESPN",
+      "source_url": "https://site.api.espn.com/apis/site/v2/sports/football/nfl/scoreboard?dates=20260921",
+      "result": "match",
+      "detail": "ESPN DK block: home close -298 (open -375), away close +240 (open +295); nflverse: 240 / -298."
+    },
+    {
+      "subject": "NFL Week 3 moneylines vs Kalshi KXNFLGAME",
+      "claim": "nflverse Week 3 MLs track Kalshi exchange yes_ask prices within cents",
+      "source_url": "https://api.elections.kalshi.com/trade-api/v2/markets?series_ticker=KXNFLGAME&status=open&limit=10",
+      "result": "match",
+      "detail": "Sample 2026-09-22: PHI ask 0.64 (~-178) vs nflverse -180; LAR 0.56 (~-127) vs -125; BAL 0.60 (~-150) vs -155; NO 0.63 (~-170) vs -175. Dogs run longer on Kalshi (no-vig two-sided book); favorites within ~1-5c."
+    },
+    {
+      "subject": "NFL MNF status 2026-09-21",
+      "claim": "NYG@LA had not kicked off at seed time",
+      "source_url": "https://site.api.espn.com/apis/site/v2/sports/football/nfl/scoreboard?dates=20260921",
+      "result": "match",
+      "detail": "ESPN status STATUS_SCHEDULED, 'Mon, September 21st at 8:15 PM EDT' (2026-09-22T00:15Z). Correctly treated as upcoming, not final."
+    },
+    {
+      "subject": "MLB 2026 standings snapshot",
+      "claim": "30-team standings with W/L, streaks, splits, xW transcribed from official StatsAPI",
+      "source_url": "https://statsapi.mlb.com/api/v1/standings?leagueId=103,104&season=2026&standingsTypes=regularSeason",
+      "result": "match",
+      "detail": "Retrieved 2026-09-22; league lastUpdated 2026-09-21T19:20:07Z. Clinched: TB(x) NYY(x) BOS(x) MIL(y) LAD(y) ATL(y). Cross-checked division leaders vs WC games-back arithmetic on 6 teams."
+    },
+    {
+      "subject": "NHL 2026-09-21 preseason slate live",
+      "claim": "Preseason games in progress at seed time; excluded from forward books",
+      "source_url": "https://api-web.nhle.com/v1/schedule/now",
+      "result": "match",
+      "detail": "5 games LIVE (BUF@PIT, DET@CBJ, NYR@NJD, PHI@WSH neutral, OTT@MTL neutral), 3 PRE. Imported schedule rows match these game IDs (2026010015-2026010022 range)."
+    },
+    {
+      "subject": "NBA 2026-27 openers exist with markets",
+      "claim": "Oct 20 openers scheduled with ESPN/DK lines and Kalshi markets",
+      "source_url": "https://github.com/buffedlizard55-lab/NBAComp (odds_snapshots + kalshi_markets, captured 2026-09-21)",
+      "result": "match",
+      "detail": "24 games carry ESPN/DK spread+total lines; 3 openers (OKC@SAS, PHI@NYK, BOS@DET... event tickers) carry 6 Kalshi GAME contracts with two-sided quotes. Inherited, re-verified by nightly pull."
+    }
+  ]
+}
