@@ -5,16 +5,16 @@
   "decision_utc": "2026-09-22T01:30:00Z",
   "legs": [
    {
-    "away_score": null,
+    "away_score": 4,
     "g_away": "CIN",
     "g_home": "ATL",
     "g_sport": "MLB",
     "game_date": "2026-09-22",
     "game_key": "MLB:824867",
     "game_source_id": "SRC_SIBLING_VACSCHED",
-    "game_status": "scheduled",
+    "game_status": "final",
     "game_verified": 1,
-    "home_score": null,
+    "home_score": 0,
     "leg_detail": "{\"edge\": 0.0001, \"features\": {\"basis\": \"mlb-log5-v1\", \"conviction\": 0.502, \"form_as_of\": \"2026-09-22T01:30:00Z\"}, \"market_prob\": 0.7509, \"note\": \"MODEL-grade: no market odds feed; fair price from log5 blend\", \"price_id\": null}",
     "leg_id": 20396,
     "line": null,
@@ -23,23 +23,23 @@
     "odds_american": -301.5,
     "odds_type": "model_fair",
     "parlay_id": "FO-S-MLB-01-20260922-01",
-    "result": "pending",
+    "result": "loss",
     "selection": "home",
-    "settle_detail": null,
+    "settle_detail": "final CIN 4 @ ATL 0",
     "sport": "MLB",
     "start_utc": "2026-09-22T23:15:00Z"
    },
    {
-    "away_score": null,
+    "away_score": 4,
     "g_away": "MIL",
     "g_home": "PHI",
     "g_sport": "MLB",
     "game_date": "2026-09-22",
     "game_key": "MLB:823412",
     "game_source_id": "SRC_SIBLING_VACSCHED",
-    "game_status": "scheduled",
+    "game_status": "final",
     "game_verified": 1,
-    "home_score": null,
+    "home_score": 6,
     "leg_detail": "{\"edge\": 0.0001, \"features\": {\"basis\": \"mlb-log5-v1\", \"conviction\": 0.355, \"form_as_of\": \"2026-09-22T01:30:00Z\"}, \"market_prob\": 0.6776, \"note\": \"MODEL-grade: no market odds feed; fair price from log5 blend\", \"price_id\": null}",
     "leg_id": 20397,
     "line": null,
@@ -48,23 +48,23 @@
     "odds_american": -210.2,
     "odds_type": "model_fair",
     "parlay_id": "FO-S-MLB-01-20260922-01",
-    "result": "pending",
+    "result": "loss",
     "selection": "away",
-    "settle_detail": null,
+    "settle_detail": "final MIL 4 @ PHI 6",
     "sport": "MLB",
     "start_utc": "2026-09-22T22:40:00Z"
    },
    {
-    "away_score": null,
+    "away_score": 7,
     "g_away": "LAA",
     "g_home": "ATH",
     "g_sport": "MLB",
     "game_date": "2026-09-22",
     "game_key": "MLB:824953",
     "game_source_id": "SRC_SIBLING_VACSCHED",
-    "game_status": "scheduled",
+    "game_status": "final",
     "game_verified": 1,
-    "home_score": null,
+    "home_score": 9,
     "leg_detail": "{\"edge\": 0.0001, \"features\": {\"basis\": \"mlb-log5-v1\", \"conviction\": 0.121, \"form_as_of\": \"2026-09-22T01:30:00Z\"}, \"market_prob\": 0.5606, \"note\": \"MODEL-grade: no market odds feed; fair price from log5 blend\", \"price_id\": null}",
     "leg_id": 20398,
     "line": null,
@@ -73,9 +73,9 @@
     "odds_american": -127.6,
     "odds_type": "model_fair",
     "parlay_id": "FO-S-MLB-01-20260922-01",
-    "result": "pending",
+    "result": "loss",
     "selection": "away",
-    "settle_detail": null,
+    "settle_detail": "final LAA 7 @ ATH 9",
     "sport": "MLB",
     "start_utc": "2026-09-23T01:40:00Z"
    },
@@ -102,7 +102,7 @@
     "selection": "home",
     "settle_detail": null,
     "sport": "MLB",
-    "start_utc": "2026-09-22T22:35:00Z"
+    "start_utc": "2026-09-23T17:35:00Z"
    }
   ],
   "legs_n": 4,
@@ -129,484 +129,6 @@
   "strategy_id": "S-MLB-01",
   "test_mode": "forward",
   "username": "Pythagoras",
-  "version": "v1"
- },
- {
-  "combined_american": 2306.5,
-  "combined_decimal": 24.0654,
-  "decision_utc": "2026-09-22T01:30:00Z",
-  "legs": [
-   {
-    "away_score": null,
-    "g_away": "HOU",
-    "g_home": "SEA",
-    "g_sport": "MLB",
-    "game_date": "2026-09-22",
-    "game_key": "MLB:823089",
-    "game_source_id": "SRC_SIBLING_VACSCHED",
-    "game_status": "scheduled",
-    "game_verified": 1,
-    "home_score": null,
-    "leg_detail": "{\"edge\": 0.0001, \"features\": {\"basis\": \"mlb-log5-v1\", \"conviction\": 0.159, \"form_as_of\": \"2026-09-22T01:30:00Z\"}, \"market_prob\": 0.4205, \"note\": \"MODEL-grade: no market odds feed; fair price from log5 blend\", \"price_id\": null}",
-    "leg_id": 20400,
-    "line": null,
-    "market": "ML",
-    "model_prob": 0.4206,
-    "odds_american": 137.8,
-    "odds_type": "model_fair",
-    "parlay_id": "FO-S-MLB-01-20260922-02",
-    "result": "pending",
-    "selection": "away",
-    "settle_detail": null,
-    "sport": "MLB",
-    "start_utc": "2026-09-23T01:40:00Z"
-   },
-   {
-    "away_score": null,
-    "g_away": "CWS",
-    "g_home": "KC",
-    "g_sport": "MLB",
-    "game_date": "2026-09-22",
-    "game_key": "MLB:824061",
-    "game_source_id": "SRC_SIBLING_VACSCHED",
-    "game_status": "scheduled",
-    "game_verified": 1,
-    "home_score": null,
-    "leg_detail": "{\"edge\": 0.0001, \"features\": {\"basis\": \"mlb-log5-v1\", \"conviction\": 0.208, \"form_as_of\": \"2026-09-22T01:30:00Z\"}, \"market_prob\": 0.3957, \"note\": \"MODEL-grade: no market odds feed; fair price from log5 blend\", \"price_id\": null}",
-    "leg_id": 20401,
-    "line": null,
-    "market": "ML",
-    "model_prob": 0.3958,
-    "odds_american": 152.7,
-    "odds_type": "model_fair",
-    "parlay_id": "FO-S-MLB-01-20260922-02",
-    "result": "pending",
-    "selection": "home",
-    "settle_detail": null,
-    "sport": "MLB",
-    "start_utc": "2026-09-22T23:40:00Z"
-   },
-   {
-    "away_score": null,
-    "g_away": "NYM",
-    "g_home": "TEX",
-    "g_sport": "MLB",
-    "game_date": "2026-09-22",
-    "game_key": "MLB:822840",
-    "game_source_id": "SRC_SIBLING_VACSCHED",
-    "game_status": "scheduled",
-    "game_verified": 1,
-    "home_score": null,
-    "leg_detail": "{\"edge\": 0.0001, \"features\": {\"basis\": \"mlb-log5-v1\", \"conviction\": 0.223, \"form_as_of\": \"2026-09-22T01:30:00Z\"}, \"market_prob\": 0.3883, \"note\": \"MODEL-grade: no market odds feed; fair price from log5 blend\", \"price_id\": null}",
-    "leg_id": 20402,
-    "line": null,
-    "market": "ML",
-    "model_prob": 0.3884,
-    "odds_american": 157.5,
-    "odds_type": "model_fair",
-    "parlay_id": "FO-S-MLB-01-20260922-02",
-    "result": "pending",
-    "selection": "away",
-    "settle_detail": null,
-    "sport": "MLB",
-    "start_utc": "2026-09-23T00:05:00Z"
-   },
-   {
-    "away_score": null,
-    "g_away": "MIA",
-    "g_home": "CHC",
-    "g_sport": "MLB",
-    "game_date": "2026-09-22",
-    "game_key": "MLB:824624",
-    "game_source_id": "SRC_SIBLING_VACSCHED",
-    "game_status": "scheduled",
-    "game_verified": 1,
-    "home_score": null,
-    "leg_detail": "{\"edge\": 0.0, \"features\": {\"basis\": \"mlb-log5-v1\", \"conviction\": 0.286, \"form_as_of\": \"2026-09-22T01:30:00Z\"}, \"market_prob\": 0.643, \"note\": \"MODEL-grade: no market odds feed; fair price from log5 blend\", \"price_id\": null}",
-    "leg_id": 20403,
-    "line": null,
-    "market": "ML",
-    "model_prob": 0.643,
-    "odds_american": -180.1,
-    "odds_type": "model_fair",
-    "parlay_id": "FO-S-MLB-01-20260922-02",
-    "result": "pending",
-    "selection": "home",
-    "settle_detail": null,
-    "sport": "MLB",
-    "start_utc": "2026-09-22T23:40:00Z"
-   }
-  ],
-  "legs_n": 4,
-  "market_mix": "ML",
-  "n_legs": 4,
-  "note": "{\"model_prob\": 0.04158}",
-  "parlay_id": "FO-S-MLB-01-20260922-02",
-  "payout": null,
-  "pnl": null,
-  "potential_payout": 240.65,
-  "pricing_grade": "MODEL",
-  "result_detail": null,
-  "roi_parlay": null,
-  "settled_utc": null,
-  "settlement_source": null,
-  "slate_date": "2026-09-22",
-  "sport_scope": "MLB",
-  "sports": [
-   "MLB"
-  ],
-  "sports_json": "[\"MLB\"]",
-  "stake": 10.0,
-  "status": "upcoming",
-  "strategy_id": "S-MLB-01",
-  "test_mode": "forward",
-  "username": "Pythagoras",
-  "version": "v1"
- },
- {
-  "combined_american": 172.2,
-  "combined_decimal": 2.7223,
-  "decision_utc": "2026-09-22T01:30:00Z",
-  "legs": [
-   {
-    "away_score": null,
-    "g_away": "ARI",
-    "g_home": "COL",
-    "g_sport": "MLB",
-    "game_date": "2026-09-22",
-    "game_key": "MLB:824302",
-    "game_source_id": "SRC_SIBLING_VACSCHED",
-    "game_status": "scheduled",
-    "game_verified": 1,
-    "home_score": null,
-    "leg_detail": "{\"edge\": 0.0, \"features\": {\"basis\": \"mlb-log5-v1\", \"conviction\": 0.221, \"form_as_of\": \"2026-09-22T01:30:00Z\"}, \"market_prob\": 0.6103, \"note\": \"MODEL-grade: no market odds feed; fair price from log5 blend\", \"price_id\": null}",
-    "leg_id": 20404,
-    "line": null,
-    "market": "ML",
-    "model_prob": 0.6103,
-    "odds_american": -156.6,
-    "odds_type": "model_fair",
-    "parlay_id": "FO-S-MLB-01-20260922-03",
-    "result": "pending",
-    "selection": "away",
-    "settle_detail": null,
-    "sport": "MLB",
-    "start_utc": "2026-09-23T00:40:00Z"
-   },
-   {
-    "away_score": null,
-    "g_away": "STL",
-    "g_home": "PIT",
-    "g_sport": "MLB",
-    "game_date": "2026-09-22",
-    "game_key": "MLB:823328",
-    "game_source_id": "SRC_SIBLING_VACSCHED",
-    "game_status": "scheduled",
-    "game_verified": 1,
-    "home_score": null,
-    "leg_detail": "{\"edge\": -0.0, \"features\": {\"basis\": \"mlb-log5-v1\", \"conviction\": 0.204, \"form_as_of\": \"2026-09-22T01:30:00Z\"}, \"market_prob\": 0.6019, \"note\": \"MODEL-grade: no market odds feed; fair price from log5 blend\", \"price_id\": null}",
-    "leg_id": 20405,
-    "line": null,
-    "market": "ML",
-    "model_prob": 0.6019,
-    "odds_american": -151.2,
-    "odds_type": "model_fair",
-    "parlay_id": "FO-S-MLB-01-20260922-03",
-    "result": "pending",
-    "selection": "home",
-    "settle_detail": null,
-    "sport": "MLB",
-    "start_utc": "2026-09-22T22:40:00Z"
-   }
-  ],
-  "legs_n": 2,
-  "market_mix": "ML",
-  "n_legs": 2,
-  "note": "{\"model_prob\": 0.36734}",
-  "parlay_id": "FO-S-MLB-01-20260922-03",
-  "payout": null,
-  "pnl": null,
-  "potential_payout": 27.22,
-  "pricing_grade": "MODEL",
-  "result_detail": null,
-  "roi_parlay": null,
-  "settled_utc": null,
-  "settlement_source": null,
-  "slate_date": "2026-09-22",
-  "sport_scope": "MLB",
-  "sports": [
-   "MLB"
-  ],
-  "sports_json": "[\"MLB\"]",
-  "stake": 10.0,
-  "status": "upcoming",
-  "strategy_id": "S-MLB-01",
-  "test_mode": "forward",
-  "username": "Pythagoras",
-  "version": "v1"
- },
- {
-  "combined_american": 514.7,
-  "combined_decimal": 6.1466,
-  "decision_utc": "2026-09-22T01:30:00Z",
-  "legs": [
-   {
-    "away_score": null,
-    "g_away": "CIN",
-    "g_home": "ATL",
-    "g_sport": "MLB",
-    "game_date": "2026-09-22",
-    "game_key": "MLB:824867",
-    "game_source_id": "SRC_SIBLING_VACSCHED",
-    "game_status": "scheduled",
-    "game_verified": 1,
-    "home_score": null,
-    "leg_detail": "{\"edge\": 0.0001, \"features\": {\"form_as_of\": \"2026-09-22T01:30:00Z\", \"l10\": 0.7, \"opp_l10\": 0.3, \"streak\": \"W3\"}, \"market_prob\": 0.7509, \"note\": \"MODEL-grade leg\", \"price_id\": null}",
-    "leg_id": 20460,
-    "line": null,
-    "market": "ML",
-    "model_prob": 0.751,
-    "odds_american": -301.5,
-    "odds_type": "model_fair",
-    "parlay_id": "FO-S-MLB-02-20260922-01",
-    "result": "pending",
-    "selection": "home",
-    "settle_detail": null,
-    "sport": "MLB",
-    "start_utc": "2026-09-22T23:15:00Z"
-   },
-   {
-    "away_score": null,
-    "g_away": "MIL",
-    "g_home": "PHI",
-    "g_sport": "MLB",
-    "game_date": "2026-09-22",
-    "game_key": "MLB:823412",
-    "game_source_id": "SRC_SIBLING_VACSCHED",
-    "game_status": "scheduled",
-    "game_verified": 1,
-    "home_score": null,
-    "leg_detail": "{\"edge\": 0.0001, \"features\": {\"form_as_of\": \"2026-09-22T01:30:00Z\", \"l10\": 0.8, \"opp_l10\": 0.4, \"streak\": \"W3\"}, \"market_prob\": 0.6776, \"note\": \"MODEL-grade leg\", \"price_id\": null}",
-    "leg_id": 20461,
-    "line": null,
-    "market": "ML",
-    "model_prob": 0.6777,
-    "odds_american": -210.2,
-    "odds_type": "model_fair",
-    "parlay_id": "FO-S-MLB-02-20260922-01",
-    "result": "pending",
-    "selection": "away",
-    "settle_detail": null,
-    "sport": "MLB",
-    "start_utc": "2026-09-22T22:40:00Z"
-   },
-   {
-    "away_score": null,
-    "g_away": "STL",
-    "g_home": "PIT",
-    "g_sport": "MLB",
-    "game_date": "2026-09-22",
-    "game_key": "MLB:823328",
-    "game_source_id": "SRC_SIBLING_VACSCHED",
-    "game_status": "scheduled",
-    "game_verified": 1,
-    "home_score": null,
-    "leg_detail": "{\"edge\": -0.0, \"features\": {\"form_as_of\": \"2026-09-22T01:30:00Z\", \"l10\": 0.6, \"opp_l10\": 0.4, \"streak\": \"W4\"}, \"market_prob\": 0.6019, \"note\": \"MODEL-grade leg\", \"price_id\": null}",
-    "leg_id": 20462,
-    "line": null,
-    "market": "ML",
-    "model_prob": 0.6019,
-    "odds_american": -151.2,
-    "odds_type": "model_fair",
-    "parlay_id": "FO-S-MLB-02-20260922-01",
-    "result": "pending",
-    "selection": "home",
-    "settle_detail": null,
-    "sport": "MLB",
-    "start_utc": "2026-09-22T22:40:00Z"
-   },
-   {
-    "away_score": null,
-    "g_away": "CLE",
-    "g_home": "BOS",
-    "g_sport": "MLB",
-    "game_date": "2026-09-22",
-    "game_key": "MLB:824709",
-    "game_source_id": "SRC_SIBLING_VACSCHED",
-    "game_status": "scheduled",
-    "game_verified": 1,
-    "home_score": null,
-    "leg_detail": "{\"edge\": 0.0, \"features\": {\"form_as_of\": \"2026-09-22T01:30:00Z\", \"l10\": 0.7, \"opp_l10\": 0.4, \"streak\": \"W5\"}, \"market_prob\": 0.5312, \"note\": \"MODEL-grade leg\", \"price_id\": null}",
-    "leg_id": 20463,
-    "line": null,
-    "market": "ML",
-    "model_prob": 0.5312,
-    "odds_american": -113.3,
-    "odds_type": "model_fair",
-    "parlay_id": "FO-S-MLB-02-20260922-01",
-    "result": "pending",
-    "selection": "away",
-    "settle_detail": null,
-    "sport": "MLB",
-    "start_utc": "2026-09-22T22:45:00Z"
-   }
-  ],
-  "legs_n": 4,
-  "market_mix": "ML",
-  "n_legs": 4,
-  "note": "{\"model_prob\": 0.16273}",
-  "parlay_id": "FO-S-MLB-02-20260922-01",
-  "payout": null,
-  "pnl": null,
-  "potential_payout": 61.47,
-  "pricing_grade": "MODEL",
-  "result_detail": null,
-  "roi_parlay": null,
-  "settled_utc": null,
-  "settlement_source": null,
-  "slate_date": "2026-09-22",
-  "sport_scope": "MLB",
-  "sports": [
-   "MLB"
-  ],
-  "sports_json": "[\"MLB\"]",
-  "stake": 10.0,
-  "status": "upcoming",
-  "strategy_id": "S-MLB-02",
-  "test_mode": "forward",
-  "username": "StreakSmarter",
-  "version": "v1"
- },
- {
-  "combined_american": 890.8,
-  "combined_decimal": 9.9077,
-  "decision_utc": "2026-09-22T01:30:00Z",
-  "legs": [
-   {
-    "away_score": null,
-    "g_away": "HOU",
-    "g_home": "SEA",
-    "g_sport": "MLB",
-    "game_date": "2026-09-22",
-    "game_key": "MLB:823089",
-    "game_source_id": "SRC_SIBLING_VACSCHED",
-    "game_status": "scheduled",
-    "game_verified": 1,
-    "home_score": null,
-    "leg_detail": "{\"edge\": 0.0001, \"features\": {\"away_race\": [\"race\", 1], \"form_as_of\": \"2026-09-22T01:30:00Z\", \"home_race\": [\"out\", 99]}, \"market_prob\": 0.4205, \"note\": \"MODEL-grade leg; motivation signal\", \"price_id\": null}",
-    "leg_id": 20486,
-    "line": null,
-    "market": "ML",
-    "model_prob": 0.4206,
-    "odds_american": 137.8,
-    "odds_type": "model_fair",
-    "parlay_id": "FO-S-MLB-06-20260922-01",
-    "result": "pending",
-    "selection": "away",
-    "settle_detail": null,
-    "sport": "MLB",
-    "start_utc": "2026-09-23T01:40:00Z"
-   },
-   {
-    "away_score": null,
-    "g_away": "MIA",
-    "g_home": "CHC",
-    "g_sport": "MLB",
-    "game_date": "2026-09-22",
-    "game_key": "MLB:824624",
-    "game_source_id": "SRC_SIBLING_VACSCHED",
-    "game_status": "scheduled",
-    "game_verified": 1,
-    "home_score": null,
-    "leg_detail": "{\"edge\": 0.0, \"features\": {\"away_race\": [\"out\", 99], \"form_as_of\": \"2026-09-22T01:30:00Z\", \"home_race\": [\"race\", 0]}, \"market_prob\": 0.643, \"note\": \"MODEL-grade leg; motivation signal\", \"price_id\": null}",
-    "leg_id": 20487,
-    "line": null,
-    "market": "ML",
-    "model_prob": 0.643,
-    "odds_american": -180.1,
-    "odds_type": "model_fair",
-    "parlay_id": "FO-S-MLB-06-20260922-01",
-    "result": "pending",
-    "selection": "home",
-    "settle_detail": null,
-    "sport": "MLB",
-    "start_utc": "2026-09-22T23:40:00Z"
-   },
-   {
-    "away_score": null,
-    "g_away": "ARI",
-    "g_home": "COL",
-    "g_sport": "MLB",
-    "game_date": "2026-09-22",
-    "game_key": "MLB:824302",
-    "game_source_id": "SRC_SIBLING_VACSCHED",
-    "game_status": "scheduled",
-    "game_verified": 1,
-    "home_score": null,
-    "leg_detail": "{\"edge\": 0.0, \"features\": {\"away_race\": [\"race\", 4], \"form_as_of\": \"2026-09-22T01:30:00Z\", \"home_race\": [\"out\", 99]}, \"market_prob\": 0.6103, \"note\": \"MODEL-grade leg; motivation signal\", \"price_id\": null}",
-    "leg_id": 20488,
-    "line": null,
-    "market": "ML",
-    "model_prob": 0.6103,
-    "odds_american": -156.6,
-    "odds_type": "model_fair",
-    "parlay_id": "FO-S-MLB-06-20260922-01",
-    "result": "pending",
-    "selection": "away",
-    "settle_detail": null,
-    "sport": "MLB",
-    "start_utc": "2026-09-23T00:40:00Z"
-   },
-   {
-    "away_score": null,
-    "g_away": "NYM",
-    "g_home": "TEX",
-    "g_sport": "MLB",
-    "game_date": "2026-09-22",
-    "game_key": "MLB:822840",
-    "game_source_id": "SRC_SIBLING_VACSCHED",
-    "game_status": "scheduled",
-    "game_verified": 1,
-    "home_score": null,
-    "leg_detail": "{\"edge\": -0.0001, \"features\": {\"away_race\": [\"out\", 99], \"form_as_of\": \"2026-09-22T01:30:00Z\", \"home_race\": [\"race\", 0]}, \"market_prob\": 0.6117, \"note\": \"MODEL-grade leg; motivation signal\", \"price_id\": null}",
-    "leg_id": 20489,
-    "line": null,
-    "market": "ML",
-    "model_prob": 0.6116,
-    "odds_american": -157.5,
-    "odds_type": "model_fair",
-    "parlay_id": "FO-S-MLB-06-20260922-01",
-    "result": "pending",
-    "selection": "home",
-    "settle_detail": null,
-    "sport": "MLB",
-    "start_utc": "2026-09-23T00:05:00Z"
-   }
-  ],
-  "legs_n": 4,
-  "market_mix": "ML",
-  "n_legs": 4,
-  "note": "{\"model_prob\": 0.10095}",
-  "parlay_id": "FO-S-MLB-06-20260922-01",
-  "payout": null,
-  "pnl": null,
-  "potential_payout": 99.08,
-  "pricing_grade": "MODEL",
-  "result_detail": null,
-  "roi_parlay": null,
-  "settled_utc": null,
-  "settlement_source": null,
-  "slate_date": "2026-09-22",
-  "sport_scope": "MLB",
-  "sports": [
-   "MLB"
-  ],
-  "sports_json": "[\"MLB\"]",
-  "stake": 10.0,
-  "status": "upcoming",
-  "strategy_id": "S-MLB-06",
-  "test_mode": "forward",
-  "username": "ScoreboardWatcher",
   "version": "v1"
  },
  {
@@ -1827,6 +1349,330 @@
   "strategy_id": "S-MLB-06",
   "test_mode": "forward",
   "username": "ScoreboardWatcher",
+  "version": "v1"
+ },
+ {
+  "combined_american": -114.2,
+  "combined_decimal": 1.8756,
+  "decision_utc": "2026-09-23T13:43:18Z",
+  "legs": [
+   {
+    "away_score": null,
+    "g_away": "ATL",
+    "g_home": "GB",
+    "g_sport": "NFL",
+    "game_date": "2026-09-24",
+    "game_key": "NFL:2026_03_ATL_GB",
+    "game_source_id": "SRC_NFLVERSE_GAMES",
+    "game_status": "scheduled",
+    "game_verified": 1,
+    "home_score": null,
+    "leg_detail": "{\"edge\": 0.0539, \"features\": {\"elo_away\": 1401.8, \"elo_home\": 1544.1, \"price_observed_utc\": \"2026-09-23T13:42:48Z\", \"price_source\": \"SRC_KALSHI\"}, \"market_prob\": 0.703, \"note\": \"\", \"price_id\": 92953}",
+    "leg_id": 20574,
+    "line": null,
+    "market": "ML",
+    "model_prob": 0.7569,
+    "odds_american": -244.83,
+    "odds_type": "market_verified",
+    "parlay_id": "FO-S-MULTI-01-20260924-01",
+    "result": "pending",
+    "selection": "home",
+    "settle_detail": null,
+    "sport": "NFL",
+    "start_utc": "2026-09-25T00:15Z"
+   },
+   {
+    "away_score": null,
+    "g_away": "CIN",
+    "g_home": "ATL",
+    "g_sport": "MLB",
+    "game_date": "2026-09-24",
+    "game_key": "MLB:824866",
+    "game_source_id": "SRC_SIBLING_VACSCHED",
+    "game_status": "scheduled",
+    "game_verified": 1,
+    "home_score": null,
+    "leg_detail": "{\"edge\": 0.0001, \"features\": {\"basis\": \"mlb-log5-v1\", \"conviction\": 0.502, \"form_as_of\": \"2026-09-22T01:30:00Z\"}, \"market_prob\": 0.7509, \"note\": \"MODEL-grade: no market odds feed; fair price from log5 blend\", \"price_id\": null}",
+    "leg_id": 20575,
+    "line": null,
+    "market": "ML",
+    "model_prob": 0.751,
+    "odds_american": -301.5,
+    "odds_type": "model_fair",
+    "parlay_id": "FO-S-MULTI-01-20260924-01",
+    "result": "pending",
+    "selection": "home",
+    "settle_detail": null,
+    "sport": "MLB",
+    "start_utc": "2026-09-24T23:15:00Z"
+   }
+  ],
+  "legs_n": 2,
+  "market_mix": "ML",
+  "n_legs": 2,
+  "note": "{\"model_prob\": 0.56843}",
+  "parlay_id": "FO-S-MULTI-01-20260924-01",
+  "payout": null,
+  "pnl": null,
+  "potential_payout": 18.76,
+  "pricing_grade": "MIXED",
+  "result_detail": null,
+  "roi_parlay": null,
+  "settled_utc": null,
+  "settlement_source": null,
+  "slate_date": "2026-09-24",
+  "sport_scope": "MULTI",
+  "sports": [
+   "MLB",
+   "NFL"
+  ],
+  "sports_json": "[\"MLB\", \"NFL\"]",
+  "stake": 10.0,
+  "status": "upcoming",
+  "strategy_id": "S-MULTI-01",
+  "test_mode": "forward",
+  "username": "FourSportFavor",
+  "version": "v1"
+ },
+ {
+  "combined_american": 496.1,
+  "combined_decimal": 5.9613,
+  "decision_utc": "2026-09-23T13:43:18Z",
+  "legs": [
+   {
+    "away_score": null,
+    "g_away": "ATL",
+    "g_home": "GB",
+    "g_sport": "NFL",
+    "game_date": "2026-09-24",
+    "game_key": "NFL:2026_03_ATL_GB",
+    "game_source_id": "SRC_NFLVERSE_GAMES",
+    "game_status": "scheduled",
+    "game_verified": 1,
+    "home_score": null,
+    "leg_detail": "{\"edge\": 0.1181, \"features\": {\"away_allowed\": 25.75, \"away_scored\": 18.75, \"dist\": \"normal\", \"home_allowed\": 27.625, \"home_scored\": 20.75, \"league_avg_total\": 44.9375, \"model_total\": 47.4, \"price_observed_utc\": \"2026-09-23T13:42:42Z\", \"price_source\": \"SRC_ESPN_SCOREBOARD\", \"sigma\": 14.333}, \"market_prob\": 0.4892, \"note\": \"\", \"price_id\": 92657}",
+    "leg_id": 20576,
+    "line": 43.5,
+    "market": "TOTAL",
+    "model_prob": 0.6072,
+    "odds_american": -105.0,
+    "odds_type": "market_reference",
+    "parlay_id": "FO-S-MULTI-02-20260924-01",
+    "result": "pending",
+    "selection": "over",
+    "settle_detail": null,
+    "sport": "NFL",
+    "start_utc": "2026-09-25T00:15Z"
+   },
+   {
+    "away_score": null,
+    "g_away": "CIN",
+    "g_home": "ATL",
+    "g_sport": "MLB",
+    "game_date": "2026-09-24",
+    "game_key": "MLB:824866",
+    "game_source_id": "SRC_SIBLING_VACSCHED",
+    "game_status": "scheduled",
+    "game_verified": 1,
+    "home_score": null,
+    "leg_detail": "{\"edge\": 0.0001, \"features\": {\"basis\": \"mlb-log5-v1\", \"conviction\": 0.502, \"form_as_of\": \"2026-09-22T01:30:00Z\"}, \"market_prob\": 0.7509, \"note\": \"MODEL-grade: no market odds feed; fair price from log5 blend\", \"price_id\": null}",
+    "leg_id": 20577,
+    "line": null,
+    "market": "ML",
+    "model_prob": 0.751,
+    "odds_american": -301.5,
+    "odds_type": "model_fair",
+    "parlay_id": "FO-S-MULTI-02-20260924-01",
+    "result": "pending",
+    "selection": "home",
+    "settle_detail": null,
+    "sport": "MLB",
+    "start_utc": "2026-09-24T23:15:00Z"
+   },
+   {
+    "away_score": null,
+    "g_away": "MIL",
+    "g_home": "PHI",
+    "g_sport": "MLB",
+    "game_date": "2026-09-24",
+    "game_key": "MLB:823411",
+    "game_source_id": "SRC_SIBLING_VACSCHED",
+    "game_status": "scheduled",
+    "game_verified": 1,
+    "home_score": null,
+    "leg_detail": "{\"edge\": 0.0001, \"features\": {\"basis\": \"mlb-log5-v1\", \"conviction\": 0.355, \"form_as_of\": \"2026-09-22T01:30:00Z\"}, \"market_prob\": 0.6776, \"note\": \"MODEL-grade: no market odds feed; fair price from log5 blend\", \"price_id\": null}",
+    "leg_id": 20578,
+    "line": null,
+    "market": "ML",
+    "model_prob": 0.6777,
+    "odds_american": -210.2,
+    "odds_type": "model_fair",
+    "parlay_id": "FO-S-MULTI-02-20260924-01",
+    "result": "pending",
+    "selection": "away",
+    "settle_detail": null,
+    "sport": "MLB",
+    "start_utc": "2026-09-24T22:05:00Z"
+   },
+   {
+    "away_score": null,
+    "g_away": "LAA",
+    "g_home": "SEA",
+    "g_sport": "MLB",
+    "game_date": "2026-09-24",
+    "game_key": "MLB:823087",
+    "game_source_id": "SRC_SIBLING_VACSCHED",
+    "game_status": "scheduled",
+    "game_verified": 1,
+    "home_score": null,
+    "leg_detail": "{\"edge\": 0.0001, \"features\": {\"form_as_of\": \"2026-09-22T01:30:00Z\", \"model_total\": 7.25, \"park_factor\": 0.85, \"proxy_line\": 8.8, \"sigma\": 4.21}, \"market_prob\": 0.6436, \"note\": \"MODEL-grade leg: proxy line, no market total feed\", \"price_id\": null}",
+    "leg_id": 20579,
+    "line": 8.8,
+    "market": "TOTAL",
+    "model_prob": 0.6437,
+    "odds_american": -180.6,
+    "odds_type": "model_fair",
+    "parlay_id": "FO-S-MULTI-02-20260924-01",
+    "result": "pending",
+    "selection": "under",
+    "settle_detail": null,
+    "sport": "MLB",
+    "start_utc": "2026-09-25T01:40:00Z"
+   }
+  ],
+  "legs_n": 4,
+  "market_mix": "ML,TOTAL",
+  "n_legs": 4,
+  "note": "{\"model_prob\": 0.19893}",
+  "parlay_id": "FO-S-MULTI-02-20260924-01",
+  "payout": null,
+  "pnl": null,
+  "potential_payout": 59.61,
+  "pricing_grade": "MIXED",
+  "result_detail": null,
+  "roi_parlay": null,
+  "settled_utc": null,
+  "settlement_source": null,
+  "slate_date": "2026-09-24",
+  "sport_scope": "MULTI",
+  "sports": [
+   "MLB",
+   "NFL"
+  ],
+  "sports_json": "[\"MLB\", \"NFL\"]",
+  "stake": 10.0,
+  "status": "upcoming",
+  "strategy_id": "S-MULTI-02",
+  "test_mode": "forward",
+  "username": "CrossSportEdge",
+  "version": "v1"
+ },
+ {
+  "combined_american": 327.5,
+  "combined_decimal": 4.2751,
+  "decision_utc": "2026-09-23T13:43:18Z",
+  "legs": [
+   {
+    "away_score": null,
+    "g_away": "ATL",
+    "g_home": "GB",
+    "g_sport": "NFL",
+    "game_date": "2026-09-24",
+    "game_key": "NFL:2026_03_ATL_GB",
+    "game_source_id": "SRC_NFLVERSE_GAMES",
+    "game_status": "scheduled",
+    "game_verified": 1,
+    "home_score": null,
+    "leg_detail": "{\"edge\": 0.1181, \"features\": {\"away_allowed\": 25.75, \"away_scored\": 18.75, \"dist\": \"normal\", \"home_allowed\": 27.625, \"home_scored\": 20.75, \"league_avg_total\": 44.9375, \"model_total\": 47.4, \"price_observed_utc\": \"2026-09-23T13:42:42Z\", \"price_source\": \"SRC_ESPN_SCOREBOARD\", \"sigma\": 14.333}, \"market_prob\": 0.4892, \"note\": \"\", \"price_id\": 92657}",
+    "leg_id": 20580,
+    "line": 43.5,
+    "market": "TOTAL",
+    "model_prob": 0.6072,
+    "odds_american": -105.0,
+    "odds_type": "market_reference",
+    "parlay_id": "FO-S-MULTI-03-20260924-01",
+    "result": "pending",
+    "selection": "over",
+    "settle_detail": null,
+    "sport": "NFL",
+    "start_utc": "2026-09-25T00:15Z"
+   },
+   {
+    "away_score": null,
+    "g_away": "LAA",
+    "g_home": "SEA",
+    "g_sport": "MLB",
+    "game_date": "2026-09-24",
+    "game_key": "MLB:823087",
+    "game_source_id": "SRC_SIBLING_VACSCHED",
+    "game_status": "scheduled",
+    "game_verified": 1,
+    "home_score": null,
+    "leg_detail": "{\"edge\": 0.0001, \"features\": {\"form_as_of\": \"2026-09-22T01:30:00Z\", \"model_total\": 7.25, \"park_factor\": 0.85, \"proxy_line\": 8.8, \"sigma\": 4.21}, \"market_prob\": 0.6436, \"note\": \"MODEL-grade leg: proxy line, no market total feed\", \"price_id\": null}",
+    "leg_id": 20581,
+    "line": 8.8,
+    "market": "TOTAL",
+    "model_prob": 0.6437,
+    "odds_american": -180.6,
+    "odds_type": "model_fair",
+    "parlay_id": "FO-S-MULTI-03-20260924-01",
+    "result": "pending",
+    "selection": "under",
+    "settle_detail": null,
+    "sport": "MLB",
+    "start_utc": "2026-09-25T01:40:00Z"
+   },
+   {
+    "away_score": null,
+    "g_away": "ARI",
+    "g_home": "COL",
+    "g_sport": "MLB",
+    "game_date": "2026-09-24",
+    "game_key": "MLB:824298",
+    "game_source_id": "SRC_SIBLING_VACSCHED",
+    "game_status": "scheduled",
+    "game_verified": 1,
+    "home_score": null,
+    "leg_detail": "{\"edge\": -0.0001, \"features\": {\"form_as_of\": \"2026-09-22T01:30:00Z\", \"model_total\": 11.12, \"park_factor\": 1.15, \"proxy_line\": 8.8, \"sigma\": 4.21}, \"market_prob\": 0.7096, \"note\": \"MODEL-grade leg: proxy line, no market total feed\", \"price_id\": null}",
+    "leg_id": 20582,
+    "line": 8.8,
+    "market": "TOTAL",
+    "model_prob": 0.7095,
+    "odds_american": -244.3,
+    "odds_type": "model_fair",
+    "parlay_id": "FO-S-MULTI-03-20260924-01",
+    "result": "pending",
+    "selection": "over",
+    "settle_detail": null,
+    "sport": "MLB",
+    "start_utc": "2026-09-24T19:10:00Z"
+   }
+  ],
+  "legs_n": 3,
+  "market_mix": "TOTAL",
+  "n_legs": 3,
+  "note": "{\"model_prob\": 0.27731}",
+  "parlay_id": "FO-S-MULTI-03-20260924-01",
+  "payout": null,
+  "pnl": null,
+  "potential_payout": 42.75,
+  "pricing_grade": "MIXED",
+  "result_detail": null,
+  "roi_parlay": null,
+  "settled_utc": null,
+  "settlement_source": null,
+  "slate_date": "2026-09-24",
+  "sport_scope": "MULTI",
+  "sports": [
+   "MLB",
+   "NFL"
+  ],
+  "sports_json": "[\"MLB\", \"NFL\"]",
+  "stake": 10.0,
+  "status": "upcoming",
+  "strategy_id": "S-MULTI-03",
+  "test_mode": "forward",
+  "username": "TotalChaos",
   "version": "v1"
  },
  {
@@ -3837,7 +3683,7 @@
     "selection": "away",
     "settle_detail": null,
     "sport": "NFL",
-    "start_utc": null
+    "start_utc": "2026-09-27T20:05Z"
    },
    {
     "away_score": null,
@@ -3920,7 +3766,7 @@
     "selection": "home",
     "settle_detail": null,
     "sport": "NFL",
-    "start_utc": null
+    "start_utc": "2026-09-27T17:00Z"
    },
    {
     "away_score": null,
@@ -4003,7 +3849,7 @@
     "selection": "home",
     "settle_detail": null,
     "sport": "NFL",
-    "start_utc": null
+    "start_utc": "2026-09-27T17:00Z"
    },
    {
     "away_score": null,
@@ -4086,7 +3932,7 @@
     "selection": "over",
     "settle_detail": null,
     "sport": "NFL",
-    "start_utc": null
+    "start_utc": "2026-09-27T17:00Z"
    },
    {
     "away_score": null,
@@ -4136,7 +3982,7 @@
     "selection": "under",
     "settle_detail": null,
     "sport": "NFL",
-    "start_utc": null
+    "start_utc": "2026-09-27T17:00Z"
    },
    {
     "away_score": null,
@@ -4219,7 +4065,7 @@
     "selection": "over",
     "settle_detail": null,
     "sport": "NFL",
-    "start_utc": null
+    "start_utc": "2026-09-27T17:00Z"
    },
    {
     "away_score": null,
@@ -4244,7 +4090,7 @@
     "selection": "over",
     "settle_detail": null,
     "sport": "NFL",
-    "start_utc": null
+    "start_utc": "2026-09-27T17:00Z"
    },
    {
     "away_score": null,
@@ -4269,7 +4115,7 @@
     "selection": "over",
     "settle_detail": null,
     "sport": "NFL",
-    "start_utc": null
+    "start_utc": "2026-09-27T17:00Z"
    },
    {
     "away_score": null,
@@ -4352,7 +4198,7 @@
     "selection": "over",
     "settle_detail": null,
     "sport": "NFL",
-    "start_utc": null
+    "start_utc": "2026-09-27T20:05Z"
    },
    {
     "away_score": null,
@@ -4377,7 +4223,7 @@
     "selection": "home",
     "settle_detail": null,
     "sport": "NFL",
-    "start_utc": null
+    "start_utc": "2026-09-27T20:25Z"
    },
    {
     "away_score": null,
@@ -4485,7 +4331,7 @@
     "selection": "over",
     "settle_detail": null,
     "sport": "NFL",
-    "start_utc": null
+    "start_utc": "2026-09-27T17:00Z"
    },
    {
     "away_score": null,
@@ -4535,7 +4381,7 @@
     "selection": "under",
     "settle_detail": null,
     "sport": "NFL",
-    "start_utc": null
+    "start_utc": "2026-09-27T17:00Z"
    },
    {
     "away_score": null,
@@ -4618,7 +4464,7 @@
     "selection": "away",
     "settle_detail": null,
     "sport": "NFL",
-    "start_utc": null
+    "start_utc": "2026-09-27T20:05Z"
    },
    {
     "away_score": null,
@@ -4643,7 +4489,7 @@
     "selection": "home",
     "settle_detail": null,
     "sport": "NFL",
-    "start_utc": null
+    "start_utc": "2026-09-27T17:00Z"
    },
    {
     "away_score": null,
@@ -4668,7 +4514,7 @@
     "selection": "home",
     "settle_detail": null,
     "sport": "NFL",
-    "start_utc": null
+    "start_utc": "2026-09-27T17:00Z"
    },
    {
     "away_score": null,
@@ -4718,7 +4564,7 @@
     "selection": "home",
     "settle_detail": null,
     "sport": "NFL",
-    "start_utc": null
+    "start_utc": "2026-09-27T17:00Z"
    },
    {
     "away_score": null,
@@ -4743,7 +4589,7 @@
     "selection": "home",
     "settle_detail": null,
     "sport": "NFL",
-    "start_utc": null
+    "start_utc": "2026-09-27T20:25Z"
    },
    {
     "away_score": null,
@@ -4768,7 +4614,7 @@
     "selection": "away",
     "settle_detail": null,
     "sport": "NFL",
-    "start_utc": null
+    "start_utc": "2026-09-27T17:00Z"
    },
    {
     "away_score": null,
@@ -4851,7 +4697,7 @@
     "selection": "away",
     "settle_detail": null,
     "sport": "NFL",
-    "start_utc": null
+    "start_utc": "2026-09-27T20:05Z"
    },
    {
     "away_score": null,
@@ -4876,7 +4722,7 @@
     "selection": "home",
     "settle_detail": null,
     "sport": "NFL",
-    "start_utc": null
+    "start_utc": "2026-09-27T17:00Z"
    },
    {
     "away_score": null,
@@ -4901,7 +4747,7 @@
     "selection": "home",
     "settle_detail": null,
     "sport": "NFL",
-    "start_utc": null
+    "start_utc": "2026-09-27T17:00Z"
    }
   ],
   "legs_n": 3,
@@ -4983,7 +4829,7 @@
     "selection": "home",
     "settle_detail": null,
     "sport": "NFL",
-    "start_utc": null
+    "start_utc": "2026-09-27T17:00Z"
    },
    {
     "away_score": null,
@@ -5008,7 +4854,7 @@
     "selection": "home",
     "settle_detail": null,
     "sport": "NFL",
-    "start_utc": null
+    "start_utc": "2026-09-27T20:25Z"
    }
   ],
   "legs_n": 3,
@@ -5065,7 +4911,7 @@
     "selection": "home",
     "settle_detail": null,
     "sport": "NFL",
-    "start_utc": null
+    "start_utc": "2026-09-27T17:00Z"
    },
    {
     "away_score": null,
@@ -5090,7 +4936,7 @@
     "selection": "home",
     "settle_detail": null,
     "sport": "NFL",
-    "start_utc": null
+    "start_utc": "2026-09-27T17:00Z"
    }
   ],
   "legs_n": 2,
@@ -5147,7 +4993,7 @@
     "selection": "over",
     "settle_detail": null,
     "sport": "NFL",
-    "start_utc": null
+    "start_utc": "2026-09-27T17:00Z"
    },
    {
     "away_score": null,
@@ -5197,7 +5043,7 @@
     "selection": "under",
     "settle_detail": null,
     "sport": "NFL",
-    "start_utc": null
+    "start_utc": "2026-09-27T17:00Z"
    }
   ],
   "legs_n": 3,
@@ -5254,7 +5100,7 @@
     "selection": "over",
     "settle_detail": null,
     "sport": "NFL",
-    "start_utc": null
+    "start_utc": "2026-09-27T17:00Z"
    },
    {
     "away_score": null,
@@ -5279,7 +5125,7 @@
     "selection": "over",
     "settle_detail": null,
     "sport": "NFL",
-    "start_utc": null
+    "start_utc": "2026-09-27T17:00Z"
    },
    {
     "away_score": null,
@@ -5304,7 +5150,7 @@
     "selection": "over",
     "settle_detail": null,
     "sport": "NFL",
-    "start_utc": null
+    "start_utc": "2026-09-27T17:00Z"
    }
   ],
   "legs_n": 3,
@@ -5361,7 +5207,7 @@
     "selection": "under",
     "settle_detail": null,
     "sport": "NFL",
-    "start_utc": null
+    "start_utc": "2026-09-27T17:00Z"
    },
    {
     "away_score": null,
@@ -5386,7 +5232,7 @@
     "selection": "over",
     "settle_detail": null,
     "sport": "NFL",
-    "start_utc": null
+    "start_utc": "2026-09-27T20:05Z"
    }
   ],
   "legs_n": 2,
@@ -5443,7 +5289,7 @@
     "selection": "home",
     "settle_detail": null,
     "sport": "NFL",
-    "start_utc": null
+    "start_utc": "2026-09-27T17:00Z"
    },
    {
     "away_score": null,
@@ -5468,7 +5314,7 @@
     "selection": "home",
     "settle_detail": null,
     "sport": "NFL",
-    "start_utc": null
+    "start_utc": "2026-09-27T17:00Z"
    }
   ],
   "legs_n": 2,
@@ -5525,7 +5371,7 @@
     "selection": "home",
     "settle_detail": null,
     "sport": "NFL",
-    "start_utc": null
+    "start_utc": "2026-09-27T20:25Z"
    },
    {
     "away_score": null,
@@ -5550,7 +5396,7 @@
     "selection": "home",
     "settle_detail": null,
     "sport": "NFL",
-    "start_utc": null
+    "start_utc": "2026-09-27T17:00Z"
    },
    {
     "away_score": null,
@@ -5575,7 +5421,7 @@
     "selection": "home",
     "settle_detail": null,
     "sport": "NFL",
-    "start_utc": null
+    "start_utc": "2026-09-27T17:00Z"
    }
   ],
   "legs_n": 3,
@@ -5632,7 +5478,7 @@
     "selection": "home",
     "settle_detail": null,
     "sport": "NFL",
-    "start_utc": null
+    "start_utc": "2026-09-28T00:20Z"
    },
    {
     "away_score": null,
@@ -5657,7 +5503,7 @@
     "selection": "home",
     "settle_detail": null,
     "sport": "NFL",
-    "start_utc": null
+    "start_utc": "2026-09-27T20:05Z"
    }
   ],
   "legs_n": 2,
@@ -5684,6 +5530,113 @@
   "strategy_id": "S-NFL-06",
   "test_mode": "forward",
   "username": "ShortChalkFade",
+  "version": "v1"
+ },
+ {
+  "combined_american": 1004.5,
+  "combined_decimal": 11.0454,
+  "decision_utc": "2026-09-23T13:43:18Z",
+  "legs": [
+   {
+    "away_score": null,
+    "g_away": "MTL",
+    "g_home": "TOR",
+    "g_sport": "NHL",
+    "game_date": "2026-09-29",
+    "game_key": "NHL:2026020002",
+    "game_source_id": "SRC_SIBLING_NHLCOMP",
+    "game_status": "scheduled",
+    "game_verified": 0,
+    "home_score": null,
+    "leg_detail": "{\"edge\": 0.1332, \"features\": {\"elo_away\": 1556.9, \"elo_home\": 1440.1, \"price_observed_utc\": \"2026-09-23T13:42:45Z\", \"price_source\": \"SRC_ESPN_SCOREBOARD\"}, \"market_prob\": 0.4892, \"note\": \"\", \"price_id\": 92850}",
+    "leg_id": 20571,
+    "line": null,
+    "market": "ML",
+    "model_prob": 0.6224,
+    "odds_american": -105.0,
+    "odds_type": "market_reference",
+    "parlay_id": "FO-S-NHL-01-20260929-01",
+    "result": "pending",
+    "selection": "away",
+    "settle_detail": null,
+    "sport": "NHL",
+    "start_utc": "2026-09-29T23:00Z"
+   },
+   {
+    "away_score": null,
+    "g_away": "FLA",
+    "g_home": "CAR",
+    "g_sport": "NHL",
+    "game_date": "2026-09-29",
+    "game_key": "NHL:2026020001",
+    "game_source_id": "SRC_SIBLING_NHLCOMP",
+    "game_status": "scheduled",
+    "game_verified": 0,
+    "home_score": null,
+    "leg_detail": "{\"edge\": 0.0926, \"features\": {\"elo_away\": 1499.9, \"elo_home\": 1572.9, \"price_observed_utc\": \"2026-09-23T13:42:45Z\", \"price_source\": \"SRC_ESPN_SCOREBOARD\"}, \"market_prob\": 0.5514, \"note\": \"\", \"price_id\": 92843}",
+    "leg_id": 20572,
+    "line": null,
+    "market": "ML",
+    "model_prob": 0.644,
+    "odds_american": -135.0,
+    "odds_type": "market_reference",
+    "parlay_id": "FO-S-NHL-01-20260929-01",
+    "result": "pending",
+    "selection": "home",
+    "settle_detail": null,
+    "sport": "NHL",
+    "start_utc": "2026-09-29T21:00Z"
+   },
+   {
+    "away_score": null,
+    "g_away": "VAN",
+    "g_home": "EDM",
+    "g_sport": "NHL",
+    "game_date": "2026-09-29",
+    "game_key": "NHL:2026020004",
+    "game_source_id": "SRC_SIBLING_NHLCOMP",
+    "game_status": "scheduled",
+    "game_verified": 0,
+    "home_score": null,
+    "leg_detail": "{\"edge\": 0.0842, \"features\": {\"elo_away\": 1441.7, \"elo_home\": 1497.4, \"price_observed_utc\": \"2026-09-23T13:42:45Z\", \"price_source\": \"SRC_ESPN_SCOREBOARD\"}, \"market_prob\": 0.295, \"note\": \"\", \"price_id\": 92862}",
+    "leg_id": 20573,
+    "line": null,
+    "market": "ML",
+    "model_prob": 0.3792,
+    "odds_american": 225.0,
+    "odds_type": "market_reference",
+    "parlay_id": "FO-S-NHL-01-20260929-01",
+    "result": "pending",
+    "selection": "away",
+    "settle_detail": null,
+    "sport": "NHL",
+    "start_utc": "2026-09-30T02:00Z"
+   }
+  ],
+  "legs_n": 3,
+  "market_mix": "ML",
+  "n_legs": 3,
+  "note": "{\"model_prob\": 0.15199}",
+  "parlay_id": "FO-S-NHL-01-20260929-01",
+  "payout": null,
+  "pnl": null,
+  "potential_payout": 110.45,
+  "pricing_grade": "REFERENCE",
+  "result_detail": null,
+  "roi_parlay": null,
+  "settled_utc": null,
+  "settlement_source": null,
+  "slate_date": "2026-09-29",
+  "sport_scope": "NHL",
+  "sports": [
+   "NHL"
+  ],
+  "sports_json": "[\"NHL\"]",
+  "stake": 10.0,
+  "status": "upcoming",
+  "strategy_id": "S-NHL-01",
+  "test_mode": "forward",
+  "username": "PuckElo",
   "version": "v1"
  },
  {
@@ -5714,7 +5667,7 @@
     "selection": "over",
     "settle_detail": null,
     "sport": "NHL",
-    "start_utc": "2026-09-29T23:00:00Z"
+    "start_utc": "2026-09-29T23:00Z"
    },
    {
     "away_score": null,
@@ -5739,7 +5692,7 @@
     "selection": "over",
     "settle_detail": null,
     "sport": "NHL",
-    "start_utc": "2026-09-29T21:00:00Z"
+    "start_utc": "2026-09-29T21:00Z"
    },
    {
     "away_score": null,
@@ -5764,7 +5717,7 @@
     "selection": "over",
     "settle_detail": null,
     "sport": "NHL",
-    "start_utc": "2026-09-30T02:00:00Z"
+    "start_utc": "2026-09-30T02:00Z"
    }
   ],
   "legs_n": 3,
