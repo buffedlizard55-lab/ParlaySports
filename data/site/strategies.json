@@ -5871,7 +5871,7 @@
    },
    "forward": {
     "avg_legs": 3.76,
-    "bankroll": 9857.22,
+    "bankroll": 9830.0,
     "equity": [
      {
       "b": 10000.0,
@@ -5944,10 +5944,6 @@
      {
       "b": 9830.0,
       "t": "2026-09-22T01:30:00Z"
-     },
-     {
-      "b": 9857.22,
-      "t": "2026-09-25T13:45:17Z"
      }
     ],
     "grades": {
@@ -5955,28 +5951,28 @@
     },
     "last_activity": "2026-09-27",
     "ledger_drift": 0.0,
-    "leg_hit_rate": 0.5357,
+    "leg_hit_rate": 0.5455,
     "legs": {
-     "loss": 13,
-     "pending": 36,
-     "win": 15
+     "loss": 15,
+     "pending": 31,
+     "win": 18
     },
-    "lost": 7,
+    "lost": 8,
     "max_drawdown": 0.017,
     "min_balance": 9830.0,
-    "parlay_hit_rate": 0.125,
+    "parlay_hit_rate": 0.0,
     "parlays": 8,
-    "pnl": -142.78,
+    "pnl": -170.0,
     "push": 0,
-    "roi": -0.8399,
+    "roi": -1.0,
     "staked": 170.0,
     "start": 10000.0,
     "started": true,
-    "streak": "L5",
-    "total_payout": 27.22,
+    "streak": "L8",
+    "total_payout": 0.0,
     "upcoming": 9,
     "verified_share": 0.0,
-    "won": 1
+    "won": 0
    }
   },
   "category": "ratings-vs-market",
@@ -6011,16 +6007,16 @@
    "forward": {
     "by_market": {
      "ML": {
-      "hit": 0.5357,
-      "loss": 13,
-      "win": 15
+      "hit": 0.5455,
+      "loss": 15,
+      "win": 18
      }
     },
     "by_sport": {
      "MLB": {
-      "hit": 0.5357,
-      "loss": 13,
-      "win": 15
+      "hit": 0.5455,
+      "loss": 15,
+      "win": 18
      }
     }
    }
@@ -7212,11 +7208,11 @@
     },
     "last_activity": "2026-09-27",
     "ledger_drift": 0.0,
-    "leg_hit_rate": 0.5833,
+    "leg_hit_rate": 0.6667,
     "legs": {
-     "loss": 5,
+     "loss": 4,
      "pending": 12,
-     "win": 7
+     "win": 8
     },
     "lost": 3,
     "max_drawdown": 0.006,
@@ -7268,16 +7264,16 @@
    "forward": {
     "by_market": {
      "ML": {
-      "hit": 0.5833,
-      "loss": 5,
-      "win": 7
+      "hit": 0.6667,
+      "loss": 4,
+      "win": 8
      }
     },
     "by_sport": {
      "MLB": {
-      "hit": 0.5833,
-      "loss": 5,
-      "win": 7
+      "hit": 0.6667,
+      "loss": 4,
+      "win": 8
      }
     }
    }
@@ -10443,7 +10439,7 @@
      },
      {
       "b": 10016.36,
-      "t": "2026-09-25T13:45:17Z"
+      "t": "2026-09-26T13:06:46Z"
      }
     ],
     "grades": {
@@ -10468,7 +10464,7 @@
     "staked": 60.0,
     "start": 10000.0,
     "started": true,
-    "streak": "W1",
+    "streak": "L1",
     "total_payout": 76.36,
     "upcoming": 3,
     "verified_share": 0.0,
@@ -33825,53 +33821,57 @@
     "won": 30
    },
    "forward": {
-    "avg_legs": 2.5,
-    "bankroll": 9960.0,
+    "avg_legs": 2.6,
+    "bankroll": 9950.0,
     "equity": [
      {
       "b": 10000.0,
-      "t": "2026-09-25T13:45:17Z"
+      "t": "2026-09-26T13:06:45Z"
      },
      {
       "b": 9990.0,
-      "t": "2026-09-25T13:45:17Z"
+      "t": "2026-09-26T13:06:45Z"
      },
      {
       "b": 9980.0,
-      "t": "2026-09-25T13:45:17Z"
+      "t": "2026-09-26T13:06:45Z"
      },
      {
       "b": 9970.0,
-      "t": "2026-09-25T13:45:17Z"
+      "t": "2026-09-26T13:06:45Z"
      },
      {
       "b": 9960.0,
-      "t": "2026-09-25T13:45:17Z"
+      "t": "2026-09-26T13:06:45Z"
+     },
+     {
+      "b": 9950.0,
+      "t": "2026-09-26T13:06:45Z"
      }
     ],
     "grades": {
-     "REFERENCE": 4
+     "REFERENCE": 5
     },
-    "last_activity": "2026-10-02",
+    "last_activity": "2026-10-03",
     "ledger_drift": 0.0,
     "leg_hit_rate": null,
     "legs": {
-     "pending": 10
+     "pending": 13
     },
     "lost": 0,
-    "max_drawdown": 0.004,
-    "min_balance": 9960.0,
+    "max_drawdown": 0.005,
+    "min_balance": 9950.0,
     "parlay_hit_rate": null,
     "parlays": 0,
-    "pnl": -40.0,
+    "pnl": -50.0,
     "push": 0,
     "roi": -1.0,
-    "staked": 40.0,
+    "staked": 50.0,
     "start": 10000.0,
     "started": true,
     "streak": null,
     "total_payout": 0.0,
-    "upcoming": 4,
+    "upcoming": 5,
     "verified_share": null,
     "won": 0
    }
@@ -34401,11 +34401,11 @@
     "equity": [
      {
       "b": 10000.0,
-      "t": "2026-09-25T13:45:17Z"
+      "t": "2026-09-26T13:06:45Z"
      },
      {
       "b": 9990.0,
-      "t": "2026-09-25T13:45:17Z"
+      "t": "2026-09-26T13:06:45Z"
      }
     ],
     "grades": {
@@ -34981,8 +34981,8 @@
     "won": 24
    },
    "forward": {
-    "avg_legs": 2.75,
-    "bankroll": 9960.0,
+    "avg_legs": 2.6,
+    "bankroll": 9950.0,
     "equity": [
      {
       "b": 10000.0,
@@ -35003,31 +35003,36 @@
      {
       "b": 9960.0,
       "t": "2026-09-22T01:30:00Z"
+     },
+     {
+      "b": 9950.0,
+      "t": "2026-09-26T13:06:45Z"
      }
     ],
     "grades": {
+     "MIXED": 1,
      "MODEL": 4
     },
     "last_activity": "2026-10-05",
     "ledger_drift": 0.0,
     "leg_hit_rate": null,
     "legs": {
-     "pending": 11
+     "pending": 13
     },
     "lost": 0,
-    "max_drawdown": 0.004,
-    "min_balance": 9960.0,
+    "max_drawdown": 0.005,
+    "min_balance": 9950.0,
     "parlay_hit_rate": null,
     "parlays": 0,
-    "pnl": -40.0,
+    "pnl": -50.0,
     "push": 0,
     "roi": -1.0,
-    "staked": 40.0,
+    "staked": 50.0,
     "start": 10000.0,
     "started": true,
     "streak": null,
     "total_payout": 0.0,
-    "upcoming": 4,
+    "upcoming": 5,
     "verified_share": null,
     "won": 0
    }
@@ -35701,11 +35706,11 @@
     "equity": [
      {
       "b": 10000.0,
-      "t": "2026-09-25T13:45:17Z"
+      "t": "2026-09-26T13:06:46Z"
      },
      {
       "b": 9990.0,
-      "t": "2026-09-25T13:45:17Z"
+      "t": "2026-09-26T13:06:46Z"
      }
     ],
     "grades": {
