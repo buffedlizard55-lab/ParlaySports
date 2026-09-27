@@ -7,17 +7,17 @@
  {
   "check": "sport-NFL-has-games",
   "status": "PASS",
-  "detail": "7549 games"
+  "detail": "7550 games"
  },
  {
   "check": "sport-MLB-has-games",
   "status": "PASS",
-  "detail": "8738 games"
+  "detail": "8741 games"
  },
  {
   "check": "sport-NHL-has-games",
   "status": "PASS",
-  "detail": "4424 games"
+  "detail": "4421 games"
  },
  {
   "check": "sport-NBA-has-games",
@@ -82,7 +82,7 @@
  {
   "check": "NFL-forward-parlays",
   "status": "PASS",
-  "detail": "9"
+  "detail": "15"
  },
  {
   "check": "MLB-forward-parlays",
@@ -107,12 +107,12 @@
  {
   "check": "settled-parlays-exist",
   "status": "PASS",
-  "detail": "6970"
+  "detail": "6969"
  },
  {
   "check": "upcoming-parlays-exist",
   "status": "PASS",
-  "detail": "54"
+  "detail": "67"
  },
  {
   "check": "ledger-bankroll-consistent",
@@ -147,7 +147,7 @@
  {
   "check": "export-leaderboard_forward.json",
   "status": "PASS",
-  "detail": "18536B"
+  "detail": "18601B"
  },
  {
   "check": "export-leaderboard_backtest.json",
@@ -157,27 +157,27 @@
  {
   "check": "export-upcoming.json",
   "status": "PASS",
-  "detail": "184542B"
+  "detail": "231916B"
  },
  {
   "check": "export-completed.json",
   "status": "PASS",
-  "detail": "6787932B"
+  "detail": "6787944B"
  },
  {
   "check": "export-strategies.json",
   "status": "PASS",
-  "detail": "637001B"
+  "detail": "638022B"
  },
  {
   "check": "export-games.json",
   "status": "PASS",
-  "detail": "428612B"
+  "detail": "471840B"
  },
  {
   "check": "export-performance.json",
   "status": "PASS",
-  "detail": "687848B"
+  "detail": "688755B"
  },
  {
   "check": "export-research.json",
@@ -192,7 +192,7 @@
  {
   "check": "export-quality.json",
   "status": "PASS",
-  "detail": "40006B"
+  "detail": "46653B"
  },
  {
   "check": "site-index.html",
@@ -302,7 +302,7 @@
  {
   "check": "no-cross-source-duplicate-games",
   "status": "FAIL",
-  "detail": "2 ESPN rows shadow a league-log game"
+  "detail": "4 ESPN rows shadow a league-log game"
  },
  {
   "check": "workflow-files-valid",
