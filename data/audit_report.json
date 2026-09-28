@@ -12,12 +12,12 @@
  {
   "check": "sport-MLB-has-games",
   "status": "PASS",
-  "detail": "8741 games"
+  "detail": "8744 games"
  },
  {
   "check": "sport-NHL-has-games",
   "status": "PASS",
-  "detail": "4421 games"
+  "detail": "4423 games"
  },
  {
   "check": "sport-NBA-has-games",
@@ -82,7 +82,7 @@
  {
   "check": "NFL-forward-parlays",
   "status": "PASS",
-  "detail": "15"
+  "detail": "14"
  },
  {
   "check": "MLB-forward-parlays",
@@ -107,12 +107,12 @@
  {
   "check": "settled-parlays-exist",
   "status": "PASS",
-  "detail": "6969"
+  "detail": "6986"
  },
  {
   "check": "upcoming-parlays-exist",
   "status": "PASS",
-  "detail": "67"
+  "detail": "52"
  },
  {
   "check": "ledger-bankroll-consistent",
@@ -147,7 +147,7 @@
  {
   "check": "export-leaderboard_forward.json",
   "status": "PASS",
-  "detail": "18601B"
+  "detail": "18835B"
  },
  {
   "check": "export-leaderboard_backtest.json",
@@ -157,27 +157,27 @@
  {
   "check": "export-upcoming.json",
   "status": "PASS",
-  "detail": "231916B"
+  "detail": "176271B"
  },
  {
   "check": "export-completed.json",
   "status": "PASS",
-  "detail": "6787944B"
+  "detail": "6797549B"
  },
  {
   "check": "export-strategies.json",
   "status": "PASS",
-  "detail": "638022B"
+  "detail": "640386B"
  },
  {
   "check": "export-games.json",
   "status": "PASS",
-  "detail": "471840B"
+  "detail": "359953B"
  },
  {
   "check": "export-performance.json",
   "status": "PASS",
-  "detail": "688755B"
+  "detail": "689229B"
  },
  {
   "check": "export-research.json",
@@ -192,7 +192,7 @@
  {
   "check": "export-quality.json",
   "status": "PASS",
-  "detail": "46653B"
+  "detail": "49996B"
  },
  {
   "check": "site-index.html",
@@ -302,7 +302,7 @@
  {
   "check": "no-cross-source-duplicate-games",
   "status": "FAIL",
-  "detail": "4 ESPN rows shadow a league-log game"
+  "detail": "6 ESPN rows shadow a league-log game"
  },
  {
   "check": "workflow-files-valid",
