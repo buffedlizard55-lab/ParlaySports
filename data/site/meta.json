@@ -4,22 +4,22 @@
   "forward"
  ],
  "counts": {
-  "games": 29108,
+  "games": 29113,
   "issues": 71,
-  "ledger": 8305,
-  "legs": 20652,
-  "parlays": 7044,
-  "prices": 93008,
-  "ratings": 54388,
+  "ledger": 8300,
+  "legs": 20646,
+  "parlays": 7041,
+  "prices": 93074,
+  "ratings": 54374,
   "research": 24,
-  "signals": 20652,
+  "signals": 20646,
   "strategies": 28,
   "users": 28,
   "verifications": 28
  },
- "data_as_of_utc": "2026-09-29T14:56:10Z",
+ "data_as_of_utc": "2026-09-30T14:59:55Z",
  "disclaimer": "SIMULATED PAPER COMPETITION. No real money. Model prices are labeled MODEL and are estimates, never market facts.",
  "engine_version": "1.1.0",
- "exported_utc": "2026-09-29T14:56:10Z",
+ "exported_utc": "2026-09-30T14:59:55Z",
  "seed_manifest_sha256": "c62fb543869de5d2fea31bee0bd335342cc4848aa331ff562df42ddc30f245c4"
 }

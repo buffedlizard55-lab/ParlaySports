@@ -7,12 +7,12 @@
  {
   "check": "sport-NFL-has-games",
   "status": "PASS",
-  "detail": "7550 games"
+  "detail": "7549 games"
  },
  {
   "check": "sport-MLB-has-games",
   "status": "PASS",
-  "detail": "8748 games"
+  "detail": "8754 games"
  },
  {
   "check": "sport-NHL-has-games",
@@ -107,12 +107,12 @@
  {
   "check": "settled-parlays-exist",
   "status": "PASS",
-  "detail": "6980"
+  "detail": "6976"
  },
  {
   "check": "upcoming-parlays-exist",
   "status": "PASS",
-  "detail": "64"
+  "detail": "65"
  },
  {
   "check": "ledger-bankroll-consistent",
@@ -147,7 +147,7 @@
  {
   "check": "export-leaderboard_forward.json",
   "status": "PASS",
-  "detail": "18849B"
+  "detail": "18838B"
  },
  {
   "check": "export-leaderboard_backtest.json",
@@ -157,27 +157,27 @@
  {
   "check": "export-upcoming.json",
   "status": "PASS",
-  "detail": "216925B"
+  "detail": "227282B"
  },
  {
   "check": "export-completed.json",
   "status": "PASS",
-  "detail": "6792393B"
+  "detail": "6787681B"
  },
  {
   "check": "export-strategies.json",
   "status": "PASS",
-  "detail": "640734B"
+  "detail": "640535B"
  },
  {
   "check": "export-games.json",
   "status": "PASS",
-  "detail": "343984B"
+  "detail": "366110B"
  },
  {
   "check": "export-performance.json",
   "status": "PASS",
-  "detail": "689454B"
+  "detail": "689117B"
  },
  {
   "check": "export-research.json",
