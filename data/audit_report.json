@@ -12,12 +12,12 @@
  {
   "check": "sport-MLB-has-games",
   "status": "PASS",
-  "detail": "8754 games"
+  "detail": "8750 games"
  },
  {
   "check": "sport-NHL-has-games",
   "status": "PASS",
-  "detail": "4421 games"
+  "detail": "4423 games"
  },
  {
   "check": "sport-NBA-has-games",
@@ -107,12 +107,12 @@
  {
   "check": "settled-parlays-exist",
   "status": "PASS",
-  "detail": "6976"
+  "detail": "6965"
  },
  {
   "check": "upcoming-parlays-exist",
   "status": "PASS",
-  "detail": "65"
+  "detail": "77"
  },
  {
   "check": "ledger-bankroll-consistent",
@@ -147,7 +147,7 @@
  {
   "check": "export-leaderboard_forward.json",
   "status": "PASS",
-  "detail": "18838B"
+  "detail": "18748B"
  },
  {
   "check": "export-leaderboard_backtest.json",
@@ -157,27 +157,27 @@
  {
   "check": "export-upcoming.json",
   "status": "PASS",
-  "detail": "227282B"
+  "detail": "276846B"
  },
  {
   "check": "export-completed.json",
   "status": "PASS",
-  "detail": "6787681B"
+  "detail": "6775430B"
  },
  {
   "check": "export-strategies.json",
   "status": "PASS",
-  "detail": "640535B"
+  "detail": "639547B"
  },
  {
   "check": "export-games.json",
   "status": "PASS",
-  "detail": "366110B"
+  "detail": "367724B"
  },
  {
   "check": "export-performance.json",
   "status": "PASS",
-  "detail": "689117B"
+  "detail": "688785B"
  },
  {
   "check": "export-research.json",
@@ -192,7 +192,7 @@
  {
   "check": "export-quality.json",
   "status": "PASS",
-  "detail": "50772B"
+  "detail": "52659B"
  },
  {
   "check": "site-index.html",
@@ -211,8 +211,8 @@
  },
  {
   "check": "hard-quality-gates",
-  "status": "PASS",
-  "detail": "chain+settle+leakage+bankroll+price-time+form-time+schedule clean"
+  "status": "FAIL",
+  "detail": "schedule-completeness:1"
  },
  {
   "check": "strategies-documented",
@@ -302,7 +302,7 @@
  {
   "check": "no-cross-source-duplicate-games",
   "status": "FAIL",
-  "detail": "6 ESPN rows shadow a league-log game"
+  "detail": "9 ESPN rows shadow a league-log game"
  },
  {
   "check": "workflow-files-valid",
@@ -311,7 +311,7 @@
  },
  {
   "check": "schedule-completeness-clean",
-  "status": "PASS",
-  "detail": "every season matches its verified league length (or is documented)"
+  "status": "FAIL",
+  "detail": "NHL 2027: 1 regular-season games vs 82 expected (82/team over 2 teams); per-team spread 0; short: [('COL', 1), ('LA', 1)]"
  }
 ]
