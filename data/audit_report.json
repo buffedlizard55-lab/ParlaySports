@@ -12,7 +12,7 @@
  {
   "check": "sport-MLB-has-games",
   "status": "PASS",
-  "detail": "8750 games"
+  "detail": "8754 games"
  },
  {
   "check": "sport-NHL-has-games",
@@ -82,7 +82,7 @@
  {
   "check": "NFL-forward-parlays",
   "status": "PASS",
-  "detail": "14"
+  "detail": "13"
  },
  {
   "check": "MLB-forward-parlays",
@@ -112,7 +112,7 @@
  {
   "check": "upcoming-parlays-exist",
   "status": "PASS",
-  "detail": "77"
+  "detail": "72"
  },
  {
   "check": "ledger-bankroll-consistent",
@@ -147,7 +147,7 @@
  {
   "check": "export-leaderboard_forward.json",
   "status": "PASS",
-  "detail": "18748B"
+  "detail": "18616B"
  },
  {
   "check": "export-leaderboard_backtest.json",
@@ -157,27 +157,27 @@
  {
   "check": "export-upcoming.json",
   "status": "PASS",
-  "detail": "276846B"
+  "detail": "263413B"
  },
  {
   "check": "export-completed.json",
   "status": "PASS",
-  "detail": "6775430B"
+  "detail": "6775459B"
  },
  {
   "check": "export-strategies.json",
   "status": "PASS",
-  "detail": "639547B"
+  "detail": "638972B"
  },
  {
   "check": "export-games.json",
   "status": "PASS",
-  "detail": "367724B"
+  "detail": "358126B"
  },
  {
   "check": "export-performance.json",
   "status": "PASS",
-  "detail": "688785B"
+  "detail": "688391B"
  },
  {
   "check": "export-research.json",
@@ -192,7 +192,7 @@
  {
   "check": "export-quality.json",
   "status": "PASS",
-  "detail": "52659B"
+  "detail": "51315B"
  },
  {
   "check": "site-index.html",
@@ -302,7 +302,7 @@
  {
   "check": "no-cross-source-duplicate-games",
   "status": "FAIL",
-  "detail": "9 ESPN rows shadow a league-log game"
+  "detail": "14 ESPN rows shadow a league-log game"
  },
  {
   "check": "workflow-files-valid",
@@ -312,6 +312,6 @@
  {
   "check": "schedule-completeness-clean",
   "status": "FAIL",
-  "detail": "NHL 2027: 1 regular-season games vs 82 expected (82/team over 2 teams); per-team spread 0; short: [('COL', 1), ('LA', 1)]"
+  "detail": "NHL 2027: 4 regular-season games vs 328 expected (82/team over 8 teams); per-team spread 0; short: [('COL', 1), ('FLA', 1), ('LA', 1), ('NJ', 1)]"
  }
 ]
