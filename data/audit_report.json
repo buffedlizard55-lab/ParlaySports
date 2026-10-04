@@ -7,17 +7,17 @@
  {
   "check": "sport-NFL-has-games",
   "status": "PASS",
-  "detail": "7549 games"
+  "detail": "7550 games"
  },
  {
   "check": "sport-MLB-has-games",
   "status": "PASS",
-  "detail": "8750 games"
+  "detail": "8747 games"
  },
  {
   "check": "sport-NHL-has-games",
   "status": "PASS",
-  "detail": "4426 games"
+  "detail": "4423 games"
  },
  {
   "check": "sport-NBA-has-games",
@@ -82,7 +82,7 @@
  {
   "check": "NFL-forward-parlays",
   "status": "PASS",
-  "detail": "14"
+  "detail": "20"
  },
  {
   "check": "MLB-forward-parlays",
@@ -107,12 +107,12 @@
  {
   "check": "settled-parlays-exist",
   "status": "PASS",
-  "detail": "6965"
+  "detail": "6970"
  },
  {
   "check": "upcoming-parlays-exist",
   "status": "PASS",
-  "detail": "78"
+  "detail": "80"
  },
  {
   "check": "ledger-bankroll-consistent",
@@ -147,7 +147,7 @@
  {
   "check": "export-leaderboard_forward.json",
   "status": "PASS",
-  "detail": "18595B"
+  "detail": "18624B"
  },
  {
   "check": "export-leaderboard_backtest.json",
@@ -157,27 +157,27 @@
  {
   "check": "export-upcoming.json",
   "status": "PASS",
-  "detail": "282241B"
+  "detail": "290169B"
  },
  {
   "check": "export-completed.json",
   "status": "PASS",
-  "detail": "6774256B"
+  "detail": "6772428B"
  },
  {
   "check": "export-strategies.json",
   "status": "PASS",
-  "detail": "639167B"
+  "detail": "639888B"
  },
  {
   "check": "export-games.json",
   "status": "PASS",
-  "detail": "354398B"
+  "detail": "370806B"
  },
  {
   "check": "export-performance.json",
   "status": "PASS",
-  "detail": "688454B"
+  "detail": "689058B"
  },
  {
   "check": "export-research.json",
@@ -192,7 +192,7 @@
  {
   "check": "export-quality.json",
   "status": "PASS",
-  "detail": "51317B"
+  "detail": "51313B"
  },
  {
   "check": "site-index.html",
@@ -302,7 +302,7 @@
  {
   "check": "no-cross-source-duplicate-games",
   "status": "FAIL",
-  "detail": "12 ESPN rows shadow a league-log game"
+  "detail": "11 ESPN rows shadow a league-log game"
  },
  {
   "check": "workflow-files-valid",
@@ -312,6 +312,6 @@
  {
   "check": "schedule-completeness-clean",
   "status": "FAIL",
-  "detail": "NHL 2027: 3 regular-season games vs 246 expected (82/team over 6 teams); per-team spread 0; short: [('FLA', 1), ('NJ', 1), ('NYR', 1), ('PHI', 1)]"
+  "detail": "NHL 2027: 3 regular-season games vs 246 expected (82/team over 6 teams); per-team spread 0; short: [('LA', 1), ('NJ', 1), ('NYI', 1), ('SJ', 1)]"
  }
 ]
