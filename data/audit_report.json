@@ -12,17 +12,17 @@
  {
   "check": "sport-MLB-has-games",
   "status": "PASS",
-  "detail": "8747 games"
+  "detail": "8748 games"
  },
  {
   "check": "sport-NHL-has-games",
   "status": "PASS",
-  "detail": "4423 games"
+  "detail": "4424 games"
  },
  {
   "check": "sport-NBA-has-games",
   "status": "PASS",
-  "detail": "8389 games"
+  "detail": "8390 games"
  },
  {
   "check": "28-strategies",
@@ -82,7 +82,7 @@
  {
   "check": "NFL-forward-parlays",
   "status": "PASS",
-  "detail": "20"
+  "detail": "16"
  },
  {
   "check": "MLB-forward-parlays",
@@ -107,12 +107,12 @@
  {
   "check": "settled-parlays-exist",
   "status": "PASS",
-  "detail": "6970"
+  "detail": "6969"
  },
  {
   "check": "upcoming-parlays-exist",
   "status": "PASS",
-  "detail": "80"
+  "detail": "69"
  },
  {
   "check": "ledger-bankroll-consistent",
@@ -147,7 +147,7 @@
  {
   "check": "export-leaderboard_forward.json",
   "status": "PASS",
-  "detail": "18624B"
+  "detail": "18685B"
  },
  {
   "check": "export-leaderboard_backtest.json",
@@ -157,27 +157,27 @@
  {
   "check": "export-upcoming.json",
   "status": "PASS",
-  "detail": "290169B"
+  "detail": "242290B"
  },
  {
   "check": "export-completed.json",
   "status": "PASS",
-  "detail": "6772428B"
+  "detail": "6772167B"
  },
  {
   "check": "export-strategies.json",
   "status": "PASS",
-  "detail": "639888B"
+  "detail": "639386B"
  },
  {
   "check": "export-games.json",
   "status": "PASS",
-  "detail": "370806B"
+  "detail": "335680B"
  },
  {
   "check": "export-performance.json",
   "status": "PASS",
-  "detail": "689058B"
+  "detail": "688362B"
  },
  {
   "check": "export-research.json",
@@ -192,7 +192,7 @@
  {
   "check": "export-quality.json",
   "status": "PASS",
-  "detail": "51313B"
+  "detail": "51661B"
  },
  {
   "check": "site-index.html",
@@ -286,8 +286,8 @@
  },
  {
   "check": "nba-game-type-boundaries",
-  "status": "PASS",
-  "detail": "PRE rows {'2023-24': 64, '2024-25': 70, '2025-26': 66, '2026-27': 66}; seasons over 82/team []; rows without derivation evidence 0"
+  "status": "FAIL",
+  "detail": "PRE rows {'2023-24': 64, '2024-25': 70, '2025-26': 66, '2026-27': 66, '2027': 1}; seasons over 82/team []; rows without derivation evidence 1"
  },
  {
   "check": "slate-cap-enforced",
