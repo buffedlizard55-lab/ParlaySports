@@ -12,12 +12,12 @@
  {
   "check": "sport-MLB-has-games",
   "status": "PASS",
-  "detail": "8742 games"
+  "detail": "8736 games"
  },
  {
   "check": "sport-NHL-has-games",
   "status": "PASS",
-  "detail": "4425 games"
+  "detail": "4426 games"
  },
  {
   "check": "sport-NBA-has-games",
@@ -112,7 +112,7 @@
  {
   "check": "upcoming-parlays-exist",
   "status": "PASS",
-  "detail": "83"
+  "detail": "84"
  },
  {
   "check": "ledger-bankroll-consistent",
@@ -147,7 +147,7 @@
  {
   "check": "export-leaderboard_forward.json",
   "status": "PASS",
-  "detail": "18575B"
+  "detail": "18717B"
  },
  {
   "check": "export-leaderboard_backtest.json",
@@ -157,7 +157,7 @@
  {
   "check": "export-upcoming.json",
   "status": "PASS",
-  "detail": "284036B"
+  "detail": "287781B"
  },
  {
   "check": "export-completed.json",
@@ -167,17 +167,17 @@
  {
   "check": "export-strategies.json",
   "status": "PASS",
-  "detail": "638654B"
+  "detail": "639012B"
  },
  {
   "check": "export-games.json",
   "status": "PASS",
-  "detail": "378382B"
+  "detail": "382065B"
  },
  {
   "check": "export-performance.json",
   "status": "PASS",
-  "detail": "688042B"
+  "detail": "688370B"
  },
  {
   "check": "export-research.json",
@@ -192,7 +192,7 @@
  {
   "check": "export-quality.json",
   "status": "PASS",
-  "detail": "51315B"
+  "detail": "52011B"
  },
  {
   "check": "site-index.html",
@@ -302,7 +302,7 @@
  {
   "check": "no-cross-source-duplicate-games",
   "status": "FAIL",
-  "detail": "7 ESPN rows shadow a league-log game"
+  "detail": "5 ESPN rows shadow a league-log game"
  },
  {
   "check": "workflow-files-valid",
@@ -312,6 +312,6 @@
  {
   "check": "schedule-completeness-clean",
   "status": "FAIL",
-  "detail": "NHL 2027: 4 regular-season games vs 328 expected (82/team over 8 teams); per-team spread 0; short: [('DAL', 1), ('FLA', 1), ('LA', 1), ('NJ', 1)]"
+  "detail": "NHL 2027: 2 regular-season games vs 164 expected (82/team over 4 teams); per-team spread 0; short: [('FLA', 1), ('LA', 1), ('NJ', 1), ('UTA', 1)]"
  }
 ]

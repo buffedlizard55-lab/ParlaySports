@@ -451,38 +451,6 @@
   "lost": 0,
   "max_drawdown": 0.0,
   "min_balance": 10000.0,
-  "name": "Home ice + rest",
-  "parlay_hit_rate": null,
-  "parlays": 0,
-  "pnl": 0.0,
-  "push": 0,
-  "roi": null,
-  "sport": "NHL",
-  "staked": 0.0,
-  "start": 10000.0,
-  "started": false,
-  "status": "active",
-  "strategy_id": "S-NHL-02",
-  "streak": null,
-  "total_payout": 0.0,
-  "upcoming": 0,
-  "username": "HomeIceQ",
-  "verified_share": null,
-  "version": "v1",
-  "won": 0
- },
- {
-  "avg_legs": null,
-  "bankroll": 10000.0,
-  "category": "situational",
-  "grades": {},
-  "last_activity": null,
-  "ledger_drift": 0.0,
-  "leg_hit_rate": null,
-  "legs": {},
-  "lost": 0,
-  "max_drawdown": 0.0,
-  "min_balance": 10000.0,
   "name": "B2B fade",
   "parlay_hit_rate": null,
   "parlays": 0,
@@ -536,38 +504,6 @@
   "won": 0
  },
  {
-  "avg_legs": null,
-  "bankroll": 10000.0,
-  "category": "contrarian",
-  "grades": {},
-  "last_activity": null,
-  "ledger_drift": 0.0,
-  "leg_hit_rate": null,
-  "legs": {},
-  "lost": 0,
-  "max_drawdown": 0.0,
-  "min_balance": 10000.0,
-  "name": "Road dog process",
-  "parlay_hit_rate": null,
-  "parlays": 0,
-  "pnl": 0.0,
-  "push": 0,
-  "roi": null,
-  "sport": "NHL",
-  "staked": 0.0,
-  "start": 10000.0,
-  "started": false,
-  "status": "active",
-  "strategy_id": "S-NHL-06",
-  "streak": null,
-  "total_payout": 0.0,
-  "upcoming": 0,
-  "username": "MuddyWater",
-  "verified_share": null,
-  "version": "v1",
-  "won": 0
- },
- {
   "avg_legs": 2.0,
   "bankroll": 9990.0,
   "category": "totals",
@@ -599,6 +535,43 @@
   "total_payout": 0.0,
   "upcoming": 1,
   "username": "CoorsTotal",
+  "verified_share": null,
+  "version": "v1",
+  "won": 0
+ },
+ {
+  "avg_legs": 2.45,
+  "bankroll": 9990.0,
+  "category": "situational",
+  "grades": {
+   "REFERENCE": 1,
+   "UNPRICED": 10
+  },
+  "last_activity": "2026-10-15",
+  "ledger_drift": 0.0,
+  "leg_hit_rate": null,
+  "legs": {
+   "pending": 27
+  },
+  "lost": 0,
+  "max_drawdown": 0.001,
+  "min_balance": 9990.0,
+  "name": "Home ice + rest",
+  "parlay_hit_rate": null,
+  "parlays": 0,
+  "pnl": -10.0,
+  "push": 0,
+  "roi": -1.0,
+  "sport": "NHL",
+  "staked": 10.0,
+  "start": 10000.0,
+  "started": true,
+  "status": "active",
+  "strategy_id": "S-NHL-02",
+  "streak": null,
+  "total_payout": 0.0,
+  "upcoming": 11,
+  "username": "HomeIceQ",
   "verified_share": null,
   "version": "v1",
   "won": 0
@@ -680,7 +653,7 @@
   "won": 0
  },
  {
-  "avg_legs": 2.5,
+  "avg_legs": 3.0,
   "bankroll": 9980.0,
   "category": "ratings-vs-market",
   "grades": {
@@ -690,7 +663,7 @@
   "ledger_drift": 0.0,
   "leg_hit_rate": null,
   "legs": {
-   "pending": 5
+   "pending": 6
   },
   "lost": 0,
   "max_drawdown": 0.002,
@@ -716,18 +689,56 @@
   "won": 0
  },
  {
-  "avg_legs": 8.0,
+  "avg_legs": 2.33,
+  "bankroll": 9980.0,
+  "category": "contrarian",
+  "grades": {
+   "REFERENCE": 2,
+   "UNPRICED": 4
+  },
+  "last_activity": "2026-10-15",
+  "ledger_drift": 0.0,
+  "leg_hit_rate": null,
+  "legs": {
+   "pending": 14
+  },
+  "lost": 0,
+  "max_drawdown": 0.002,
+  "min_balance": 9980.0,
+  "name": "Road dog process",
+  "parlay_hit_rate": null,
+  "parlays": 0,
+  "pnl": -20.0,
+  "push": 0,
+  "roi": -1.0,
+  "sport": "NHL",
+  "staked": 20.0,
+  "start": 10000.0,
+  "started": true,
+  "status": "active",
+  "strategy_id": "S-NHL-06",
+  "streak": null,
+  "total_payout": 0.0,
+  "upcoming": 6,
+  "username": "MuddyWater",
+  "verified_share": null,
+  "version": "v1",
+  "won": 0
+ },
+ {
+  "avg_legs": 5.5,
   "bankroll": 9975.0,
   "category": "multi-sport",
   "grades": {
-   "MIXED": 1
+   "MIXED": 1,
+   "UNPRICED": 1
   },
-  "last_activity": "2026-09-27",
+  "last_activity": "2026-10-15",
   "ledger_drift": 0.0,
   "leg_hit_rate": 0.5714,
   "legs": {
    "loss": 3,
-   "pending": 1,
+   "pending": 4,
    "win": 4
   },
   "lost": 0,
@@ -747,7 +758,7 @@
   "strategy_id": "S-MULTI-04",
   "streak": null,
   "total_payout": 0.0,
-  "upcoming": 1,
+  "upcoming": 2,
   "username": "LotteryTicket",
   "verified_share": null,
   "version": "v1",
@@ -905,15 +916,14 @@
   "bankroll": 9910.0,
   "category": "totals",
   "grades": {
-   "MODEL": 8,
-   "REFERENCE": 1
+   "MIXED": 2,
+   "MODEL": 7
   },
-  "last_activity": "2026-10-13",
+  "last_activity": "2026-10-15",
   "ledger_drift": 0.0,
-  "leg_hit_rate": 1.0,
+  "leg_hit_rate": null,
   "legs": {
-   "pending": 23,
-   "win": 1
+   "pending": 24
   },
   "lost": 0,
   "max_drawdown": 0.009,
