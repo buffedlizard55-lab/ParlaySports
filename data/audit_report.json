@@ -12,12 +12,12 @@
  {
   "check": "sport-MLB-has-games",
   "status": "PASS",
-  "detail": "8733 games"
+  "detail": "8730 games"
  },
  {
   "check": "sport-NHL-has-games",
   "status": "PASS",
-  "detail": "4428 games"
+  "detail": "4426 games"
  },
  {
   "check": "sport-NBA-has-games",
@@ -82,7 +82,7 @@
  {
   "check": "NFL-forward-parlays",
   "status": "PASS",
-  "detail": "15"
+  "detail": "21"
  },
  {
   "check": "MLB-forward-parlays",
@@ -112,7 +112,7 @@
  {
   "check": "upcoming-parlays-exist",
   "status": "PASS",
-  "detail": "85"
+  "detail": "89"
  },
  {
   "check": "ledger-bankroll-consistent",
@@ -147,7 +147,7 @@
  {
   "check": "export-leaderboard_forward.json",
   "status": "PASS",
-  "detail": "18718B"
+  "detail": "18716B"
  },
  {
   "check": "export-leaderboard_backtest.json",
@@ -157,7 +157,7 @@
  {
   "check": "export-upcoming.json",
   "status": "PASS",
-  "detail": "295480B"
+  "detail": "310755B"
  },
  {
   "check": "export-completed.json",
@@ -167,17 +167,17 @@
  {
   "check": "export-strategies.json",
   "status": "PASS",
-  "detail": "639013B"
+  "detail": "639272B"
  },
  {
   "check": "export-games.json",
   "status": "PASS",
-  "detail": "369968B"
+  "detail": "393964B"
  },
  {
   "check": "export-performance.json",
   "status": "PASS",
-  "detail": "688370B"
+  "detail": "688620B"
  },
  {
   "check": "export-research.json",
@@ -302,7 +302,7 @@
  {
   "check": "no-cross-source-duplicate-games",
   "status": "FAIL",
-  "detail": "3 ESPN rows shadow a league-log game"
+  "detail": "7 ESPN rows shadow a league-log game"
  },
  {
   "check": "workflow-files-valid",
@@ -312,6 +312,6 @@
  {
   "check": "schedule-completeness-clean",
   "status": "FAIL",
-  "detail": "NHL 2027: 2 regular-season games vs 164 expected (82/team over 4 teams); per-team spread 0; short: [('MIN', 1), ('SJ', 1), ('STL', 1), ('TB', 1)]"
+  "detail": "NHL 2027: 4 regular-season games vs 328 expected (82/team over 8 teams); per-team spread 0; short: [('EDM', 1), ('LA', 1), ('NJ', 1), ('NYI', 1)]"
  }
 ]
