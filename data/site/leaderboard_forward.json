@@ -306,38 +306,6 @@
  {
   "avg_legs": null,
   "bankroll": 10000.0,
-  "category": "contrarian",
-  "grades": {},
-  "last_activity": null,
-  "ledger_drift": 0.0,
-  "leg_hit_rate": null,
-  "legs": {},
-  "lost": 0,
-  "max_drawdown": 0.0,
-  "min_balance": 10000.0,
-  "name": "Rested road dogs",
-  "parlay_hit_rate": null,
-  "parlays": 0,
-  "pnl": 0.0,
-  "push": 0,
-  "roi": null,
-  "sport": "NBA",
-  "staked": 0.0,
-  "start": 10000.0,
-  "started": false,
-  "status": "active",
-  "strategy_id": "S-NBA-06",
-  "streak": null,
-  "total_payout": 0.0,
-  "upcoming": 0,
-  "username": "RoadDawg",
-  "verified_share": null,
-  "version": "v1",
-  "won": 0
- },
- {
-  "avg_legs": null,
-  "bankroll": 10000.0,
   "category": "weather totals",
   "grades": {},
   "last_activity": null,
@@ -363,6 +331,38 @@
   "total_payout": 0.0,
   "upcoming": 0,
   "username": "WindChill",
+  "verified_share": null,
+  "version": "v1",
+  "won": 0
+ },
+ {
+  "avg_legs": null,
+  "bankroll": 10000.0,
+  "category": "ratings-vs-market",
+  "grades": {},
+  "last_activity": null,
+  "ledger_drift": 0.0,
+  "leg_hit_rate": null,
+  "legs": {},
+  "lost": 0,
+  "max_drawdown": 0.0,
+  "min_balance": 10000.0,
+  "name": "Puck Elo edge",
+  "parlay_hit_rate": null,
+  "parlays": 0,
+  "pnl": 0.0,
+  "push": 0,
+  "roi": null,
+  "sport": "NHL",
+  "staked": 0.0,
+  "start": 10000.0,
+  "started": false,
+  "status": "active",
+  "strategy_id": "S-NHL-01",
+  "streak": null,
+  "total_payout": 0.0,
+  "upcoming": 0,
+  "username": "PuckElo",
   "verified_share": null,
   "version": "v1",
   "won": 0
@@ -509,11 +509,11 @@
  {
   "avg_legs": 3.0,
   "bankroll": 9990.0,
-  "category": "ratings-vs-market",
+  "category": "contrarian",
   "grades": {
    "REFERENCE": 1
   },
-  "last_activity": "2026-10-20",
+  "last_activity": "2026-10-21",
   "ledger_drift": 0.0,
   "leg_hit_rate": null,
   "legs": {
@@ -522,7 +522,7 @@
   "lost": 0,
   "max_drawdown": 0.001,
   "min_balance": 9990.0,
-  "name": "Elo vs close",
+  "name": "Rested road dogs",
   "parlay_hit_rate": null,
   "parlays": 0,
   "pnl": -10.0,
@@ -533,28 +533,28 @@
   "start": 10000.0,
   "started": true,
   "status": "active",
-  "strategy_id": "S-NBA-01",
+  "strategy_id": "S-NBA-06",
   "streak": null,
   "total_payout": 0.0,
   "upcoming": 1,
-  "username": "EloAndOrder",
+  "username": "RoadDawg",
   "verified_share": null,
   "version": "v1",
   "won": 0
  },
  {
-  "avg_legs": 2.75,
+  "avg_legs": 2.6,
   "bankroll": 9990.0,
   "category": "situational",
   "grades": {
    "REFERENCE": 1,
-   "UNPRICED": 11
+   "UNPRICED": 9
   },
   "last_activity": "2026-10-20",
   "ledger_drift": 0.0,
   "leg_hit_rate": null,
   "legs": {
-   "pending": 33
+   "pending": 26
   },
   "lost": 0,
   "max_drawdown": 0.001,
@@ -573,25 +573,25 @@
   "strategy_id": "S-NHL-02",
   "streak": null,
   "total_payout": 0.0,
-  "upcoming": 12,
+  "upcoming": 10,
   "username": "HomeIceQ",
   "verified_share": null,
   "version": "v1",
   "won": 0
  },
  {
-  "avg_legs": 2.9,
+  "avg_legs": 2.75,
   "bankroll": 9990.0,
   "category": "situational",
   "grades": {
    "REFERENCE": 1,
-   "UNPRICED": 9
+   "UNPRICED": 7
   },
   "last_activity": "2026-10-20",
   "ledger_drift": 0.0,
   "leg_hit_rate": null,
   "legs": {
-   "pending": 29
+   "pending": 22
   },
   "lost": 0,
   "max_drawdown": 0.001,
@@ -610,7 +610,7 @@
   "strategy_id": "S-NHL-04",
   "streak": null,
   "total_payout": 0.0,
-  "upcoming": 10,
+  "upcoming": 8,
   "username": "BackToBacker",
   "verified_share": null,
   "version": "v1",
@@ -693,19 +693,19 @@
   "won": 0
  },
  {
-  "avg_legs": 4.0,
+  "avg_legs": 5.33,
   "bankroll": 9975.0,
   "category": "multi-sport",
   "grades": {
    "MIXED": 1,
    "UNPRICED": 2
   },
-  "last_activity": "2026-10-19",
+  "last_activity": "2026-10-20",
   "ledger_drift": 0.0,
   "leg_hit_rate": 0.5714,
   "legs": {
    "loss": 3,
-   "pending": 5,
+   "pending": 9,
    "win": 4
   },
   "lost": 0,
@@ -769,37 +769,37 @@
   "won": 0
  },
  {
-  "avg_legs": 2.67,
-  "bankroll": 9970.0,
+  "avg_legs": 3.0,
+  "bankroll": 9960.0,
   "category": "ratings-vs-market",
   "grades": {
-   "REFERENCE": 3
+   "REFERENCE": 4
   },
-  "last_activity": "2026-10-14",
+  "last_activity": "2026-10-21",
   "ledger_drift": 0.0,
   "leg_hit_rate": null,
   "legs": {
-   "pending": 8
+   "pending": 12
   },
   "lost": 0,
-  "max_drawdown": 0.003,
-  "min_balance": 9970.0,
-  "name": "Puck Elo edge",
+  "max_drawdown": 0.004,
+  "min_balance": 9960.0,
+  "name": "Elo vs close",
   "parlay_hit_rate": null,
   "parlays": 0,
-  "pnl": -30.0,
+  "pnl": -40.0,
   "push": 0,
   "roi": -1.0,
-  "sport": "NHL",
-  "staked": 30.0,
+  "sport": "NBA",
+  "staked": 40.0,
   "start": 10000.0,
   "started": true,
   "status": "active",
-  "strategy_id": "S-NHL-01",
+  "strategy_id": "S-NBA-01",
   "streak": null,
   "total_payout": 0.0,
-  "upcoming": 3,
-  "username": "PuckElo",
+  "upcoming": 4,
+  "username": "EloAndOrder",
   "verified_share": null,
   "version": "v1",
   "won": 0
@@ -877,7 +877,7 @@
   "won": 0
  },
  {
-  "avg_legs": 3.67,
+  "avg_legs": 3.83,
   "bankroll": 9940.0,
   "category": "multi-sport",
   "grades": {
@@ -888,7 +888,7 @@
   "leg_hit_rate": 0.5,
   "legs": {
    "loss": 4,
-   "pending": 14,
+   "pending": 15,
    "win": 4
   },
   "lost": 0,
@@ -915,37 +915,36 @@
   "won": 0
  },
  {
-  "avg_legs": 2.88,
-  "bankroll": 9920.0,
+  "avg_legs": 2.67,
+  "bankroll": 9910.0,
   "category": "totals",
   "grades": {
-   "MIXED": 1,
-   "MODEL": 7
+   "MODEL": 9
   },
   "last_activity": "2026-10-20",
   "ledger_drift": 0.0,
   "leg_hit_rate": null,
   "legs": {
-   "pending": 23
+   "pending": 24
   },
   "lost": 0,
-  "max_drawdown": 0.008,
-  "min_balance": 9920.0,
+  "max_drawdown": 0.009,
+  "min_balance": 9910.0,
   "name": "Goals-model totals",
   "parlay_hit_rate": null,
   "parlays": 0,
-  "pnl": -80.0,
+  "pnl": -90.0,
   "push": 0,
   "roi": -1.0,
   "sport": "NHL",
-  "staked": 80.0,
+  "staked": 90.0,
   "start": 10000.0,
   "started": true,
   "status": "active",
   "strategy_id": "S-NHL-03",
   "streak": null,
   "total_payout": 0.0,
-  "upcoming": 8,
+  "upcoming": 9,
   "username": "CreaseCrash",
   "verified_share": null,
   "version": "v1",

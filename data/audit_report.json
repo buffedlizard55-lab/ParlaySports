@@ -7,12 +7,12 @@
  {
   "check": "sport-NFL-has-games",
   "status": "PASS",
-  "detail": "7550 games"
+  "detail": "7549 games"
  },
  {
   "check": "sport-MLB-has-games",
   "status": "PASS",
-  "detail": "8733 games"
+  "detail": "8732 games"
  },
  {
   "check": "sport-NHL-has-games",
@@ -112,7 +112,7 @@
  {
   "check": "upcoming-parlays-exist",
   "status": "PASS",
-  "detail": "88"
+  "detail": "87"
  },
  {
   "check": "ledger-bankroll-consistent",
@@ -147,7 +147,7 @@
  {
   "check": "export-leaderboard_forward.json",
   "status": "PASS",
-  "detail": "18754B"
+  "detail": "18738B"
  },
  {
   "check": "export-leaderboard_backtest.json",
@@ -157,7 +157,7 @@
  {
   "check": "export-upcoming.json",
   "status": "PASS",
-  "detail": "309758B"
+  "detail": "308238B"
  },
  {
   "check": "export-completed.json",
@@ -167,17 +167,17 @@
  {
   "check": "export-strategies.json",
   "status": "PASS",
-  "detail": "639263B"
+  "detail": "639381B"
  },
  {
   "check": "export-games.json",
   "status": "PASS",
-  "detail": "353496B"
+  "detail": "392717B"
  },
  {
   "check": "export-performance.json",
   "status": "PASS",
-  "detail": "688565B"
+  "detail": "688693B"
  },
  {
   "check": "export-research.json",
@@ -192,7 +192,7 @@
  {
   "check": "export-quality.json",
   "status": "PASS",
-  "detail": "51615B"
+  "detail": "51665B"
  },
  {
   "check": "site-index.html",
@@ -312,6 +312,6 @@
  {
   "check": "schedule-completeness-clean",
   "status": "FAIL",
-  "detail": "NHL 2027: 1 regular-season games vs 82 expected (82/team over 2 teams); per-team spread 0; short: [('NJ', 1), ('OTT', 1)]"
+  "detail": "NHL 2027: 5 regular-season games vs 369 expected (82/team over 9 teams); per-team spread 1; short: [('BOS', 1), ('DET', 1), ('EDM', 1), ('LA', 1)]"
  }
 ]
