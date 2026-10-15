@@ -12,17 +12,17 @@
  {
   "check": "sport-MLB-has-games",
   "status": "PASS",
-  "detail": "8732 games"
+  "detail": "8730 games"
  },
  {
   "check": "sport-NHL-has-games",
   "status": "PASS",
-  "detail": "4427 games"
+  "detail": "4429 games"
  },
  {
   "check": "sport-NBA-has-games",
   "status": "PASS",
-  "detail": "8390 games"
+  "detail": "8389 games"
  },
  {
   "check": "28-strategies",
@@ -112,7 +112,7 @@
  {
   "check": "upcoming-parlays-exist",
   "status": "PASS",
-  "detail": "87"
+  "detail": "95"
  },
  {
   "check": "ledger-bankroll-consistent",
@@ -147,7 +147,7 @@
  {
   "check": "export-leaderboard_forward.json",
   "status": "PASS",
-  "detail": "18738B"
+  "detail": "18739B"
  },
  {
   "check": "export-leaderboard_backtest.json",
@@ -157,7 +157,7 @@
  {
   "check": "export-upcoming.json",
   "status": "PASS",
-  "detail": "308238B"
+  "detail": "336838B"
  },
  {
   "check": "export-completed.json",
@@ -167,17 +167,17 @@
  {
   "check": "export-strategies.json",
   "status": "PASS",
-  "detail": "639381B"
+  "detail": "639722B"
  },
  {
   "check": "export-games.json",
   "status": "PASS",
-  "detail": "392717B"
+  "detail": "417905B"
  },
  {
   "check": "export-performance.json",
   "status": "PASS",
-  "detail": "688693B"
+  "detail": "689013B"
  },
  {
   "check": "export-research.json",
@@ -192,7 +192,7 @@
  {
   "check": "export-quality.json",
   "status": "PASS",
-  "detail": "51665B"
+  "detail": "51317B"
  },
  {
   "check": "site-index.html",
@@ -286,8 +286,8 @@
  },
  {
   "check": "nba-game-type-boundaries",
-  "status": "FAIL",
-  "detail": "PRE rows {'2023-24': 64, '2024-25': 70, '2025-26': 66, '2026-27': 66, '2027': 1}; seasons over 82/team []; rows without derivation evidence 1"
+  "status": "PASS",
+  "detail": "PRE rows {'2023-24': 64, '2024-25': 70, '2025-26': 66, '2026-27': 66}; seasons over 82/team []; rows without derivation evidence 0"
  },
  {
   "check": "slate-cap-enforced",
@@ -302,7 +302,7 @@
  {
   "check": "no-cross-source-duplicate-games",
   "status": "FAIL",
-  "detail": "9 ESPN rows shadow a league-log game"
+  "detail": "8 ESPN rows shadow a league-log game"
  },
  {
   "check": "workflow-files-valid",
@@ -312,6 +312,6 @@
  {
   "check": "schedule-completeness-clean",
   "status": "FAIL",
-  "detail": "NHL 2027: 5 regular-season games vs 369 expected (82/team over 9 teams); per-team spread 1; short: [('BOS', 1), ('DET', 1), ('EDM', 1), ('LA', 1)]"
+  "detail": "NHL 2027: 4 regular-season games vs 328 expected (82/team over 8 teams); per-team spread 0; short: [('BOS', 1), ('DET', 1), ('EDM', 1), ('LA', 1)]"
  }
 ]
