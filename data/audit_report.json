@@ -12,12 +12,12 @@
  {
   "check": "sport-MLB-has-games",
   "status": "PASS",
-  "detail": "8723 games"
+  "detail": "8720 games"
  },
  {
   "check": "sport-NHL-has-games",
   "status": "PASS",
-  "detail": "4429 games"
+  "detail": "4426 games"
  },
  {
   "check": "sport-NBA-has-games",
@@ -82,7 +82,7 @@
  {
   "check": "NFL-forward-parlays",
   "status": "PASS",
-  "detail": "16"
+  "detail": "22"
  },
  {
   "check": "MLB-forward-parlays",
@@ -112,7 +112,7 @@
  {
   "check": "upcoming-parlays-exist",
   "status": "PASS",
-  "detail": "98"
+  "detail": "104"
  },
  {
   "check": "ledger-bankroll-consistent",
@@ -147,7 +147,7 @@
  {
   "check": "export-leaderboard_forward.json",
   "status": "PASS",
-  "detail": "18874B"
+  "detail": "18795B"
  },
  {
   "check": "export-leaderboard_backtest.json",
@@ -157,7 +157,7 @@
  {
   "check": "export-upcoming.json",
   "status": "PASS",
-  "detail": "341221B"
+  "detail": "360501B"
  },
  {
   "check": "export-completed.json",
@@ -167,17 +167,17 @@
  {
   "check": "export-strategies.json",
   "status": "PASS",
-  "detail": "640498B"
+  "detail": "640809B"
  },
  {
   "check": "export-games.json",
   "status": "PASS",
-  "detail": "430107B"
+  "detail": "426433B"
  },
  {
   "check": "export-performance.json",
   "status": "PASS",
-  "detail": "689596B"
+  "detail": "689975B"
  },
  {
   "check": "export-research.json",
@@ -192,7 +192,7 @@
  {
   "check": "export-quality.json",
   "status": "PASS",
-  "detail": "51317B"
+  "detail": "51663B"
  },
  {
   "check": "site-index.html",
@@ -302,7 +302,7 @@
  {
   "check": "no-cross-source-duplicate-games",
   "status": "FAIL",
-  "detail": "4 ESPN rows shadow a league-log game"
+  "detail": "2 ESPN rows shadow a league-log game"
  },
  {
   "check": "workflow-files-valid",
@@ -312,6 +312,6 @@
  {
   "check": "schedule-completeness-clean",
   "status": "FAIL",
-  "detail": "NHL 2027: 3 regular-season games vs 246 expected (82/team over 6 teams); per-team spread 0; short: [('NJ', 1), ('NSH', 1), ('NYR', 1), ('SEA', 1)]"
+  "detail": "NHL 2027: 4 regular-season games vs 328 expected (82/team over 8 teams); per-team spread 0; short: [('BOS', 1), ('DET', 1), ('LA', 1), ('NJ', 1)]"
  }
 ]
