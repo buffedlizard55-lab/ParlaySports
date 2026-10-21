@@ -12055,7 +12055,7 @@
    },
    "forward": {
     "avg_legs": 2.0,
-    "bankroll": 9950.0,
+    "bankroll": 9960.0,
     "equity": [
      {
       "b": 10000.0,
@@ -12075,38 +12075,34 @@
      },
      {
       "b": 9960.0,
-      "t": "2026-10-20T13:37:35Z"
-     },
-     {
-      "b": 9950.0,
-      "t": "2026-10-20T13:37:35Z"
+      "t": "2026-10-21T13:49:02Z"
      }
     ],
     "grades": {
      "MIXED": 3,
-     "REFERENCE": 2
+     "REFERENCE": 1
     },
     "last_activity": "2026-10-21",
     "ledger_drift": 0.0,
     "leg_hit_rate": 1.0,
     "legs": {
-     "pending": 7,
+     "pending": 5,
      "win": 3
     },
     "lost": 0,
-    "max_drawdown": 0.005,
-    "min_balance": 9950.0,
+    "max_drawdown": 0.004,
+    "min_balance": 9960.0,
     "parlay_hit_rate": null,
     "parlays": 0,
-    "pnl": -50.0,
+    "pnl": -40.0,
     "push": 0,
     "roi": -1.0,
-    "staked": 50.0,
+    "staked": 40.0,
     "start": 10000.0,
     "started": true,
     "streak": null,
     "total_payout": 0.0,
-    "upcoming": 5,
+    "upcoming": 4,
     "verified_share": null,
     "won": 0
    }
@@ -13789,8 +13785,8 @@
     "won": 25
    },
    "forward": {
-    "avg_legs": 3.78,
-    "bankroll": 9910.0,
+    "avg_legs": 4.0,
+    "bankroll": 9930.0,
     "equity": [
      {
       "b": 10000.0,
@@ -13810,55 +13806,47 @@
      },
      {
       "b": 9960.0,
-      "t": "2026-10-20T13:37:35Z"
+      "t": "2026-10-21T13:49:02Z"
      },
      {
       "b": 9950.0,
-      "t": "2026-10-20T13:37:35Z"
+      "t": "2026-10-21T13:49:02Z"
      },
      {
       "b": 9940.0,
-      "t": "2026-10-20T13:37:35Z"
+      "t": "2026-10-21T13:49:02Z"
      },
      {
       "b": 9930.0,
-      "t": "2026-10-20T13:37:35Z"
-     },
-     {
-      "b": 9920.0,
-      "t": "2026-10-20T13:37:35Z"
-     },
-     {
-      "b": 9910.0,
-      "t": "2026-10-20T13:37:35Z"
+      "t": "2026-10-21T13:49:02Z"
      }
     ],
     "grades": {
-     "MIXED": 7,
-     "REFERENCE": 2
+     "MIXED": 6,
+     "REFERENCE": 1
     },
     "last_activity": "2026-10-25",
     "ledger_drift": 0.0,
     "leg_hit_rate": 0.5,
     "legs": {
      "loss": 4,
-     "pending": 26,
+     "pending": 20,
      "win": 4
     },
     "lost": 0,
-    "max_drawdown": 0.009,
-    "min_balance": 9910.0,
+    "max_drawdown": 0.007,
+    "min_balance": 9930.0,
     "parlay_hit_rate": null,
     "parlays": 0,
-    "pnl": -90.0,
+    "pnl": -70.0,
     "push": 0,
     "roi": -1.0,
-    "staked": 90.0,
+    "staked": 70.0,
     "start": 10000.0,
     "started": true,
     "streak": null,
     "total_payout": 0.0,
-    "upcoming": 9,
+    "upcoming": 7,
     "verified_share": null,
     "won": 0
    }
@@ -14583,7 +14571,7 @@
     "won": 10
    },
    "forward": {
-    "avg_legs": 3.5,
+    "avg_legs": 3.75,
     "bankroll": 9960.0,
     "equity": [
      {
@@ -14596,15 +14584,15 @@
      },
      {
       "b": 9980.0,
-      "t": "2026-10-20T13:37:36Z"
+      "t": "2026-10-21T13:49:03Z"
      },
      {
       "b": 9970.0,
-      "t": "2026-10-20T13:37:36Z"
+      "t": "2026-10-21T13:49:03Z"
      },
      {
       "b": 9960.0,
-      "t": "2026-10-20T13:37:36Z"
+      "t": "2026-10-21T13:49:03Z"
      }
     ],
     "grades": {
@@ -14615,7 +14603,7 @@
     "leg_hit_rate": 0.6667,
     "legs": {
      "loss": 1,
-     "pending": 11,
+     "pending": 12,
      "win": 2
     },
     "lost": 0,
@@ -15177,7 +15165,7 @@
     "won": 0
    },
    "forward": {
-    "avg_legs": 6.5,
+    "avg_legs": 8.0,
     "bankroll": 9950.0,
     "equity": [
      {
@@ -15190,19 +15178,19 @@
      },
      {
       "b": 9950.0,
-      "t": "2026-10-20T13:37:36Z"
+      "t": "2026-10-21T13:49:03Z"
      }
     ],
     "grades": {
      "MIXED": 1,
      "REFERENCE": 1
     },
-    "last_activity": "2026-10-20",
+    "last_activity": "2026-10-21",
     "ledger_drift": 0.0,
     "leg_hit_rate": 0.5714,
     "legs": {
      "loss": 3,
-     "pending": 6,
+     "pending": 9,
      "win": 4
     },
     "lost": 0,
@@ -19256,57 +19244,53 @@
     "won": 103
    },
    "forward": {
-    "avg_legs": 2.8,
-    "bankroll": 9950.0,
+    "avg_legs": 2.75,
+    "bankroll": 9960.0,
     "equity": [
      {
       "b": 10000.0,
-      "t": "2026-10-20T13:37:32Z"
+      "t": "2026-10-21T13:48:59Z"
      },
      {
       "b": 9990.0,
-      "t": "2026-10-20T13:37:32Z"
+      "t": "2026-10-21T13:48:59Z"
      },
      {
       "b": 9980.0,
-      "t": "2026-10-20T13:37:32Z"
+      "t": "2026-10-21T13:48:59Z"
      },
      {
       "b": 9970.0,
-      "t": "2026-10-20T13:37:32Z"
+      "t": "2026-10-21T13:48:59Z"
      },
      {
       "b": 9960.0,
-      "t": "2026-10-20T13:37:32Z"
-     },
-     {
-      "b": 9950.0,
-      "t": "2026-10-20T13:37:32Z"
+      "t": "2026-10-21T13:48:59Z"
      }
     ],
     "grades": {
-     "REFERENCE": 5
+     "REFERENCE": 4
     },
     "last_activity": "2026-10-23",
     "ledger_drift": 0.0,
     "leg_hit_rate": null,
     "legs": {
-     "pending": 14
+     "pending": 11
     },
     "lost": 0,
-    "max_drawdown": 0.005,
-    "min_balance": 9950.0,
+    "max_drawdown": 0.004,
+    "min_balance": 9960.0,
     "parlay_hit_rate": null,
     "parlays": 0,
-    "pnl": -50.0,
+    "pnl": -40.0,
     "push": 0,
     "roi": -1.0,
-    "staked": 50.0,
+    "staked": 40.0,
     "start": 10000.0,
     "started": true,
     "streak": null,
     "total_payout": 0.0,
-    "upcoming": 5,
+    "upcoming": 4,
     "verified_share": null,
     "won": 0
    }
@@ -24409,16 +24393,16 @@
     "won": 25
    },
    "forward": {
-    "avg_legs": 2.0,
+    "avg_legs": 3.0,
     "bankroll": 9990.0,
     "equity": [
      {
       "b": 10000.0,
-      "t": "2026-10-20T13:37:35Z"
+      "t": "2026-10-21T13:49:02Z"
      },
      {
       "b": 9990.0,
-      "t": "2026-10-20T13:37:35Z"
+      "t": "2026-10-21T13:49:02Z"
      }
     ],
     "grades": {
@@ -24428,7 +24412,7 @@
     "ledger_drift": 0.0,
     "leg_hit_rate": null,
     "legs": {
-     "pending": 2
+     "pending": 3
     },
     "lost": 0,
     "max_drawdown": 0.001,
@@ -26254,15 +26238,15 @@
      },
      {
       "b": 9970.0,
-      "t": "2026-10-20T13:37:32Z"
+      "t": "2026-10-21T13:48:58Z"
      },
      {
       "b": 9960.0,
-      "t": "2026-10-20T13:37:32Z"
+      "t": "2026-10-21T13:48:58Z"
      },
      {
       "b": 9992.14,
-      "t": "2026-10-20T13:37:36Z"
+      "t": "2026-10-21T13:49:03Z"
      }
     ],
     "grades": {
@@ -27181,7 +27165,7 @@
      },
      {
       "b": 10028.12,
-      "t": "2026-10-20T13:37:36Z"
+      "t": "2026-10-21T13:49:03Z"
      }
     ],
     "grades": {
@@ -29465,15 +29449,15 @@
      },
      {
       "b": 9960.0,
-      "t": "2026-10-20T13:37:32Z"
+      "t": "2026-10-21T13:48:58Z"
      },
      {
       "b": 9950.0,
-      "t": "2026-10-20T13:37:32Z"
+      "t": "2026-10-21T13:48:58Z"
      },
      {
       "b": 9986.01,
-      "t": "2026-10-20T13:37:36Z"
+      "t": "2026-10-21T13:49:03Z"
      }
     ],
     "grades": {
@@ -30995,15 +30979,15 @@
      },
      {
       "b": 9980.0,
-      "t": "2026-10-20T13:37:32Z"
+      "t": "2026-10-21T13:48:58Z"
      },
      {
       "b": 9970.0,
-      "t": "2026-10-20T13:37:32Z"
+      "t": "2026-10-21T13:48:58Z"
      },
      {
       "b": 10006.14,
-      "t": "2026-10-20T13:37:36Z"
+      "t": "2026-10-21T13:49:03Z"
      }
     ],
     "grades": {
@@ -32846,8 +32830,8 @@
     "won": 32
    },
    "forward": {
-    "avg_legs": 2.5,
-    "bankroll": 10019.05,
+    "avg_legs": 2.33,
+    "bankroll": 10009.05,
     "equity": [
      {
       "b": 10000.0,
@@ -32862,36 +32846,41 @@
       "t": "2026-09-22T01:30:00Z"
      },
      {
-      "b": 10019.05,
-      "t": "2026-10-20T13:37:36Z"
+      "b": 9970.0,
+      "t": "2026-10-21T13:48:58Z"
+     },
+     {
+      "b": 10009.05,
+      "t": "2026-10-21T13:49:03Z"
      }
     ],
     "grades": {
-     "REFERENCE": 2
+     "REFERENCE": 3
     },
-    "last_activity": "2026-09-27",
+    "last_activity": "2026-10-25",
     "ledger_drift": 0.0,
     "leg_hit_rate": 0.75,
     "legs": {
      "loss": 1,
+     "pending": 2,
      "push": 1,
      "win": 3
     },
     "lost": 1,
-    "max_drawdown": 0.002,
-    "min_balance": 9980.0,
+    "max_drawdown": 0.003,
+    "min_balance": 9970.0,
     "parlay_hit_rate": 0.5,
     "parlays": 2,
-    "pnl": 19.05,
+    "pnl": 9.05,
     "push": 0,
-    "roi": 0.9525,
-    "staked": 20.0,
+    "roi": 0.3017,
+    "staked": 30.0,
     "start": 10000.0,
     "started": true,
     "streak": "L1",
     "total_payout": 39.05,
-    "upcoming": 0,
-    "verified_share": 1.0,
+    "upcoming": 1,
+    "verified_share": 1.5,
     "won": 1
    }
   },
@@ -34573,42 +34562,28 @@
     "won": 28
    },
    "forward": {
-    "avg_legs": 2.62,
-    "bankroll": 9990.0,
-    "equity": [
-     {
-      "b": 10000.0,
-      "t": "2026-10-20T13:37:32Z"
-     },
-     {
-      "b": 9990.0,
-      "t": "2026-10-20T13:37:32Z"
-     }
-    ],
-    "grades": {
-     "REFERENCE": 1,
-     "UNPRICED": 7
-    },
-    "last_activity": "2026-10-25",
+    "avg_legs": null,
+    "bankroll": 10000.0,
+    "equity": [],
+    "grades": {},
+    "last_activity": null,
     "ledger_drift": 0.0,
     "leg_hit_rate": null,
-    "legs": {
-     "pending": 21
-    },
+    "legs": {},
     "lost": 0,
-    "max_drawdown": 0.001,
-    "min_balance": 9990.0,
+    "max_drawdown": 0.0,
+    "min_balance": 10000.0,
     "parlay_hit_rate": null,
     "parlays": 0,
-    "pnl": -10.0,
+    "pnl": 0.0,
     "push": 0,
-    "roi": -1.0,
-    "staked": 10.0,
+    "roi": null,
+    "staked": 0.0,
     "start": 10000.0,
-    "started": true,
+    "started": false,
     "streak": null,
     "total_payout": 0.0,
-    "upcoming": 8,
+    "upcoming": 0,
     "verified_share": null,
     "won": 0
    }
@@ -35158,8 +35133,8 @@
     "won": 24
    },
    "forward": {
-    "avg_legs": 2.5,
-    "bankroll": 9920.0,
+    "avg_legs": 2.67,
+    "bankroll": 9910.0,
     "equity": [
      {
       "b": 10000.0,
@@ -35183,44 +35158,48 @@
      },
      {
       "b": 9950.0,
-      "t": "2026-10-20T13:37:32Z"
+      "t": "2026-10-21T13:48:58Z"
      },
      {
       "b": 9940.0,
-      "t": "2026-10-20T13:37:32Z"
+      "t": "2026-10-21T13:48:58Z"
      },
      {
       "b": 9930.0,
-      "t": "2026-10-20T13:37:32Z"
+      "t": "2026-10-21T13:48:58Z"
      },
      {
       "b": 9920.0,
-      "t": "2026-10-20T13:37:32Z"
+      "t": "2026-10-21T13:48:58Z"
+     },
+     {
+      "b": 9910.0,
+      "t": "2026-10-21T13:48:58Z"
      }
     ],
     "grades": {
-     "MODEL": 8
+     "MODEL": 9
     },
     "last_activity": "2026-10-27",
     "ledger_drift": 0.0,
     "leg_hit_rate": null,
     "legs": {
-     "pending": 20
+     "pending": 24
     },
     "lost": 0,
-    "max_drawdown": 0.008,
-    "min_balance": 9920.0,
+    "max_drawdown": 0.009,
+    "min_balance": 9910.0,
     "parlay_hit_rate": null,
     "parlays": 0,
-    "pnl": -80.0,
+    "pnl": -90.0,
     "push": 0,
     "roi": -1.0,
-    "staked": 80.0,
+    "staked": 90.0,
     "start": 10000.0,
     "started": true,
     "streak": null,
     "total_payout": 0.0,
-    "upcoming": 8,
+    "upcoming": 9,
     "verified_share": null,
     "won": 0
    }
@@ -35889,42 +35868,28 @@
     "won": 31
    },
    "forward": {
-    "avg_legs": 2.75,
-    "bankroll": 9990.0,
-    "equity": [
-     {
-      "b": 10000.0,
-      "t": "2026-10-20T13:37:32Z"
-     },
-     {
-      "b": 9990.0,
-      "t": "2026-10-20T13:37:32Z"
-     }
-    ],
-    "grades": {
-     "REFERENCE": 1,
-     "UNPRICED": 7
-    },
-    "last_activity": "2026-10-25",
+    "avg_legs": null,
+    "bankroll": 10000.0,
+    "equity": [],
+    "grades": {},
+    "last_activity": null,
     "ledger_drift": 0.0,
     "leg_hit_rate": null,
-    "legs": {
-     "pending": 22
-    },
+    "legs": {},
     "lost": 0,
-    "max_drawdown": 0.001,
-    "min_balance": 9990.0,
+    "max_drawdown": 0.0,
+    "min_balance": 10000.0,
     "parlay_hit_rate": null,
     "parlays": 0,
-    "pnl": -10.0,
+    "pnl": 0.0,
     "push": 0,
-    "roi": -1.0,
-    "staked": 10.0,
+    "roi": null,
+    "staked": 0.0,
     "start": 10000.0,
-    "started": true,
+    "started": false,
     "streak": null,
     "total_payout": 0.0,
-    "upcoming": 8,
+    "upcoming": 0,
     "verified_share": null,
     "won": 0
    }
