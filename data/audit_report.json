@@ -82,7 +82,7 @@
  {
   "check": "NFL-forward-parlays",
   "status": "PASS",
-  "detail": "22"
+  "detail": "15"
  },
  {
   "check": "MLB-forward-parlays",
@@ -112,7 +112,7 @@
  {
   "check": "upcoming-parlays-exist",
   "status": "PASS",
-  "detail": "106"
+  "detail": "92"
  },
  {
   "check": "ledger-bankroll-consistent",
@@ -147,7 +147,7 @@
  {
   "check": "export-leaderboard_forward.json",
   "status": "PASS",
-  "detail": "18952B"
+  "detail": "18839B"
  },
  {
   "check": "export-leaderboard_backtest.json",
@@ -157,7 +157,7 @@
  {
   "check": "export-upcoming.json",
   "status": "PASS",
-  "detail": "370569B"
+  "detail": "322698B"
  },
  {
   "check": "export-completed.json",
@@ -167,17 +167,17 @@
  {
   "check": "export-strategies.json",
   "status": "PASS",
-  "detail": "640991B"
+  "detail": "639978B"
  },
  {
   "check": "export-games.json",
   "status": "PASS",
-  "detail": "365396B"
+  "detail": "316782B"
  },
  {
   "check": "export-performance.json",
   "status": "PASS",
-  "detail": "689979B"
+  "detail": "689146B"
  },
  {
   "check": "export-research.json",
@@ -192,7 +192,7 @@
  {
   "check": "export-quality.json",
   "status": "PASS",
-  "detail": "51663B"
+  "detail": "51313B"
  },
  {
   "check": "site-index.html",
@@ -312,6 +312,6 @@
  {
   "check": "schedule-completeness-clean",
   "status": "FAIL",
-  "detail": "NHL 2027: 4 regular-season games vs 287 expected (82/team over 7 teams); per-team spread 1; short: [('BOS', 1), ('COL', 1), ('LA', 1), ('NJ', 1)]"
+  "detail": "NHL 2027: 3 regular-season games vs 246 expected (82/team over 6 teams); per-team spread 0; short: [('BOS', 1), ('LA', 1), ('NJ', 1), ('SJ', 1)]"
  }
 ]
