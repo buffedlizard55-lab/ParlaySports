@@ -12,17 +12,17 @@
  {
   "check": "sport-MLB-has-games",
   "status": "PASS",
-  "detail": "8717 games"
+  "detail": "8713 games"
  },
  {
   "check": "sport-NHL-has-games",
   "status": "PASS",
-  "detail": "4426 games"
+  "detail": "4427 games"
  },
  {
   "check": "sport-NBA-has-games",
   "status": "PASS",
-  "detail": "8403 games"
+  "detail": "8405 games"
  },
  {
   "check": "28-strategies",
@@ -112,7 +112,7 @@
  {
   "check": "upcoming-parlays-exist",
   "status": "PASS",
-  "detail": "94"
+  "detail": "91"
  },
  {
   "check": "ledger-bankroll-consistent",
@@ -147,7 +147,7 @@
  {
   "check": "export-leaderboard_forward.json",
   "status": "PASS",
-  "detail": "18751B"
+  "detail": "18840B"
  },
  {
   "check": "export-leaderboard_backtest.json",
@@ -157,7 +157,7 @@
  {
   "check": "export-upcoming.json",
   "status": "PASS",
-  "detail": "327452B"
+  "detail": "317742B"
  },
  {
   "check": "export-completed.json",
@@ -167,17 +167,17 @@
  {
   "check": "export-strategies.json",
   "status": "PASS",
-  "detail": "639601B"
+  "detail": "639843B"
  },
  {
   "check": "export-games.json",
   "status": "PASS",
-  "detail": "348419B"
+  "detail": "349838B"
  },
  {
   "check": "export-performance.json",
   "status": "PASS",
-  "detail": "688886B"
+  "detail": "689018B"
  },
  {
   "check": "export-research.json",
@@ -192,7 +192,7 @@
  {
   "check": "export-quality.json",
   "status": "PASS",
-  "detail": "51666B"
+  "detail": "51667B"
  },
  {
   "check": "site-index.html",
@@ -302,7 +302,7 @@
  {
   "check": "no-cross-source-duplicate-games",
   "status": "FAIL",
-  "detail": "3 ESPN rows shadow a league-log game"
+  "detail": "1 ESPN rows shadow a league-log game"
  },
  {
   "check": "workflow-files-valid",
@@ -312,6 +312,6 @@
  {
   "check": "schedule-completeness-clean",
   "status": "FAIL",
-  "detail": "NHL 2027: 4 regular-season games vs 287 expected (82/team over 7 teams); per-team spread 1; short: [('BUF', 1), ('CHI', 1), ('DAL', 1), ('LA', 2)]"
+  "detail": "NHL 2027: 4 regular-season games vs 287 expected (82/team over 7 teams); per-team spread 1; short: [('BUF', 1), ('CHI', 1), ('COL', 1), ('DAL', 1)]"
  }
 ]
