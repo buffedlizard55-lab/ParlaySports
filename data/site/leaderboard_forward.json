@@ -112,7 +112,7 @@
   "won": 1
  },
  {
-  "avg_legs": 3.0,
+  "avg_legs": 2.67,
   "bankroll": 10002.14,
   "category": "ratings-vs-market",
   "grades": {
@@ -124,7 +124,7 @@
   "leg_hit_rate": 0.6667,
   "legs": {
    "loss": 2,
-   "pending": 3,
+   "pending": 2,
    "win": 4
   },
   "lost": 1,
@@ -217,7 +217,7 @@
  {
   "avg_legs": null,
   "bankroll": 10000.0,
-  "category": "totals",
+  "category": "situational",
   "grades": {},
   "last_activity": null,
   "ledger_drift": 0.0,
@@ -226,7 +226,7 @@
   "lost": 0,
   "max_drawdown": 0.0,
   "min_balance": 10000.0,
-  "name": "Pace totals",
+  "name": "Schedule-spot fade",
   "parlay_hit_rate": null,
   "parlays": 0,
   "pnl": 0.0,
@@ -237,11 +237,11 @@
   "start": 10000.0,
   "started": false,
   "status": "active",
-  "strategy_id": "S-NBA-03",
+  "strategy_id": "S-NBA-02",
   "streak": null,
   "total_payout": 0.0,
   "upcoming": 0,
-  "username": "PaceCase",
+  "username": "LoadManager",
   "verified_share": null,
   "version": "v1",
   "won": 0
@@ -513,54 +513,18 @@
   "won": 0
  },
  {
-  "avg_legs": 2.0,
-  "bankroll": 9990.0,
-  "category": "situational",
-  "grades": {
-   "REFERENCE": 1
-  },
-  "last_activity": "2026-10-29",
-  "ledger_drift": 0.0,
-  "leg_hit_rate": null,
-  "legs": {
-   "pending": 2
-  },
-  "lost": 0,
-  "max_drawdown": 0.001,
-  "min_balance": 9990.0,
-  "name": "Schedule-spot fade",
-  "parlay_hit_rate": null,
-  "parlays": 0,
-  "pnl": -10.0,
-  "push": 0,
-  "roi": -1.0,
-  "sport": "NBA",
-  "staked": 10.0,
-  "start": 10000.0,
-  "started": true,
-  "status": "active",
-  "strategy_id": "S-NBA-02",
-  "streak": null,
-  "total_payout": 0.0,
-  "upcoming": 1,
-  "username": "LoadManager",
-  "verified_share": null,
-  "version": "v1",
-  "won": 0
- },
- {
-  "avg_legs": 2.8,
+  "avg_legs": 2.67,
   "bankroll": 9990.0,
   "category": "situational",
   "grades": {
    "REFERENCE": 1,
-   "UNPRICED": 9
+   "UNPRICED": 8
   },
-  "last_activity": "2026-11-04",
+  "last_activity": "2026-11-06",
   "ledger_drift": 0.0,
   "leg_hit_rate": null,
   "legs": {
-   "pending": 28
+   "pending": 24
   },
   "lost": 0,
   "max_drawdown": 0.001,
@@ -579,25 +543,25 @@
   "strategy_id": "S-NHL-02",
   "streak": null,
   "total_payout": 0.0,
-  "upcoming": 10,
+  "upcoming": 9,
   "username": "HomeIceQ",
   "verified_share": null,
   "version": "v1",
   "won": 0
  },
  {
-  "avg_legs": 2.73,
+  "avg_legs": 2.64,
   "bankroll": 9990.0,
   "category": "situational",
   "grades": {
    "REFERENCE": 1,
    "UNPRICED": 10
   },
-  "last_activity": "2026-11-05",
+  "last_activity": "2026-11-06",
   "ledger_drift": 0.0,
   "leg_hit_rate": null,
   "legs": {
-   "pending": 30
+   "pending": 29
   },
   "lost": 0,
   "max_drawdown": 0.001,
@@ -623,7 +587,7 @@
   "won": 0
  },
  {
-  "avg_legs": 2.0,
+  "avg_legs": 2.5,
   "bankroll": 9980.0,
   "category": "ratings-vs-market",
   "grades": {
@@ -633,7 +597,7 @@
   "ledger_drift": 0.0,
   "leg_hit_rate": null,
   "legs": {
-   "pending": 4
+   "pending": 5
   },
   "lost": 0,
   "max_drawdown": 0.002,
@@ -659,17 +623,53 @@
   "won": 0
  },
  {
-  "avg_legs": 2.5,
+  "avg_legs": 3.0,
+  "bankroll": 9980.0,
+  "category": "totals",
+  "grades": {
+   "REFERENCE": 2
+  },
+  "last_activity": "2026-10-30",
+  "ledger_drift": 0.0,
+  "leg_hit_rate": null,
+  "legs": {
+   "pending": 6
+  },
+  "lost": 0,
+  "max_drawdown": 0.002,
+  "min_balance": 9980.0,
+  "name": "Pace totals",
+  "parlay_hit_rate": null,
+  "parlays": 0,
+  "pnl": -20.0,
+  "push": 0,
+  "roi": -1.0,
+  "sport": "NBA",
+  "staked": 20.0,
+  "start": 10000.0,
+  "started": true,
+  "status": "active",
+  "strategy_id": "S-NBA-03",
+  "streak": null,
+  "total_payout": 0.0,
+  "upcoming": 2,
+  "username": "PaceCase",
+  "verified_share": null,
+  "version": "v1",
+  "won": 0
+ },
+ {
+  "avg_legs": 3.0,
   "bankroll": 9980.0,
   "category": "ratings-vs-market",
   "grades": {
    "REFERENCE": 2
   },
-  "last_activity": "2026-10-29",
+  "last_activity": "2026-10-31",
   "ledger_drift": 0.0,
   "leg_hit_rate": null,
   "legs": {
-   "pending": 5
+   "pending": 6
   },
   "lost": 0,
   "max_drawdown": 0.002,
@@ -695,77 +695,40 @@
   "won": 0
  },
  {
-  "avg_legs": 3.25,
-  "bankroll": 9960.0,
+  "avg_legs": 4.0,
+  "bankroll": 9970.0,
   "category": "multi-sport",
   "grades": {
-   "MIXED": 4
+   "MIXED": 2,
+   "REFERENCE": 1
   },
   "last_activity": "2026-11-01",
   "ledger_drift": 0.0,
   "leg_hit_rate": 0.6667,
   "legs": {
    "loss": 1,
-   "pending": 10,
+   "pending": 9,
    "win": 2
   },
   "lost": 0,
-  "max_drawdown": 0.004,
-  "min_balance": 9960.0,
+  "max_drawdown": 0.003,
+  "min_balance": 9970.0,
   "name": "Cross-sport totals",
   "parlay_hit_rate": null,
   "parlays": 0,
-  "pnl": -40.0,
+  "pnl": -30.0,
   "push": 0,
   "roi": -1.0,
   "sport": "MULTI",
-  "staked": 40.0,
+  "staked": 30.0,
   "start": 10000.0,
   "started": true,
   "status": "active",
   "strategy_id": "S-MULTI-03",
   "streak": null,
   "total_payout": 0.0,
-  "upcoming": 4,
+  "upcoming": 3,
   "username": "TotalChaos",
-  "verified_share": null,
-  "version": "v1",
-  "won": 0
- },
- {
-  "avg_legs": 2.2,
-  "bankroll": 9950.0,
-  "category": "multi-sport",
-  "grades": {
-   "MIXED": 3,
-   "REFERENCE": 2
-  },
-  "last_activity": "2026-10-29",
-  "ledger_drift": 0.0,
-  "leg_hit_rate": 1.0,
-  "legs": {
-   "pending": 8,
-   "win": 3
-  },
-  "lost": 0,
-  "max_drawdown": 0.005,
-  "min_balance": 9950.0,
-  "name": "Cross-sport favorites",
-  "parlay_hit_rate": null,
-  "parlays": 0,
-  "pnl": -50.0,
-  "push": 0,
-  "roi": -1.0,
-  "sport": "MULTI",
-  "staked": 50.0,
-  "start": 10000.0,
-  "started": true,
-  "status": "active",
-  "strategy_id": "S-MULTI-01",
-  "streak": null,
-  "total_payout": 0.0,
-  "upcoming": 5,
-  "username": "FourSportFavor",
   "verified_share": null,
   "version": "v1",
   "won": 0
@@ -778,7 +741,7 @@
    "MIXED": 1,
    "REFERENCE": 1
   },
-  "last_activity": "2026-10-29",
+  "last_activity": "2026-10-30",
   "ledger_drift": 0.0,
   "leg_hit_rate": 0.5714,
   "legs": {
@@ -882,76 +845,114 @@
   "won": 0
  },
  {
-  "avg_legs": 2.57,
-  "bankroll": 9930.0,
+  "avg_legs": 2.0,
+  "bankroll": 9940.0,
+  "category": "multi-sport",
+  "grades": {
+   "MIXED": 3,
+   "REFERENCE": 3
+  },
+  "last_activity": "2026-10-30",
+  "ledger_drift": 0.0,
+  "leg_hit_rate": 1.0,
+  "legs": {
+   "pending": 9,
+   "win": 3
+  },
+  "lost": 0,
+  "max_drawdown": 0.006,
+  "min_balance": 9940.0,
+  "name": "Cross-sport favorites",
+  "parlay_hit_rate": null,
+  "parlays": 0,
+  "pnl": -60.0,
+  "push": 0,
+  "roi": -1.0,
+  "sport": "MULTI",
+  "staked": 60.0,
+  "start": 10000.0,
+  "started": true,
+  "status": "active",
+  "strategy_id": "S-MULTI-01",
+  "streak": null,
+  "total_payout": 0.0,
+  "upcoming": 6,
+  "username": "FourSportFavor",
+  "verified_share": null,
+  "version": "v1",
+  "won": 0
+ },
+ {
+  "avg_legs": 2.5,
+  "bankroll": 9920.0,
   "category": "totals",
   "grades": {
    "MIXED": 1,
-   "MODEL": 6
+   "MODEL": 7
   },
-  "last_activity": "2026-11-03",
+  "last_activity": "2026-11-05",
   "ledger_drift": 0.0,
   "leg_hit_rate": null,
   "legs": {
-   "pending": 18
+   "pending": 20
   },
   "lost": 0,
-  "max_drawdown": 0.007,
-  "min_balance": 9930.0,
+  "max_drawdown": 0.008,
+  "min_balance": 9920.0,
   "name": "Goals-model totals",
   "parlay_hit_rate": null,
   "parlays": 0,
-  "pnl": -70.0,
+  "pnl": -80.0,
   "push": 0,
   "roi": -1.0,
   "sport": "NHL",
-  "staked": 70.0,
+  "staked": 80.0,
   "start": 10000.0,
   "started": true,
   "status": "active",
   "strategy_id": "S-NHL-03",
   "streak": null,
   "total_payout": 0.0,
-  "upcoming": 7,
+  "upcoming": 8,
   "username": "CreaseCrash",
   "verified_share": null,
   "version": "v1",
   "won": 0
  },
  {
-  "avg_legs": 3.62,
-  "bankroll": 9920.0,
+  "avg_legs": 3.33,
+  "bankroll": 9910.0,
   "category": "multi-sport",
   "grades": {
    "MIXED": 6,
-   "REFERENCE": 2
+   "REFERENCE": 3
   },
   "last_activity": "2026-11-02",
   "ledger_drift": 0.0,
   "leg_hit_rate": 0.5,
   "legs": {
    "loss": 4,
-   "pending": 21,
+   "pending": 22,
    "win": 4
   },
   "lost": 0,
-  "max_drawdown": 0.008,
-  "min_balance": 9920.0,
+  "max_drawdown": 0.009,
+  "min_balance": 9910.0,
   "name": "Best edges any sport",
   "parlay_hit_rate": null,
   "parlays": 0,
-  "pnl": -80.0,
+  "pnl": -90.0,
   "push": 0,
   "roi": -1.0,
   "sport": "MULTI",
-  "staked": 80.0,
+  "staked": 90.0,
   "start": 10000.0,
   "started": true,
   "status": "active",
   "strategy_id": "S-MULTI-02",
   "streak": null,
   "total_payout": 0.0,
-  "upcoming": 8,
+  "upcoming": 9,
   "username": "CrossSportEdge",
   "verified_share": null,
   "version": "v1",
