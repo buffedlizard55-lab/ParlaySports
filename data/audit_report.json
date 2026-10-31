@@ -12,17 +12,17 @@
  {
   "check": "sport-MLB-has-games",
   "status": "PASS",
-  "detail": "8712 games"
+  "detail": "8710 games"
  },
  {
   "check": "sport-NHL-has-games",
   "status": "PASS",
-  "detail": "4425 games"
+  "detail": "4428 games"
  },
  {
   "check": "sport-NBA-has-games",
   "status": "PASS",
-  "detail": "8414 games"
+  "detail": "8421 games"
  },
  {
   "check": "28-strategies",
@@ -112,7 +112,7 @@
  {
   "check": "upcoming-parlays-exist",
   "status": "PASS",
-  "detail": "94"
+  "detail": "96"
  },
  {
   "check": "ledger-bankroll-consistent",
@@ -147,7 +147,7 @@
  {
   "check": "export-leaderboard_forward.json",
   "status": "PASS",
-  "detail": "18857B"
+  "detail": "18861B"
  },
  {
   "check": "export-leaderboard_backtest.json",
@@ -157,7 +157,7 @@
  {
   "check": "export-upcoming.json",
   "status": "PASS",
-  "detail": "324083B"
+  "detail": "332700B"
  },
  {
   "check": "export-completed.json",
@@ -167,17 +167,17 @@
  {
   "check": "export-strategies.json",
   "status": "PASS",
-  "detail": "640066B"
+  "detail": "640002B"
  },
  {
   "check": "export-games.json",
   "status": "PASS",
-  "detail": "345727B"
+  "detail": "345915B"
  },
  {
   "check": "export-performance.json",
   "status": "PASS",
-  "detail": "689210B"
+  "detail": "689146B"
  },
  {
   "check": "export-research.json",
@@ -192,7 +192,7 @@
  {
   "check": "export-quality.json",
   "status": "PASS",
-  "detail": "51315B"
+  "detail": "51313B"
  },
  {
   "check": "site-index.html",
@@ -301,8 +301,8 @@
  },
  {
   "check": "no-cross-source-duplicate-games",
-  "status": "FAIL",
-  "detail": "1 ESPN rows shadow a league-log game"
+  "status": "PASS",
+  "detail": "0 ESPN rows shadow a league-log game"
  },
  {
   "check": "workflow-files-valid",
@@ -312,6 +312,6 @@
  {
   "check": "schedule-completeness-clean",
   "status": "FAIL",
-  "detail": "NHL 2027: 4 regular-season games vs 328 expected (82/team over 8 teams); per-team spread 0; short: [('COL', 1), ('LA', 1), ('NJ', 1), ('OTT', 1)]"
+  "detail": "NHL 2027: 4 regular-season games vs 328 expected (82/team over 8 teams); per-team spread 0; short: [('LA', 1), ('NJ', 1), ('OTT', 1), ('SJ', 1)]"
  }
 ]
